@@ -6,7 +6,6 @@ from django.conf import settings
 # from django.contrib.auth.models import User
 from django.db.models.signals import post_save, post_delete, pre_save
 
-from core.utils.utils import get_md5
 
 # class Profiles(models.Model):
 #     USER_ROLE_CHOICES = [

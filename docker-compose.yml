@@ -1,25 +1,30 @@
-postgresql:
-  image: postgres:12
-  env_file: .env
-  volumes:
-    - ./dockerfiles/pgdata:/var/lib/postgresql/data/pgdata
-  ports:
-    - "5433:5432"
+version: '3.7'
 
-project:
-  build: ./
-  env_file: .env
-  working_dir: /opt/project
-  command: bash -c "sleep 3 && /etc/init.d/ssh start && supervisord -n"
-  volumes:
-    - ./src:/opt/project
-    - ./dockerfiles/sshdconf/sshd_config:/etc/ssh/sshd_config
-    - ./dockerfiles/id_rsa.pub:/root/.ssh/authorized_keys
-    - /home/USERNAME/.pycharm_helpers/:/root/.pycharm_helpers/
-    - ./supervisord.conf:/etc/supervisord.conf
-    - ./djangod.conf:/etc/djangod.conf
-  links:
-    - postgresql
-  ports:
-    - "2225:22"
-    - "8005:8000"
+services:
+  web:
+    build: ./back
+    command: python manage.py runserver 0.0.0.0:8000
+    ports:
+      - 8000:8000
+    volumes:
+      - C:\Projects\Abyss-Translate\back\:/usr/src/back/
+    env_file:
+      - ./.env.dev
+    depends_on:
+      - db
+  db:
+    image: postgres:12.0-alpine
+    volumes:
+      - C:\Projects\Abyss-Translate\db\:/var/lib/postgresql/data/
+    ports:
+      - 5432:5432
+    environment:
+      - POSTGRES_USER=localize
+      - POSTGRES_PASSWORD=eecais
+      - POSTGRES_DB=aby
+volumes:
+  postgres_data:
+
+
+
+
