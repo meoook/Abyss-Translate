@@ -4,10 +4,10 @@ services:
   web:
     build: ./back
     command: python manage.py runserver 0.0.0.0:8000
+    volumes:
+      - ./back/:/usr/src/back/
     ports:
       - 8000:8000
-    volumes:
-      - C:\Projects\Abyss-Translate\back\:/usr/src/back/
     env_file:
       - ./.env.dev
     depends_on:
@@ -15,12 +15,12 @@ services:
   db:
     image: postgres:12.0-alpine
     volumes:
-      - C:\Projects\Abyss-Translate\db\:/var/lib/postgresql/data/
+      - postgres_data:/var/lib/postgresql/data/
     ports:
       - 5432:5432
     environment:
       - POSTGRES_USER=localize
-      - POSTGRES_PASSWORD=eecais
+      - POSTGRES_PASSWORD=eecaishi1Eejah0ceNgi
       - POSTGRES_DB=aby
 volumes:
   postgres_data:

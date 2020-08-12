@@ -19,7 +19,7 @@ MY_APPS = [
     'knox',
     'core',
     'accounts',
-    'corsheaders',                                              # REMOVE IN PROD
+    'corsheaders',
 ]
 
 INSTALLED_APPS = [
@@ -71,7 +71,7 @@ DATABASES = {
         "ENGINE": os.environ.get("SQL_ENGINE", "django.db.backends.postgresql"),
         "NAME": os.environ.get("SQL_DATABASE", "aby"),
         "USER": os.environ.get("SQL_USER", "localize"),
-        "PASSWORD": os.environ.get("SQL_PASSWORD", "eecais"),
+        "PASSWORD": os.environ.get("SQL_PASSWORD", "eecaishi1Eejah0ceNgi"),
         "HOST": os.environ.get("SQL_HOST", "127.0.0.1"),
         "PORT": os.environ.get("SQL_PORT", "5432"),
     }
