@@ -11,6 +11,7 @@ services:
       - POSTGRES_USER=localize
       - POSTGRES_PASSWORD=eecaishi1Eejah0ceNgi
       - POSTGRES_DB=aby
+    restart: always
   django:
     build: ./back
     command: python manage.py runserver 0.0.0.0:8000
@@ -22,6 +23,7 @@ services:
       - ./.env.dev
     depends_on:
       - postgres
+    restart: always
   react:
     build: ./front
     command: npm start
@@ -32,6 +34,7 @@ services:
       - 3000:3000
     tty: true
     stdin_open: true
+    restart: always
 volumes:
   postgres_data:
   node-modules:
