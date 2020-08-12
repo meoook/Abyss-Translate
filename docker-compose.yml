@@ -1,7 +1,17 @@
 version: '3.7'
 
 services:
-  web:
+  postgres:
+    image: postgres:12-alpine
+    volumes:
+      - postgres_data:/var/lib/postgresql/data/
+    ports:
+      - 5432:5432
+    environment:
+      - POSTGRES_USER=localize
+      - POSTGRES_PASSWORD=eecaishi1Eejah0ceNgi
+      - POSTGRES_DB=aby
+  django:
     build: ./back
     command: python manage.py runserver 0.0.0.0:8000
     volumes:
@@ -11,20 +21,15 @@ services:
     env_file:
       - ./.env.dev
     depends_on:
-      - db
-  db:
-    image: postgres:12.0-alpine
+      - postgres
+  react:
+    build: ./front
+    command: ["npm", "start"]
     volumes:
-      - postgres_data:/var/lib/postgresql/data/
+      - ./front:/usr/src/front/
+      - node-modules:/usr/src/front/node_modules        
     ports:
-      - 5432:5432
-    environment:
-      - POSTGRES_USER=localize
-      - POSTGRES_PASSWORD=eecaishi1Eejah0ceNgi
-      - POSTGRES_DB=aby
+      - 3000:3000
 volumes:
   postgres_data:
-
-
-
-
+  node-modules:

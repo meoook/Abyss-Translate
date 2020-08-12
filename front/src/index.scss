@@ -1,0 +1,402 @@
+@import "./SCSS/nullstyle.scss";
+@import "./SCSS/config.scss";
+@import "./SCSS/bootstrap.scss";
+@import "./SCSS/input-fields.scss";
+@import "./SCSS/menu.scss";
+@import "./SCSS/loader-car.scss";
+@import "./SCSS/custom-select.scss";
+
+// .gamePage .gamePage-profile:after {
+//     background-image: linear-gradient(to top,#292931 92%,rgba(41,41,49,0.9));
+// }
+
+// transition-property: transform,min-width,max-width,-webkit-transform,margin;
+// transition-duration: 350ms;
+// transition-timing-function: cubic-bezier(.39,.575,.565,1);
+// transition-delay: 0s;
+
+.user-stats {
+  td {
+    width: 24%;
+    padding: 10px 0;
+    &:first-child {
+      width: 28%;
+    }
+  }
+}
+
+.stats {
+  border-spacing: $indent * 2 0;
+  border-collapse: separate;
+  white-space: nowrap;
+  td {
+    width: 50%;
+    height: $indent * 6.2;
+    &:first-child {
+      text-align: right;
+    }
+    &:last-child {
+      color: $texth;
+    }
+  }
+}
+
+.table {
+  tbody {
+    // td {
+    //   overflow: hidden;
+    //   white-space: nowrap;
+    // }
+    tr {
+      cursor: pointer;
+      &.translated {
+        background-color: rgba($green, 0.05);
+        &:hover {
+          background-color: rgba($green, 0.1);
+        }
+      }
+      &.active {
+        background-color: rgba($red, 0.1);
+        &:hover {
+          background-color: rgba($red, 0.2);
+        }
+      }
+      &.parsed {
+        background-color: rgba($blue, 0.1);
+        &:hover {
+          background-color: rgba($blue, 0.2);
+        }
+      }
+      &.new {
+        background-color: rgba($blue, 0.1);
+      }
+      &:hover {
+        background-color: lighten($disable, 4%);
+      }
+      &:last-child {
+        td {
+          border-bottom-width: 0;
+        }
+      }
+    }
+  }
+}
+// can be added to bootstrap
+.form {
+  margin-top: $indent;
+  padding: $indent * 4;
+  border-radius: $indent;
+  @include shadow();
+  h1 {
+    text-transform: uppercase;
+    text-align: center;
+  }
+  .btn {
+    letter-spacing: 3px;
+  }
+  & > div,
+  & > table {
+    margin: $indent * 2.5 0;
+  }
+  .title {
+    text-align: center;
+    margin: $indent * 2 0;
+  }
+}
+// can be added to bootstrap with part of .form
+.steps {
+  margin: $indent * 2 0;
+  position: relative;
+  &-step {
+    text-align: center;
+    & > i {
+      position: relative;
+      border-radius: 50%;
+      background-color: darken($text, 15%);
+      &.big {
+        padding: $indent * 2;
+      }
+    }
+    & > div {
+      margin-top: $indent * 2;
+    }
+    &.active {
+      & > i {
+        background-color: #6753d8;
+      }
+      & > div {
+        color: #6753d8;
+      }
+    }
+  }
+  &-line {
+    position: absolute;
+    top: 32px;
+    left: 0;
+    width: 100%;
+    height: 1px;
+    background-color: rgba($texth, 0.9);
+    & > div {
+      height: 1px;
+      background: #6753d8;
+    }
+  }
+}
+
+.t {
+  &-big {
+    font-size: $indent * 4;
+    line-height: 0;
+  }
+  &-small {
+    font-size: $indent * 2;
+    // line-height: 0;
+  }
+  &-right {
+    text-align: right;
+  }
+  &-center {
+    text-align: center;
+  }
+}
+.input-inline {
+  // To global input-fields
+  // border-bottom: 1px solid white;
+  position: relative;
+  .input {
+    &-error {
+      color: lighten($red, 15);
+      position: absolute;
+      top: 122%;
+      left: 0;
+      right: 0;
+    }
+  }
+  .input-underrow {
+    height: 2px;
+    position: relative;
+    bottom: -$indent * 1.5;
+    overflow-x: hidden;
+    &::after,
+    &::before {
+      content: "";
+      position: absolute;
+      left: 0;
+      right: 0;
+      border-bottom: 1px solid $border;
+    }
+    &::before {
+      transform: translateX(-100%);
+      transition: all 0.2s ease-in-out;
+      border-bottom: 1px solid lighten($main, 10);
+      z-index: 2;
+    }
+  }
+  i {
+    position: absolute;
+    left: 0;
+    bottom: -15%;
+    &.big {
+      padding-bottom: $indent/1.5;
+    }
+  }
+  input {
+    display: block;
+    font-size: inherit;
+    color: inherit;
+    font-weight: inherit;
+    background: none transparent;
+    letter-spacing: inherit;
+    box-shadow: none;
+    margin: 0;
+    padding: 0;
+    border: 0 none;
+    outline: none;
+    -webkit-appearance: none;
+    &.in-big {
+      padding-left: $indent * 6.3;
+      font-size: $indent * 4;
+      color: $texth;
+      letter-spacing: 1.4px;
+      font-weight: 700;
+    }
+    &.pl-4 {
+      padding-left: $indent * 3.7;
+    }
+  }
+  input:focus {
+    color: $texth;
+  }
+  input:focus ~ {
+    i > svg {
+      fill: lighten($main, 15);
+    }
+    .input-underrow {
+      &::before {
+        transform: translateX(0%);
+      }
+    }
+  }
+}
+
+.sticky {
+  position: sticky;
+  top: 0;
+  z-index: 2;
+  background: #1d1d23;
+  background-image: linear-gradient(to top, #292931, #292931);
+}
+// EXPLORER
+.explorer {
+  position: relative;
+  margin-top: $indent * 12;
+  min-height: calc(100vh - 5rem);
+  max-height: calc(100vh - 5rem);
+  max-width: 100%;
+  overflow-x: hidden;
+  hr {
+    margin: $indent * 1.5 0;
+  }
+  & > .col {
+    overflow-x: hidden;
+    overflow-y: auto;
+    position: relative;
+    // max-height: calc(100vh - 5rem); // inherit ?
+    border-right: 1px solid $border;
+  }
+  &-scroll {
+    position: relative;
+    max-height: calc(100vh - 13.2rem);
+    overflow-y: auto;
+    overflow-x: hidden;
+    &:last-child {
+      max-height: calc(100vh - 9.5rem);
+    }
+  }
+  &-zebra {
+    & > div {
+      border-bottom: $size-bd solid $body;
+    }
+    & > div:first-child {
+      border-top: $size-bd solid $body;
+    }
+    & > div:nth-child(even) {
+      background-color: rgba($main, 0.02);
+    }
+    & > div:nth-child(odd) {
+      background-color: rgba($shadow, 0.08);
+    }
+  }
+  &-slider {
+    position: absolute;
+    z-index: 2;
+    right: 0;
+    top: 0;
+    bottom: 0;
+    min-width: 35%;
+    background-image: linear-gradient(to top, #292931, #292931);
+    box-shadow: -$indent/2 0 $indent rgba(0, 0, 0, 0.15);
+    border-left: 1px solid $border;
+    transition: all 0.2s linear;
+  }
+  .slider-toggler {
+    position: absolute;
+    padding: $indent * 1.5;
+    right: 0;
+    top: 0;
+    cursor: pointer;
+    z-index: 3;
+    & > svg {
+      transition: all 0.2s ease-in-out;
+      width: $indent * 6;
+      height: $indent * 6;
+      transform: rotate(180deg);
+    }
+  }
+  &.wide {
+    .explorer-slider {
+      // transition-duration: 0s;
+      // max-width: 0%;
+      // opacity: 0;
+      transform: translateX(100%);
+    }
+    .slider-toggler {
+      & > svg {
+        fill: $texth;
+        transform: rotate(360deg);
+      }
+    }
+  }
+  .fix-bot {
+    position: absolute;
+    z-index: 2;
+    bottom: 0;
+    left: 0;
+    right: 0;
+    background-image: linear-gradient(to top, #292931 92%, rgba(41, 41, 49, 0.9));
+  }
+  // tr:nth-child(even) {background-color: #f2f2f2;}
+  .btn-f {
+    text-align: left;
+    cursor: pointer;
+    color: $text;
+    min-height: $indent * 6.5;
+    padding: $indent $indent * 2 $indent/2;
+    svg {
+      transition-duration: 0.4s;
+    }
+    // .col {
+    //   overflow: hidden;
+    // }
+    &.folder {
+      padding: $indent * 2;
+      &.selected {
+        svg {
+          transform: scale(1.2);
+        }
+      }
+    }
+    &:hover {
+      background-color: rgba($text, 0.05);
+      color: $texth;
+      svg {
+        fill: rgba($texth, 0.8);
+      }
+    }
+    &.active {
+      background-color: rgba($main, 0.15);
+      svg {
+        fill: rgba($texth, 0.6);
+      }
+    }
+    &.selected {
+      cursor: unset;
+      background-color: rgba($main, 0.25);
+      color: $texth;
+      svg {
+        fill: rgba($texth, 0.8);
+      }
+    }
+  }
+}
+.paginator {
+  display: flex;
+  align-items: center;
+  padding: $indent;
+  border-top: $size-bd solid $border;
+}
+.modal {
+  position: fixed;
+  z-index: 10;
+  top: 0;
+  left: 0;
+  right: 0;
+  width: 100%;
+  height: 100vh;
+  background-color: rgba($textm, 0.8);
+  &-content {
+    position: relative;
+    width: $indent * 55;
+    margin: 15% auto;
+  }
+}

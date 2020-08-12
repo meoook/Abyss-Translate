@@ -1,0 +1,661 @@
+hr {
+  padding-top: 1px;
+  margin: $indent * 2.5 0;
+  background-color: $border;
+  border: none;
+}
+h1,
+h2,
+h3,
+h4 {
+  font-family: montserrat, sans-serif;
+  color: $texth;
+  letter-spacing: 1px;
+  font-weight: 700;
+}
+h1 {
+  font-size: $indent * 3.75; // 1.5rem
+}
+h2 {
+  font-size: $indent * 3; // 1.2rem
+}
+h3 {
+  text-transform: uppercase;
+  font-weight: 500;
+}
+
+input[type="text"],
+input[type="password"],
+input[type="email"],
+select {
+  height: 100%;
+  width: 100%;
+  font-size: inherit;
+  @extend %field-input;
+  // &:focus {
+  //   border-color: $main;
+  //   box-shadow: 0 0 $indent $main !important;
+  // }
+}
+// input:focus {
+//   border-color: $main;
+//   box-shadow: 0 0 $indent $main !important;
+// }
+input[type="checkbox"] {
+  width: $indent * 3;
+  height: $indent * 3;
+  cursor: pointer;
+}
+svg {
+  fill: $text;
+}
+i {
+  text-align: center;
+  vertical-align: middle;
+  line-height: 0;
+  padding-right: $indent;
+  display: inline-block;
+  // background-position: center center;
+  // background-repeat: no-repeat;
+  // object-fit: cover;
+  & > svg {
+    width: $indent * 3.4;
+    height: $indent * 3.4;
+  }
+  &.big {
+    display: inline-flex;
+    & > svg {
+      fill: $texth;
+      width: 38px;
+      height: 38px;
+    }
+  }
+  &.bd {
+    & > svg {
+      fill: black;
+      box-shadow: 0 0 2px $shadow;
+      border-radius: 50%;
+      min-width: 24px;
+      min-height: 24px;
+    }
+  }
+}
+a,
+button {
+  color: $texth;
+  background: transparent;
+  position: relative;
+  letter-spacing: 1px;
+  transition: all 0.3s;
+  white-space: nowrap;
+  &.underline {
+    &:after {
+      content: "";
+      width: 100%;
+      position: absolute;
+      left: 0;
+      bottom: $indent * -0.5;
+      height: 2px;
+      background-color: $text;
+      border-radius: 1px;
+    }
+    &:hover::after {
+      background-color: $main;
+      box-shadow: 0 0 $indent $main !important;
+    }
+  }
+  &.active {
+    cursor: auto;
+    color: $main;
+    &:after {
+      background-color: $main;
+    }
+  }
+}
+.btn {
+  min-width: 120px;
+  padding: $indent * 1.2 $indent * 1.5;
+  font-size: $indent * 2.5;
+  font-weight: 600;
+  color: $texth;
+  text-align: center;
+  text-transform: capitalize;
+  text-shadow: 4px 0px 4px black, -4px 0px 4px black, 0px 4px 4px black, 0px -4px 4px black, 4px 4px 4px black,
+    -4px -4px 4px black, 4px -4px 4px black, -4px 4px 4px black;
+  border: 1px solid $border;
+  border-radius: 5px;
+  @include shadow();
+  &-close {
+    cursor: pointer;
+    position: absolute;
+    top: 0;
+    right: 0.4rem;
+    font-size: 1.5rem;
+    padding: 0.1rem;
+    color: inherit;
+  }
+  &-small {
+    min-width: unset;
+    padding: 0 $indent / 2;
+    font-weight: 200;
+  }
+  &-icon {
+    min-width: $indent * 6;
+    margin-right: $indent;
+    font-weight: 200;
+    &:last-child {
+      margin-right: 0;
+    }
+  }
+  &.green {
+    background-color: darken($green, 25%); // #4a8b3e;
+    // background-image: linear-gradient(to top, rgba($green, 0.25) 100%, rgba($green, 0.65));
+    &:hover {
+      background-color: darken($green, 20%); // #4a8b3e;
+      // background-image: linear-gradient(to top, rgba($green, 0.4) 100%, rgba($green, 0.65));
+    }
+  }
+  &.red {
+    background-color: lighten($red, 7%);
+    // background-image: linear-gradient(to top, rgba($red, 0.25) 100%, rgba($red, 0.65));
+    &:hover {
+      background-color: lighten($red, 2%);
+      // background-image: linear-gradient(to top, rgba($red, 0.4) 100%, rgba($red, 0.65));
+    }
+  }
+  &.blue {
+    background-color: lighten($blue, 13%);
+    &:hover {
+      background-color: lighten($blue, 8%);
+    }
+  }
+  &.gray:hover {
+    background: rgba($shadow, 0.2);
+  }
+  &:hover {
+    transform: scale(1.04);
+  }
+  &:disabled {
+    background-color: darken($text, 25%);
+    // background-image: linear-gradient(to top, rgba($red, 0.25) 100%, rgba($red, 0.65));
+    &:hover {
+      background-color: darken($text, 25%);
+      // background-image: linear-gradient(to top, rgba($red, 0.4) 100%, rgba($red, 0.65));
+    }
+  }
+}
+
+header {
+  background: $head;
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  z-index: 3;
+  padding: inherit;
+  padding-top: $indent * 2;
+  padding-bottom: $indent * 2;
+  white-space: nowrap;
+  margin-left: inherit;
+  &:after {
+    content: "";
+    position: absolute;
+    background-image: linear-gradient(to bottom, rgba(0, 0, 0, 0.5), transparent);
+    height: 5px;
+    left: 0;
+    right: 0;
+    bottom: -5px;
+  }
+}
+
+table {
+  thead {
+    color: $texth;
+  }
+  &.table {
+    &-nobd {
+      thead {
+        color: inherit;
+      }
+      tbody {
+        td {
+          color: $texth;
+        }
+      }
+      td {
+        &:first-child {
+          text-align: left;
+          color: inherit;
+        }
+      }
+    }
+    &-sbd {
+      thead {
+        td {
+          border-top: 0px;
+        }
+      }
+      td {
+        padding: $indent;
+        border-top: 1px dashed $border;
+        border-left: 1px dashed $border;
+        &:first-child {
+          border-left: 0px;
+          min-width: $indent * 4;
+        }
+      }
+    }
+  }
+}
+
+.row {
+  @extend %flex-row;
+}
+.column {
+  @extend %flex-col;
+}
+.row,
+.column {
+  &.center {
+    align-items: center;
+  }
+  &.justify {
+    justify-content: space-between;
+  }
+  &.middle {
+    justify-content: center;
+  }
+  &.max-h {
+    min-height: 90vh;
+  }
+}
+
+// CREATE MIXIN and SO ON
+.col {
+  width: 100%;
+  &-1 {
+    flex: 0 0 8.33333%;
+    max-width: 8.33333%;
+  }
+  &-2 {
+    flex: 0 0 16.66666%;
+    max-width: 16.66666%;
+  }
+  &-3 {
+    flex: 0 0 25%;
+    max-width: 25%;
+  }
+  &-4 {
+    flex: 0 0 33.33333%;
+    max-width: 33.33333%;
+  }
+  &-5 {
+    flex: 0 0 41.66666%;
+    max-width: 41.66666%;
+  }
+  &-6 {
+    flex: 0 0 50%;
+    max-width: 50%;
+  }
+  &-7 {
+    flex: 0 0 58.33333%;
+    max-width: 58.33333%;
+  }
+  &-8 {
+    flex: 0 0 66.66666%;
+    max-width: 66.66666%;
+  }
+  &-9 {
+    flex: 0 0 75%;
+    max-width: 75%;
+  }
+  &-10 {
+    flex: 0 0 83.33333%;
+    max-width: 83.33333%;
+  }
+  &.offset {
+    &-1 {
+      margin-left: 8.33333%;
+    }
+    &-2 {
+      margin-left: 16.66666%;
+    }
+    &-3 {
+      margin-left: 25%;
+    }
+  }
+}
+// h - horisontal
+.m {
+  &-0 {
+    margin: $indent / 2 0;
+  }
+  &-1 {
+    margin: $indent 0;
+  }
+  &-2 {
+    margin: $indent * 2 0;
+  }
+  &-3 {
+    margin: $indent * 3 0;
+  }
+  &b-0 {
+    margin-bottom: $indent/2;
+  }
+  &b-1 {
+    margin-bottom: $indent;
+  }
+  &b-2 {
+    margin-bottom: $indent * 2;
+  }
+  &b-3 {
+    margin-bottom: $indent * 3;
+  }
+  &h {
+    &-1 {
+      margin-left: $indent;
+      margin-right: $indent;
+    }
+    &-2 {
+      margin-left: $indent * 2;
+      margin-right: $indent * 2;
+    }
+    &-3 {
+      margin-left: $indent * 3;
+      margin-right: $indent * 3;
+    }
+  }
+  &t {
+    &-0 {
+      margin-top: $indent/2;
+    }
+    &-1 {
+      margin-top: $indent;
+    }
+    &-2 {
+      margin-top: $indent * 2;
+    }
+    &-3 {
+      margin-top: $indent * 3;
+    }
+  }
+}
+.p {
+  &-0 {
+    padding-top: $indent / 2;
+    padding-bottom: $indent / 2;
+  }
+  &-1 {
+    padding-top: $indent;
+    padding-bottom: $indent;
+  }
+  &-2 {
+    padding-top: $indent * 2;
+    padding-bottom: $indent * 2;
+  }
+  &h {
+    &-1 {
+      padding-left: $indent;
+      padding-right: $indent;
+    }
+    &-2 {
+      padding-left: $indent * 2;
+      padding-right: $indent * 2;
+    }
+    &-3 {
+      padding-left: $indent * 3;
+      padding-right: $indent * 3;
+    }
+  }
+  &t {
+    &-0 {
+      padding-top: $indent/2;
+    }
+  }
+  &l {
+    &-1 {
+      padding-left: $indent;
+    }
+  }
+  &r {
+    &-0 {
+      padding-right: $indent/2;
+    }
+    &-1 {
+      padding-right: $indent;
+    }
+    &-2 {
+      padding-right: $indent * 2;
+    }
+  }
+}
+.container {
+  transition: all 0.4s;
+  padding: 1px; //minimum
+  background-image: linear-gradient(to top, #292931 92%, rgba(41, 41, 49, 0.9));
+  margin-left: $menu-close;
+  &-fluid {
+    padding: 20px 0;
+    margin-top: $indent * 12;
+  }
+  &.small {
+    margin-left: $menu-open;
+  }
+}
+// FIXIT - MB MEDIA PUT ON THE BOTTOM ? AND SIZE IN $variable
+@media screen and (min-width: 1200px) {
+  header,
+  .container-fluid {
+    padding-left: 50px;
+    padding-right: 50px;
+  }
+}
+@media screen and (max-width: 1200px) {
+  header,
+  .container-fluid {
+    padding-left: 25px;
+    padding-right: 25px;
+  }
+}
+@media screen and (max-width: 1000px) {
+  header,
+  .container-fluid {
+    padding-left: 15px;
+    padding-right: 15px;
+  }
+}
+@media screen and (max-width: 600px) {
+  header,
+  .container-fluid {
+    padding-left: 10px;
+    padding-right: 10px;
+  }
+}
+
+.msg {
+  @keyframes msgRunProgress {
+    0% {
+      width: 0%;
+      background-color: rgba($texth, 0.3);
+    }
+    100% {
+      width: 100%;
+      background-color: rgba($texth, 1);
+    }
+  }
+  @keyframes fadeOut {
+    0% {
+      opacity: 0;
+    }
+    10% {
+      opacity: 1;
+    }
+    90% {
+      opacity: 1;
+      transform: translateY(0px);
+    }
+    99% {
+      opacity: 0;
+      transform: translateY(-30px);
+    }
+    100% {
+      opacity: 0;
+    }
+  }
+  &-frame {
+    position: fixed;
+    top: $indent * 2;
+    right: 0;
+    z-index: 5;
+    width: $indent * 50;
+  }
+  &-progress {
+    position: absolute;
+    bottom: 2px;
+    left: $indent * 1.8;
+    border-radius: $indent / 4;
+    width: 0;
+    max-width: $indent * 43;
+    height: $indent / 2;
+    background-color: rgba($texth, 0.9);
+  }
+  &-item {
+    min-height: $indent * 8;
+    position: relative;
+    margin: $indent * 2;
+    padding: $indent $indent * 1.5 $indent/1.5;
+    color: #fff;
+    border-radius: $indent / 2;
+    i {
+      background-size: $indent * 5;
+      & > svg {
+        fill: $texth;
+        width: 32px;
+        height: 32px;
+      }
+    }
+    &.fade {
+      animation: fadeOut 3.9s linear forwards;
+      .msg-progress {
+        animation: msgRunProgress 3.5s linear forwards 0.5s;
+      }
+    }
+    &.default {
+      background-color: $msg-default;
+    }
+    &.info {
+      background-color: $msg-info;
+    }
+    &.success {
+      background-color: $msg-success;
+    }
+    &.warning {
+      background-color: $msg-warning;
+    }
+    &.error {
+      background-color: $msg-danger;
+    }
+  }
+}
+
+.progress-bar {
+  height: 20px;
+  background-color: rgba($texth, 0.9);
+  border-radius: $indent / 1.5;
+  box-shadow: inset 0 1px 2px $shadow;
+  & > div {
+    box-sizing: content-box;
+    height: 100%;
+    background-color: #6753d8; //not main
+    border-top-left-radius: $indent / 1.5;
+    border-bottom-left-radius: $indent / 1.5;
+    background-size: 40px 40px;
+    box-shadow: inset 0 -1px 0 rgba(0, 0, 0, 0.15);
+    transition: width 0.6s ease;
+    background-image: linear-gradient(
+      45deg,
+      rgba(255, 255, 255, 0.15) 25%,
+      transparent 25%,
+      transparent 50%,
+      rgba(255, 255, 255, 0.15) 50%,
+      rgba(255, 255, 255, 0.15) 75%,
+      transparent 75%,
+      transparent
+    );
+    animation: progress-bar 2s linear infinite;
+    @keyframes progress-bar {
+      0% {
+        background-position: 40px 0;
+      }
+      100% {
+        background-position: 0 0;
+      }
+    }
+  }
+  &.finish {
+    & > div {
+      border-top-right-radius: $indent / 1.5;
+      border-bottom-right-radius: $indent / 1.5;
+    }
+  }
+}
+
+.dropzone {
+  @extend %border-big;
+  &.disable {
+    border-color: $red;
+  }
+  &.highlight {
+    border-color: $blue;
+  }
+}
+
+.shadow-box {
+  background-color: $disable;
+  border: 1px solid $border;
+  border-radius: $indent * 2;
+  padding: $indent * 2;
+  @include shadow();
+}
+
+.loader {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  width: 100%;
+  height: 55%;
+  .ring {
+    position: relative;
+    width: $indent * 9;
+    height: $indent * 9;
+    & > div {
+      box-sizing: border-box;
+      display: block;
+      position: absolute;
+      width: $indent * 9;
+      height: $indent * 9;
+      border: 8px solid #fff;
+      border-radius: 50%;
+      animation: ring-circle 1.2s cubic-bezier(0.5, 0, 0.5, 1) infinite;
+      border-color: #fff transparent transparent transparent;
+    }
+    & div:nth-child(1) {
+      animation-delay: -0.45s;
+    }
+    & div:nth-child(2) {
+      animation-delay: -0.3s;
+    }
+    & div:nth-child(3) {
+      animation-delay: -0.15s;
+    }
+    @keyframes ring-circle {
+      0% {
+        transform: rotate(0deg);
+      }
+      100% {
+        transform: rotate(360deg);
+      }
+    }
+  }
+}

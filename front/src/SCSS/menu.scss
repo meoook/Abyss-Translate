@@ -1,0 +1,145 @@
+.menu {
+  font-size: 0.875rem;
+  min-width: $menu-open;
+  max-width: $menu-open;
+  padding: 30px 0;
+  min-height: 100vh;
+  max-height: 100vh;
+  position: fixed;
+  overflow: hidden;
+  background-color: $disable;
+  box-shadow: $indent/2 0 $indent rgba(0, 0, 0, 0.15);
+  -webkit-transform: translate3d(0, 0, 0);
+  transition: all 0.4s;
+  transform: translate3d(0, 0, 0);
+  transition-duration: 350ms;
+  transition-timing-function: cubic-bezier(0.39, 0.575, 0.565, 1);
+  z-index: 3;
+  &-container {
+    height: calc(100vh - 30px * 2);
+    padding: 0 $indent * 2.7;
+    transition: padding 350ms cubic-bezier(0.39, 0.575, 0.565, 1);
+  }
+  &-logo {
+    height: 65px;
+    min-height: 24px;
+    max-height: 38px;
+    margin-left: $indent * 2;
+    margin-bottom: $indent;
+    background-position-x: left;
+    background-position-y: center;
+    background-repeat: no-repeat;
+    background-size: 125px 24px;
+    background-image: url(../IMG/abby-logo.svg);
+  }
+  &-title {
+    font-family: montserrat, sans-serif;
+    padding: $indent 0;
+    color: $textm;
+    text-transform: uppercase;
+    white-space: nowrap;
+    letter-spacing: 3px;
+  }
+  &-list {
+    position: relative;
+    height: 100%;
+    overflow-y: auto;
+    overflow-x: hidden;
+    padding-right: 1px;
+    &::-webkit-scrollbar {
+      width: 2px;
+    }
+  }
+  &-item {
+    font-family: montserrat, sans-serif;
+    color: rgba($texth, 0.6);
+    padding: $indent * 0.8 $indent * 1.6;
+    line-height: 35px;
+    margin-bottom: $indent;
+    border-radius: $indent;
+    display: block;
+    & > i {
+      min-width: 26px;
+    }
+    &.active {
+      color: $texth;
+      background-color: $main;
+      &:hover {
+        background-color: lighten($main, 6%);
+      }
+      svg {
+        transition-duration: 0.3s;
+        transform: scale(1.25) !important;
+        fill: $texth;
+      }
+    }
+    &:last-of-type {
+      margin-bottom: 0;
+    }
+    &:hover {
+      background-color: rgba($border, 0.05);
+      color: $texth;
+      svg {
+        fill: $texth;
+      }
+    }
+    svg {
+      fill: rgba($texth, 0.6);
+    }
+  }
+  &-add {
+    @extend %border-big;
+    display: block;
+    background-position-x: center;
+    background-position-y: center;
+    background-repeat: no-repeat;
+    background-size: $indent * 13;
+    background-image: url(../IMG/add_circle_outline.svg);
+  }
+  &-toggle {
+    text-align: right;
+    & svg {
+      transition: all 1.5s;
+      width: 20px;
+      height: 20px;
+    }
+    &.rotated {
+      & > svg {
+        transform: rotate(1980deg);
+      }
+    }
+  }
+  svg {
+    width: $indent * 4;
+    height: $indent * 4;
+  }
+  &.hide {
+    min-width: $menu-close;
+    max-width: $menu-close;
+    hr {
+      min-width: 50px;
+    }
+    .menu-container {
+      align-items: center;
+    }
+    .menu-logo {
+      margin-left: 0;
+      width: 20px;
+      transition: all 1s;
+      transform: scale(2);
+    }
+    .menu-item {
+      border: $size-bd dotted rgba($border, 0.4);
+      span {
+        display: none;
+      }
+      i {
+        padding-right: 0;
+      }
+    }
+    .menu-add {
+      color: transparent;
+      transform: scale(0.6);
+    }
+  }
+}

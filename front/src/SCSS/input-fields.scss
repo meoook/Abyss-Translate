@@ -1,0 +1,164 @@
+.input {
+  color: rgba($shadow, 0.7);
+  white-space: nowrap;
+  position: relative;
+  font-size: $indent * 3.7;
+  &-current {
+    display: flex;
+    flex-wrap: wrap;
+  }
+  &-value {
+    color: $head;
+    margin-right: $indent/2;
+    & > * {
+      // border: $size-bd solid $msg-default;
+      border: $size-bd solid $textm;
+      border-radius: $indent / 2;
+      // background-color: rgba($msg-default, 0.25);
+      background-color: rgba($main, 0.25);
+      padding: 0 $indent/2;
+    }
+    & > *:first-child {
+      cursor: default;
+      border-top-right-radius: 0px;
+      border-bottom-right-radius: 0px;
+    }
+    &-remove {
+      border-top-left-radius: 0px;
+      border-bottom-left-radius: 0px;
+      border-left-width: 0;
+      cursor: pointer;
+      &:hover {
+        background-color: rgba($main, 0.35);
+      }
+    }
+  }
+  &-field {
+    padding: $indent/2 $indent;
+    display: flex;
+    min-width: 100%;
+    position: relative;
+    border: $size-bd solid $border;
+    border-radius: 5px;
+    background-color: $texth;
+    cursor: pointer;
+    &.active {
+      cursor: default;
+      border-color: $main;
+      box-shadow: 0 0 $indent/4 $main;
+      border-bottom-left-radius: 0;
+      border-bottom-right-radius: 0;
+      .input-ico {
+        transform: rotate(270deg);
+      }
+    }
+    input {
+      color: $shadow;
+      background: none transparent;
+      border: 0 none;
+      box-shadow: none;
+      display: inline-block;
+      margin: 0;
+      outline: none;
+      padding: 0;
+      -webkit-appearance: none;
+    }
+  }
+  &-in {
+    width: 100%;
+    display: table;
+    flex: 1;
+    > * {
+      display: table-cell;
+    }
+    .hidden-in {
+      width: $indent/4;
+    }
+  }
+  &-ico {
+    width: $indent * 4;
+    text-align: center;
+    vertical-align: middle;
+    font: $indent * 3.7 "Consolas", monospace;
+    cursor: pointer;
+    transform: rotate(90deg);
+  }
+  &-dropdown {
+    position: relative;
+    z-index: 5;
+    & > div {
+      position: absolute;
+      max-height: 165px;
+      overflow-x: hidden;
+      top: 0px; // border radius
+      left: 0;
+      right: 0;
+      margin-top: 0px; // border radius
+      background: $texth;
+      border: $size-bd solid $main;
+      border-top: 0 none;
+      border-bottom-left-radius: 5px;
+      border-bottom-right-radius: 5px;
+      box-shadow: 0 0 $indent/4 $main;
+    }
+    &-item {
+      padding: 0 $indent;
+      &:hover {
+        background-color: rgba($shadow, 0.09);
+      }
+    }
+  }
+  &-progress {
+    padding: inherit;
+    position: absolute;
+    top: 0;
+    bottom: 0;
+    left: 0;
+    right: 0;
+    background-color: rgba($texth, 0.1);
+    border-radius: inherit;
+    transition: all 0.5s ease-out;
+  }
+  &-group {
+    position: relative;
+    display: flex;
+    align-items: stretch;
+    width: 100%;
+    @include shadow();
+    & > *:not(:first-child):not(:last-child) {
+      border-radius: 0;
+    }
+    & > *:first-child {
+      border-top-right-radius: 0px;
+      border-bottom-right-radius: 0px;
+      border-right-width: 0;
+    }
+    & > *:last-child {
+      border-top-left-radius: 0px;
+      border-bottom-left-radius: 0px;
+      border-left-width: 0;
+    }
+    .btn {
+      min-width: 40px;
+      font-size: $indent * 3;
+    }
+    // .btn {min-width: unset;}
+  }
+  &-like {
+    @extend %field-input;
+    // width: 100%;
+    background-color: rgba($shadow, 0.25);
+  }
+  &-short {
+    width: $indent * 8;
+  }
+}
+
+.arrow {
+  font: 1.5rem "Consolas", monospace;
+  padding: 0;
+  margin: 0;
+  color: #333;
+  transform: rotate(90deg);
+  pointer-events: none;
+}
