@@ -32,7 +32,7 @@ class Languages(models.Model):
     name = models.CharField(max_length=50, null=False)
     short_name = models.CharField(max_length=10, null=False)
     active = models.BooleanField(default=False)
-    regular = models.CharField(max_length=50)   # MB shorter or JSON
+    regular = models.CharField(max_length=50, blank=True)   # MB shorter or JSON
 
     def __str__(self):
         return self.name
