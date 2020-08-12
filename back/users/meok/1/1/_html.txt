@@ -1,0 +1,18 @@
+<html><title>Супортер</title><head><body>
+<br>
+Бла бла бла.
+<center>
+<table width=260><tr><td>
+Аванпост<br>
+<font color=<?outpost1?>>Аванпост Земара</font><br>
+<font color=<?outpost2?>>Аванпост Ниаса</font><br>
+</td><td valign=top>
+Города<br>
+<font color=<?town1?> >Осмун</font><br>
+<font color=<?town2?> >Аргон</font><br>
+</td></tr></table>
+</center>
+<center>
+<button action="bypass menu_select?ask=5" value="Back" width=234 height=24 back="bsfg.bigbutton6_down" fore="bsfg.bigbutton6">
+</center>
+</body></html>

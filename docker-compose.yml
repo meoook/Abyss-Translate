@@ -24,12 +24,14 @@ services:
       - postgres
   react:
     build: ./front
-    command: ["npm", "start"]
+    command: npm start
     volumes:
       - ./front:/usr/src/front/
       - node-modules:/usr/src/front/node_modules        
     ports:
       - 3000:3000
+    tty: true
+    stdin_open: true
 volumes:
   postgres_data:
   node-modules:
