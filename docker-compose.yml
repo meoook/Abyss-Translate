@@ -6,6 +6,8 @@ services:
     command: redis-server
     ports:
       - 6379:6379
+    networks: 
+      - main
     restart: always
   postgres:
     image: postgres:12-alpine
@@ -17,6 +19,8 @@ services:
       - POSTGRES_USER=localize
       - POSTGRES_PASSWORD=eecaishi1Eejah0ceNgi
       - POSTGRES_DB=aby
+    networks: 
+      - main
     restart: always
   django:
     build: ./back
@@ -31,6 +35,8 @@ services:
       - ./.env.dev
     depends_on:
       - postgres
+    networks:
+      - main
     restart: always
   celery:
     build: ./back
@@ -40,6 +46,8 @@ services:
     depends_on:
       - django
       - redis
+    networks:
+      - main
     restart: always
   react:
     build: ./front
@@ -50,8 +58,13 @@ services:
       - 3000:3000
     tty: true
     stdin_open: true
+    networks: 
+      - main
     restart: always
 volumes:
   postgres_data:
   users_files:
   node_modules:
+
+networks:
+  main:

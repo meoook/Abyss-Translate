@@ -5,11 +5,11 @@ FROM node:alpine
 WORKDIR /usr/src/front
 
 # install dependencies
-COPY . .
-RUN npm install
+COPY ./package.json .
+RUN npm update && npm install
 
 # copy project
-COPY ./package.json .
+COPY . .
 
 # react default port
 EXPOSE 3000

@@ -29,5 +29,14 @@ COPY . .
 # django default port
 EXPOSE 8000
 
+# create and set user
+RUN adduser -D user \
+    && chown -R user:user /usr/src/back/ \
+    && chmod -R 755 /usr/src/back/users \
+    && chmod +x /usr/src/back/entrypoint.sh
+USER user
+
 # run entrypoint.sh
 ENTRYPOINT ["sh", "/usr/src/back/entrypoint.sh"]
+
+# CMD ["python", "manage.py", "runserver", "0.0.0.0:8000"]
