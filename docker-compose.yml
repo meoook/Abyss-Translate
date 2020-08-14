@@ -2,7 +2,7 @@ version: '3.7'
 
 services:
   redis:
-    image: redis
+    image: redis:alpine
     command: redis-server
     ports:
       - 6379:6379
@@ -45,7 +45,6 @@ services:
     build: ./front
     command: npm start
     volumes:
-      - ./front:/usr/src/front/
       - node_modules:/usr/src/front/node_modules
     ports:
       - 3000:3000

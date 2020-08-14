@@ -4,11 +4,12 @@ FROM node:alpine
 # set work directory
 WORKDIR /usr/src/front
 
-# copy project
-COPY . .
-
 # install dependencies
+COPY . .
 RUN npm install
+
+# copy project
+COPY ./package.json .
 
 # react default port
 EXPOSE 3000

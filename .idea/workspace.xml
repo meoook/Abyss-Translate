@@ -2,15 +2,9 @@
 <project version="4">
   <component name="ChangeListManager">
     <list default="true" id="12a9ab73-47fb-4afe-84f6-9169f48afbb6" name="Default Changelist" comment="">
-      <change afterPath="$PROJECT_DIR$/back/core/tasks.py" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/back/trans_back/celery.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/.idea/misc.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/misc.xml" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/back/Dockerfile" beforeDir="false" afterPath="$PROJECT_DIR$/back/Dockerfile" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/back/requirements.txt" beforeDir="false" afterPath="$PROJECT_DIR$/back/requirements.txt" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/back/trans_back/__init__.py" beforeDir="false" afterPath="$PROJECT_DIR$/back/trans_back/__init__.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/back/trans_back/settings.py" beforeDir="false" afterPath="$PROJECT_DIR$/back/trans_back/settings.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/docker-compose.yml" beforeDir="false" afterPath="$PROJECT_DIR$/docker-compose.yml" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/front/Dockerfile" beforeDir="false" afterPath="$PROJECT_DIR$/front/Dockerfile" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/front/package.json" beforeDir="false" afterPath="$PROJECT_DIR$/front/package.json" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
@@ -25,12 +19,6 @@
   </component>
   <component name="Git.Settings">
     <option name="RECENT_GIT_ROOT_PATH" value="$PROJECT_DIR$" />
-  </component>
-  <component name="ProjectFrameBounds">
-    <option name="x" value="110" />
-    <option name="y" value="24" />
-    <option name="width" value="1296" />
-    <option name="height" value="1000" />
   </component>
   <component name="ProjectId" id="1g6f1Or0dCEFPQ0hh1urNKdfCeZ" />
   <component name="ProjectLevelVcsManager">
@@ -99,19 +87,35 @@
       <option name="project" value="LOCAL" />
       <updated>1597331970352</updated>
     </task>
-    <option name="localTasksCounter" value="6" />
+    <task id="LOCAL-00006" summary="Celery + redis">
+      <created>1597440633649</created>
+      <option name="number" value="00006" />
+      <option name="presentableId" value="LOCAL-00006" />
+      <option name="project" value="LOCAL" />
+      <updated>1597440633649</updated>
+    </task>
+    <option name="localTasksCounter" value="7" />
     <servers />
   </component>
   <component name="VcsManagerConfiguration">
     <MESSAGE value="aaa" />
     <MESSAGE value="fix IP" />
     <MESSAGE value="User volume" />
-    <option name="LAST_COMMIT_MESSAGE" value="User volume" />
+    <MESSAGE value="Celery + redis" />
+    <option name="LAST_COMMIT_MESSAGE" value="Celery + redis" />
   </component>
   <component name="WindowStateProjectService">
     <state x="384" y="202" key="#Inspections" timestamp="1597440369869">
       <screen x="0" y="0" width="1920" height="1040" />
     </state>
     <state x="384" y="202" key="#Inspections/1920.60.1280.984/0.0.1920.1040@0.0.1920.1040" timestamp="1597440369869" />
+    <state x="385" y="92" key="CommitChangelistDialog2" timestamp="1597440633158">
+      <screen x="0" y="0" width="1920" height="1040" />
+    </state>
+    <state x="385" y="92" key="CommitChangelistDialog2/1920.60.1280.984/0.0.1920.1040@0.0.1920.1040" timestamp="1597440633158" />
+    <state x="350" y="256" key="Vcs.Push.Dialog.v2" timestamp="1597440639342">
+      <screen x="0" y="0" width="1920" height="1040" />
+    </state>
+    <state x="350" y="256" key="Vcs.Push.Dialog.v2/1920.60.1280.984/0.0.1920.1040@0.0.1920.1040" timestamp="1597440639342" />
   </component>
 </project>
