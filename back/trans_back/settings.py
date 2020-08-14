@@ -8,7 +8,7 @@ SECRET_KEY = os.environ.get("SECRET_KEY")
 
 DEBUG = int(os.environ.get("DEBUG", default=0))
 
-ALLOWED_HOSTS = os.environ.get("DJANGO_ALLOWED_HOSTS").split(" ")
+ALLOWED_HOSTS = os.environ.get("DJANGO_ALLOWED_HOSTS", "['*']").split(" ")
 # ALLOWED_HOSTS = ['192.168.1.20', ]
 # ALLOWED_HOSTS = ['*']
 
@@ -69,10 +69,10 @@ WSGI_APPLICATION = 'trans_back.wsgi.application'
 DATABASES = {
     "default": {
         "ENGINE": os.environ.get("SQL_ENGINE", "django.db.backends.postgresql"),
-        "NAME": os.environ.get("SQL_DATABASE", "aby"),
+        "NAME": os.environ.get("SQL_DATABASE", "postgres"),
         "USER": os.environ.get("SQL_USER", "localize"),
         "PASSWORD": os.environ.get("SQL_PASSWORD", "eecaishi1Eejah0ceNgi"),
-        "HOST": os.environ.get("SQL_HOST", "127.0.0.1"),
+        "HOST": os.environ.get("SQL_HOST", "localhost"),
         "PORT": os.environ.get("SQL_PORT", "5432"),
     }
 }
@@ -98,6 +98,7 @@ USE_I18N = True
 USE_L10N = False
 USE_TZ = True
 DEFAULT_CHARSET = 'utf-8'
+
 MEDIA_ROOT = os.path.join(BASE_DIR, 'users')
 STATIC_URL = '/source/'
 # STATIC_ROOT = os.path.join(BASE_DIR, 'static')
@@ -140,3 +141,9 @@ CORS_ORIGIN_REGEX_WHITELIST = [
     'http://192.168.1.20:3000',
     'http://91.225.238.193:3000',
 ]
+
+# Celery
+CELERY_BROKER_URL = os.environ.get("CELERY_BROKER_URL", "redis://localhost:6379")
+
+CELERY_ACCEPT_CONTENT = ['json']
+CELERY_TASK_SERIALIZER = 'json'

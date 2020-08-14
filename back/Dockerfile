@@ -13,8 +13,6 @@ ENV PYTHONUNBUFFERED 1
 RUN apk update \
     && apk add postgresql-dev gcc python3-dev musl-dev libffi-dev
 
-# RUN apk update \
-#     && apk add postgresql-dev gcc python3-dev musl-dev libffi-dev
 # RUN apt-get update \
 #     && apt-get install -y --no-install-recommends \
 #         postgresql-client \

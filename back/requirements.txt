@@ -8,3 +8,4 @@ psycopg2-binary==2.8.5
 chardet==3.0.4
 langdetect==1.0.8
 requests==2.24.0
+# gunicorn==20.0.4
