@@ -27,17 +27,18 @@ $ docker-compose --version
 docker-compose version 1.26.2, build 1110ad01
 ```
 
-!!! For alpine, the following dependency packages are needed: py-pip, python-dev, libffi-dev, openssl-dev, gcc, libc-dev, and make.
-!!!
+For alpine, the following dependency packages are needed: py-pip, python-dev, libffi-dev, openssl-dev,
+
+gcc, libc-dev, and make.
 
 ## Diamond 💎 5%
 
-| Название файла | Содержание файла                                                                      |
-| -------------- | ------------------------------------------------------------------------------------- |
-| style.css      | Пустой файл каскадной таблицы стилей, в который производится сбока необходимых стилей |
-| reset.css      | Reset CSS от Эрика Мейера                                                             |
-| normalize.css  | Нормалайзер CSS от Nicolas Gallagher                                                  |
-| block.css      | Основные стили блоков системы                                                         |
+| Название файла | Содержание файла                     |
+| -------------- | ------------------------------------ |
+| style.css      | Пустой файл каскадной таблицы стилей |
+| reset.css      | Reset CSS от Эрика Мейера            |
+| normalize.css  | Нормалайзер CSS от Nicolas Gallagher |
+| block.css      | Основные стили блоков системы        |
 
 ## Gold 🏆 12%
 
