@@ -10,7 +10,6 @@ DEBUG = os.environ.get("DEBUG", True)
 
 ALLOWED_HOSTS = os.environ.get("DJANGO_ALLOWED_HOSTS", "*").split(" ")
 
-
 # Application definition
 MY_APPS = [
     'rest_framework',
@@ -59,11 +58,7 @@ TEMPLATES = [
 ]
 
 WSGI_APPLICATION = 'localize.wsgi.application'
-
 # Database
-# https://docs.djangoproject.com/en/3.0/ref/settings/#databases
-
-
 DATABASES = {
     "default": {
         "ENGINE": os.environ.get("SQL_ENGINE", "django.db.backends.postgresql"),
@@ -77,8 +72,6 @@ DATABASES = {
 
 
 # Password validation
-# https://docs.djangoproject.com/en/3.0/ref/settings/#auth-password-validators
-
 AUTH_PASSWORD_VALIDATORS = [
     {'NAME': 'django.contrib.auth.password_validation.UserAttributeSimilarityValidator', },
     {'NAME': 'django.contrib.auth.password_validation.MinimumLengthValidator', },
@@ -87,8 +80,6 @@ AUTH_PASSWORD_VALIDATORS = [
 ]
 
 # Internationalization
-# https://docs.djangoproject.com/en/3.0/topics/i18n/
-
 LANGUAGE_CODE = 'en-us'
 TIME_ZONE = os.environ.get("TIME_ZONE", "UTC")
 
@@ -97,6 +88,7 @@ USE_L10N = False
 USE_TZ = True
 DEFAULT_CHARSET = 'utf-8'
 
+# Files Storage
 MEDIA_ROOT = os.path.join(BASE_DIR, 'users')
 STATIC_URL = '/source/'
 # STATIC_ROOT = os.path.join(BASE_DIR, 'static')
@@ -107,6 +99,7 @@ STATIC_URL = '/source/'
 # Maximum size in bytes of request data (excluding file uploads) that will be
 # read before a SuspiciousOperation (RequestDataTooBig) is raised.
 # DATA_UPLOAD_MAX_MEMORY_SIZE = 2621440  # i.e. 2.5 MB
+DATA_UPLOAD_MAX_MEMORY_SIZE = 2.5 * 1024 * 1024
 # The numeric mode to set newly-uploaded files to. The value should be a mode
 # you'd pass directly to os.chmod; see https://docs.python.org/library/os.html#files-and-directories.
 # FILE_UPLOAD_PERMISSIONS = 0o644
@@ -147,3 +140,60 @@ CELERY_TASK_SERIALIZER = 'json'
 CELERY_RESULT_SERIALIZER = 'json'
 # TODO: Check
 CELERY_TIMEZONE = os.environ.get("TIME_ZONE", "UTC")
+
+# Logging
+LOGGING = {
+    'version': 1,
+    'disable_existing_loggers': False,
+    'formatters': {
+        'verbose': {
+            'format': '{levelname} {asctime} {module} {process:d} {thread:d} {message}',
+            'style': '{',
+        },
+        'simple': {
+            'format': '{asctime} {levelname} {message}',
+            'style': '{',
+        },
+    },
+    'filters': {
+        'require_debug_true': {
+            '()': 'django.utils.log.RequireDebugTrue',
+        },
+        'require_debug_false': {
+            '()': 'django.utils.log.RequireDebugFalse',
+        },
+    },
+    'handlers': {
+        'console': {
+            'level': 'INFO',
+            'filters': ['require_debug_true'],
+            'class': 'logging.StreamHandler',
+            'formatter': 'simple',
+        },
+        'file': {
+            'level': 'WARNING',
+            'class': 'logging.FileHandler',
+            'filename': os.path.join(BASE_DIR, 'logs', 'log.log'),
+            'formatter': 'verbose',
+        },
+        'mail_admins': {
+            'level': 'ERROR',
+            'filters': ['require_debug_false'],
+            'class': 'django.utils.log.AdminEmailHandler',
+            'email_backend': 'django.core.mail.backends.filebased.EmailBackend',
+            'include_html': True,
+        },
+    },
+    'loggers': {
+        'django': {
+            'handlers': ['console'],
+            'level': os.getenv('DJANGO_LOG_LEVEL', 'INFO'),
+            'propagate': False,
+        },
+        'django.errors': {
+            'handlers': ['file', 'mail_admins'],
+            'level': 'WARNING',
+            'propagate': True,
+        },
+    },
+}

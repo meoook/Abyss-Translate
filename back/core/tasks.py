@@ -1,4 +1,4 @@
-# Create your tasks here
+import logging
 from __future__ import absolute_import, unicode_literals
 
 from celery import shared_task
@@ -7,18 +7,21 @@ from celery.task import periodic_task
 from celery.schedules import crontab
 from datetime import timedelta
 
+logger = logging.getLogger(__name__)
 
 @shared_task(name="Get file info then parse")
 def file_parse(filo):
+    """ Get file info and parse file data into text to translate """
     return filo
 
 
-@periodic_task(run_every=timedelta(seconds=20), name="Check all files connected to repository folder")
+@periodic_task(run_every=crontab(minute='*/1'), name="Check all files connected to repository folder")
 def check_all_file_repos():
-    """ Get all files that have repo, and check them for update """
-    print("Test task OK")
+    """ Get all files that have repository, and check them for update """
+    logger.warning('TEST WARNING MESSAGE')
 
 
-@periodic_task(run_every=crontab(minute='*/1'), name="test_task2")
-def test_task2():
-    print("Test task2 OK")
+@periodic_task(run_every=timedelta(seconds=10), name="Task to check celery. Run each 10 seconds.")
+def test_task():
+    logger.error('TEST WARNING MESSAGE SECOND')
+    print("Print from test task")
