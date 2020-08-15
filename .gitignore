@@ -1,4 +1,8 @@
 # misc
 .git
+.idea
+.vscode
 # Front
 front/node_modules
+back/celerybeat-schedule
+back/users

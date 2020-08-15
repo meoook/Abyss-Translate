@@ -43,7 +43,7 @@ const AppState = ({ children }) => {
   // INIT
   const fetchLang = async () => {
     try {
-      const res = await axios.get(`${URL}/lang`, config)
+      const res = await axios.get(`${URL}/lang/`, config)
       dispatch({ type: LANGUAGES_REFRESH, payload: res.data })
     } catch (err) {
       addMsg(connectErrMsg(err, "Ошибка получения списка язков"))
