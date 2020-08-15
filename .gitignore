@@ -5,5 +5,5 @@
 # Front
 front/node_modules
 # Back
-back/celerybeat-schedule
-back/users
+/back/celerybeat-schedule
+/back/users
