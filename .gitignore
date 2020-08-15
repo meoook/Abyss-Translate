@@ -4,5 +4,6 @@
 .vscode
 # Front
 front/node_modules
+# Back
 back/celerybeat-schedule
 back/users

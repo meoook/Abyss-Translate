@@ -22,7 +22,7 @@ import {
 
 import { nullState, connectErrMsg, findPrjByFolderID } from "../utils"
 
-const URL = process.env.REACT_APP_API_URL
+const URL = process.env.BACKEND_API_URL
 
 const AppState = ({ children }) => {
   const initialState = { ...nullState, token: localStorage.getItem("token") || null }

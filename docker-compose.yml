@@ -55,7 +55,7 @@ services:
     volumes:
       - node_modules:/usr/src/front/node_modules
     environment:
-      - REACT_APP_API_URL=http://django:8000/api
+      - BACKEND_API_URL=http://localhost:8000/api
     ports:
       - 3000:3000
     tty: true
