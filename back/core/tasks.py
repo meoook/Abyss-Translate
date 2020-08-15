@@ -13,8 +13,9 @@ def add(x, y):
     return x + y
 
 
-@periodic_task(run_every=timedelta(seconds=20), name="test_task")
-def test_task():
+@periodic_task(run_every=timedelta(seconds=20), name="Check all ")
+def check_all_file_repos():
+    """ Get all files that have repo, and check them for update """
     print("Test task OK")
 
 

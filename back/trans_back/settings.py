@@ -92,8 +92,8 @@ AUTH_PASSWORD_VALIDATORS = [
 # https://docs.djangoproject.com/en/3.0/topics/i18n/
 
 LANGUAGE_CODE = 'en-us'
-TIME_ZONE = 'UTC'
-# TIME_ZONE = 'Europe/Moscow'
+TIME_ZONE = os.environ.get("TIME_ZONE", "UTC")
+
 USE_I18N = True
 USE_L10N = False
 USE_TZ = True
@@ -132,20 +132,20 @@ CORS_ALLOW_CREDENTIALS = True
 CORS_ORIGIN_WHITELIST = [
     'http://localhost:3000',
     'http://127.0.0.1:3000',
-    'http://192.168.1.20:3000',
     'http://91.225.238.193:3000',
 ]
 CORS_ORIGIN_REGEX_WHITELIST = [
     'http://localhost:3000',
     'http://127.0.0.1:3000',
-    'http://192.168.1.20:3000',
     'http://91.225.238.193:3000',
 ]
 
 # Celery
 CELERY_BROKER_URL = os.environ.get("CELERY_BROKER_URL", "redis://redis:6379")
-CELERY_RESULT_BACKEND = os.environ.get("CELERY_BROKER_URL", "redis://redis:6379")
+CELERY_RESULT_BACKEND = os.environ.get("CELERY_RESULT_BACKEND", "redis://redis:6379")
 
 CELERY_ACCEPT_CONTENT = ['application/json']
 CELERY_ACCEPT_CONTENT = ['json']
 CELERY_TASK_SERIALIZER = 'json'
+# TODO: Check
+CELERY_TIMEZONE = os.environ.get("TIME_ZONE", "UTC")

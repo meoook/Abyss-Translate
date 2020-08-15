@@ -6,7 +6,7 @@ services:
     command: redis-server
     ports:
       - 6379:6379
-    networks: 
+    networks:
       - main
     restart: always
   postgres:
@@ -19,12 +19,12 @@ services:
       - POSTGRES_USER=localize
       - POSTGRES_PASSWORD=eecaishi1Eejah0ceNgi
       - POSTGRES_DB=aby
-    networks: 
+    networks:
       - main
     restart: always
   django:
     build: ./back
-#    command: sh -c "python manage.py migrate --no-input && gunicorn mysite.wsgi -b 0.0.0.0:8000"
+    #    command: sh -c "python manage.py migrate --no-input && gunicorn mysite.wsgi -b 0.0.0.0:8000"
     command: sh -c "python manage.py migrate --no-input && python manage.py runserver 0.0.0.0:8000"
     volumes:
       - ./back/:/usr/src/back/
@@ -60,9 +60,10 @@ services:
       - 3000:3000
     tty: true
     stdin_open: true
-    networks: 
+    networks:
       - main
     restart: always
+
 volumes:
   postgres_data:
   users_files:
