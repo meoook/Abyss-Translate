@@ -22,7 +22,7 @@ import {
 
 import { nullState, connectErrMsg, findPrjByFolderID } from "../utils"
 
-const URL = process.env.BACKEND_API_URL
+const URL = process.env.REACT_APP_API_URL
 
 const AppState = ({ children }) => {
   const initialState = { ...nullState, token: localStorage.getItem("token") || null }
@@ -75,7 +75,6 @@ const AppState = ({ children }) => {
   }
   const accLogin = async (credentials) => {
     loading()
-    console.log('THIS VALUE', URL)
     await axios
       .post(`${URL}/auth/login`, credentials)
       .then((res) => {

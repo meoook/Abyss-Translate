@@ -4,12 +4,9 @@ FROM node:alpine
 # set work directory
 WORKDIR /usr/src/front
 
-# SET IP
-ARG BACKEND_API_URL
-ENV BACKEND_API_URL $BACKEND_API_URL
-
 # install dependencies
 COPY ./package.json .
+COPY ./package-lock.json .
 RUN npm update && npm install
 
 # copy project

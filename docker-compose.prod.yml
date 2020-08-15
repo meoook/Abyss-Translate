@@ -71,13 +71,12 @@ services:
     build:
       context: ./front
       dockerfile: Dockerfile.prod
-      args: BACKEND_API_URL=${IP_ADDRESS}
     volumes:
       - static_volume:/usr/share/nginx/html
+    environment: 
+      - REACT_APP_API_URL=http://127.0.0.1:8000/api
     ports:
       - 80:80
-    environment:
-      - BACKEND_API_URL=http://127.0.0.1:8000/api
     depends_on:
       - django
     networks:

@@ -8,17 +8,17 @@ from celery.schedules import crontab
 from datetime import timedelta
 
 
-@shared_task
-def add(x, y):
-    return x + y
+@shared_task(name="Get file info then parse")
+def file_parse(filo):
+    return filo
 
 
-@periodic_task(run_every=timedelta(seconds=20), name="Check all ")
+@periodic_task(run_every=timedelta(seconds=20), name="Check all files connected to repository folder")
 def check_all_file_repos():
     """ Get all files that have repo, and check them for update """
     print("Test task OK")
 
 
-@periodic_task(run_every=crontab(minute=1), name="test_task2")
+@periodic_task(run_every=crontab(minute='*/1'), name="test_task2")
 def test_task2():
     print("Test task2 OK")
