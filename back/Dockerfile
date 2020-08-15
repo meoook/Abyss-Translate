@@ -29,8 +29,9 @@ COPY . .
 # django default port
 EXPOSE 8000
 
-# create and set user
-RUN adduser -D user \
+# create and set user, olso create folder for upload users files
+RUN adduser -D user \ 
+    && mkdir -p /usr/src/back/users \
     && chown -R user:user /usr/src/back/ \
     && chmod -R 755 /usr/src/back/users \
     && chmod +x /usr/src/back/entrypoint.sh
