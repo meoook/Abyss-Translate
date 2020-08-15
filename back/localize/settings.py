@@ -146,11 +146,11 @@ LOGGING = {
     'version': 1,
     'disable_existing_loggers': False,
     'formatters': {
-        'verbose': {
+        'fulli': {
             'format': '{levelname} {asctime} {module} {process:d} {thread:d} {message}',
             'style': '{',
         },
-        'simple': {
+        'simplei': {
             'format': '{asctime} {levelname} {message}',
             'style': '{',
         },
@@ -165,35 +165,36 @@ LOGGING = {
     },
     'handlers': {
         'console': {
-            'level': 'INFO',
-            'filters': ['require_debug_true'],
+            # 'level': 'INFO',
+            # 'filters': ['require_debug_true'],
             'class': 'logging.StreamHandler',
-            'formatter': 'simple',
+            'formatter': 'simplei',
         },
-        'file': {
-            'level': 'WARNING',
+        'filei': {
+            # 'level': 'WARNING',
             'class': 'logging.FileHandler',
-            'filename': os.path.join(BASE_DIR, 'logs', 'log.log'),
-            'formatter': 'verbose',
+            'filename': os.path.join(BASE_DIR, 'logs', 'log2.log'),
+            'formatter': 'fulli',
         },
-        'mail_admins': {
-            'level': 'ERROR',
-            'filters': ['require_debug_false'],
-            'class': 'django.utils.log.AdminEmailHandler',
-            'email_backend': 'django.core.mail.backends.filebased.EmailBackend',
-            'include_html': True,
-        },
+        # 'mail_admins': {
+        #     'level': 'ERROR',
+        #     'filters': ['require_debug_false'],
+        #     'class': 'django.utils.log.AdminEmailHandler',
+        #     'email_backend': 'django.core.mail.backends.filebased.EmailBackend',
+        #     'include_html': True,
+        # },
     },
     'loggers': {
-        'django': {
+        'djangoi': {
             'handlers': ['console'],
-            'level': os.getenv('DJANGO_LOG_LEVEL', 'INFO'),
-            'propagate': False,
+            # 'level': os.getenv('DJANGO_LOG_LEVEL', 'INFO'),
+            # 'propagate': False,
         },
-        'django.errors': {
-            'handlers': ['file', 'mail_admins'],
-            'level': 'WARNING',
-            'propagate': True,
+        'djangoi.errors': {
+            # 'handlers': ['file', 'mail_admins'],
+            'handlers': ['filei'],
+            # 'level': 'WARNING',
+            # 'propagate': False,
         },
     },
 }

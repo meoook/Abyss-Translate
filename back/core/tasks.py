@@ -1,9 +1,10 @@
-import logging
 from __future__ import absolute_import, unicode_literals
 
-from celery import shared_task
+import logging
 
+from celery import shared_task
 from celery.task import periodic_task
+
 from celery.schedules import crontab
 from datetime import timedelta
 
@@ -18,10 +19,9 @@ def file_parse(filo):
 @periodic_task(run_every=crontab(minute='*/1'), name="Check all files connected to repository folder")
 def check_all_file_repos():
     """ Get all files that have repository, and check them for update """
-    logger.warning('TEST WARNING MESSAGE')
+    logger.warning('TEST WARNING')
 
 
 @periodic_task(run_every=timedelta(seconds=10), name="Task to check celery. Run each 10 seconds.")
 def test_task():
-    logger.error('TEST WARNING MESSAGE SECOND')
-    print("Print from test task")
+    logger.error('TEST ERROR')
