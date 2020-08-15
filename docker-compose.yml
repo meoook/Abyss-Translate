@@ -16,9 +16,9 @@ services:
     ports:
       - 5432:5432
     environment:
-      - POSTGRES_DB=aby
-      - POSTGRES_USER=localize
-      - POSTGRES_PASSWORD=eecaishi1Eejah0ceNgi
+      - POSTGRES_DB=postgres
+      - POSTGRES_USER=postgres
+      - POSTGRES_PASSWORD=xaxaxue
     networks:
       - main
     restart: always
@@ -37,7 +37,7 @@ services:
     restart: always
   celery:
     build: ./back
-    command: celery -A trans_back worker -B -l INFO
+    command: celery -A localize worker -B -l INFO
     volumes:
       - django_files:/usr/src/back/
     depends_on:

@@ -6,11 +6,9 @@ BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 
 SECRET_KEY = os.environ.get("SECRET_KEY", "NO_KEY")
 
-DEBUG = int(os.environ.get("DEBUG", default=0))
+DEBUG = os.environ.get("DEBUG", True)
 
-ALLOWED_HOSTS = os.environ.get("DJANGO_ALLOWED_HOSTS", "['*']").split(" ")
-# ALLOWED_HOSTS = ['192.168.1.20', ]
-# ALLOWED_HOSTS = ['*']
+ALLOWED_HOSTS = os.environ.get("DJANGO_ALLOWED_HOSTS", "* localhost").split(" ")
 
 
 # Application definition
@@ -34,7 +32,7 @@ INSTALLED_APPS = [
 MIDDLEWARE = [
     'django.middleware.security.SecurityMiddleware',
     'django.contrib.sessions.middleware.SessionMiddleware',
-    'corsheaders.middleware.CorsMiddleware',                    # REMOVE IN PROD
+    'corsheaders.middleware.CorsMiddleware',
     'django.middleware.common.CommonMiddleware',
     'django.middleware.csrf.CsrfViewMiddleware',
     'django.contrib.auth.middleware.AuthenticationMiddleware',
@@ -70,9 +68,9 @@ DATABASES = {
     "default": {
         "ENGINE": os.environ.get("SQL_ENGINE", "django.db.backends.postgresql"),
         "NAME": os.environ.get("SQL_DATABASE", "postgres"),
-        "USER": os.environ.get("SQL_USER", "localize"),
-        "PASSWORD": os.environ.get("SQL_PASSWORD", "eecaishi1Eejah0ceNgi"),
-        "HOST": os.environ.get("SQL_HOST", "localhost"),
+        "USER": os.environ.get("SQL_USER", "postgres"),
+        "PASSWORD": os.environ.get("SQL_PASSWORD", "xaxaxue"),
+        "HOST": os.environ.get("SQL_HOST", "postgres"),
         "PORT": os.environ.get("SQL_PORT", "5432"),
     }
 }
@@ -148,4 +146,4 @@ CELERY_ACCEPT_CONTENT = ['json']
 CELERY_TASK_SERIALIZER = 'json'
 CELERY_RESULT_SERIALIZER = 'json'
 # TODO: Check
-CELERY_TIMEZONE = os.environ.get("TIME_ZONE", "UTC")
+CELERY_TIMEZONE = os.environ.get("TIME_ZONE", "Europe/Moscow")
