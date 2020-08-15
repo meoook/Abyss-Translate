@@ -15,10 +15,10 @@
 Для работы приложения необходим **Docker v3.7**
 
 ```sh
-apt-get install -y docker
+$ apt-get install -y docker
 ```
 
-и **Docker-Compose v3.7**
+и **Docker-Compose v1.26.2**
 
 ```sh
 $ sudo curl -L "https://github.com/docker/compose/releases/download/1.26.2/docker-compose-$(uname -s)-$(uname -m)" -o /usr/local/bin/docker-compose
@@ -27,10 +27,8 @@ $ docker-compose --version
 docker-compose version 1.26.2, build 1110ad01
 ```
 
-For alpine, the following dependency packages are needed: py-pip, python-dev, 
-
-libffi-dev, openssl-dev,
-gcc, libc-dev, and make.
+For alpine, the following dependency packages are needed:
+`py-pip, python-dev, libffi-dev, openssl-dev, gcc, libc-dev, and make.`
 
 ## Diamond 💎 5%
 
@@ -54,3 +52,5 @@ gcc, libc-dev, and make.
 ---
 
 Стилистическая разметка должна быть так :+1:
+
+## Заданя по расписанию
