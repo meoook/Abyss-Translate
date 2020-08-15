@@ -5,4 +5,4 @@ FROM nginx:alpine
 RUN rm /etc/nginx/conf.d/default.conf
 
 # copy actual config
-COPY nginx.conf /etc/nginx/conf.d
+COPY ../front/nginx.conf /etc/nginx/conf.d
