@@ -14,9 +14,4 @@ COPY . .
 # react default port
 EXPOSE 3000
 
-# create and set user
-RUN adduser -D user \
-    && chown -R user:user /usr/src/front/
-USER user
-
 # CMD ["npm", "start"]

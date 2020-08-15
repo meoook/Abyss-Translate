@@ -8,7 +8,7 @@ SECRET_KEY = os.environ.get("SECRET_KEY", "NO_KEY")
 
 DEBUG = os.environ.get("DEBUG", True)
 
-ALLOWED_HOSTS = os.environ.get("DJANGO_ALLOWED_HOSTS", "* localhost").split(" ")
+ALLOWED_HOSTS = os.environ.get("DJANGO_ALLOWED_HOSTS", "*").split(" ")
 
 
 # Application definition
@@ -146,4 +146,4 @@ CELERY_ACCEPT_CONTENT = ['json']
 CELERY_TASK_SERIALIZER = 'json'
 CELERY_RESULT_SERIALIZER = 'json'
 # TODO: Check
-CELERY_TIMEZONE = os.environ.get("TIME_ZONE", "Europe/Moscow")
+CELERY_TIMEZONE = os.environ.get("TIME_ZONE", "UTC")

@@ -51,8 +51,6 @@ services:
     command: npm start
     volumes:
       - node_modules:/usr/src/front/node_modules
-    environment:
-      - BACKEND_API_URL=http://localhost:8000/api
     ports:
       - 3000:3000
     tty: true

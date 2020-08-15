@@ -75,6 +75,7 @@ const AppState = ({ children }) => {
   }
   const accLogin = async (credentials) => {
     loading()
+    console.log('THIS VALUE', URL)
     await axios
       .post(`${URL}/auth/login`, credentials)
       .then((res) => {
