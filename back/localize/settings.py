@@ -4,19 +4,17 @@ from django.core.files.storage import FileSystemStorage
 # Build paths inside the project like this: os.path.join(BASE_DIR, ...)
 BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 
-SECRET_KEY = os.environ.get("SECRET_KEY", "NO_KEY")
-
+SECRET_KEY = os.environ.get("SECRET_KEY", "NO_KEY_WARNING")
 DEBUG = os.environ.get("DEBUG", True)
-
 ALLOWED_HOSTS = os.environ.get("DJANGO_ALLOWED_HOSTS", "*").split(" ")
 
 # Application definition
 MY_APPS = [
+    'corsheaders',
     'rest_framework',
     'knox',
     'core',
     'accounts',
-    'corsheaders',
 ]
 
 INSTALLED_APPS = [
@@ -136,27 +134,17 @@ CELERY_BROKER_URL = os.environ.get("CELERY_BROKER_URL", "redis://redis:6379")
 CELERY_RESULT_BACKEND = os.environ.get("CELERY_RESULT_BACKEND", "redis://redis:6379")
 CELERYBEAT_SCHEDULE_FILENAME = os.environ.get("CELERYBEAT_SCHEDULE_FILENAME", "celerybeat-schedule")
 
-CELERY_TIMEZONE = os.environ.get("TIME_ZONE", "UTC")
-CELERY_ENABLE_UTC = os.environ.get("CELERY_ENABLE_UTC", True)
+CELERY_TIMEZONE = TIME_ZONE
+CELERY_ENABLE_UTC = True
 
 CELERY_ACCEPT_CONTENT = ['json']
 CELERY_TASK_SERIALIZER = 'json'
 CELERY_RESULT_SERIALIZER = 'json'
-
 CELERY_IGNORE_RESULT = True
 
-CELERY_DEFAULT_RATE_LIMIT = '20/m'
-CELERYD_SOFT_TIME_LIMIT = 45
-CELERYD_TIME_LIMIT = 60
-
-from celery.exceptions import SoftTimeLimitExceeded
-
-@app.task
-def mytask():
-    try:
-        return do_work()
-    except SoftTimeLimitExceeded:
-        cleanup_in_a_hurry()
+# CELERY_DEFAULT_RATE_LIMIT = '20/m'
+# CELERYD_SOFT_TIME_LIMIT = 45
+# CELERYD_TIME_LIMIT = 60
 
 # Logging
 LOGGING = {
