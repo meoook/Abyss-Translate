@@ -115,8 +115,8 @@ class Files(models.Model):
     folder = models.ForeignKey(Folders, on_delete=models.CASCADE)
     name = models.CharField(max_length=50)
     state = models.SmallIntegerField(choices=FILE_STATE_CHOICES, default=1)
-    codec = models.CharField(max_length=20)
-    method = models.CharField(max_length=10)  # csv, ue, html
+    codec = models.CharField(max_length=20, blank=True)
+    method = models.CharField(max_length=10, blank=True)  # csv, ue, html
     options = models.JSONField(null=True)     # csv delimiter and fields, quotes. Mb some info about PO files.
     data = models.FileField(upload_to=user_directory_path, max_length=255, storage=settings.STORAGE_ROOT)
     created = models.DateTimeField(auto_now_add=True)
