@@ -147,7 +147,7 @@ LOGGING = {
     'disable_existing_loggers': False,
     'formatters': {
         'sql': {
-            'format': '[SQL {module} {duration:.7}] {sql}',
+            'format': '[SQL {module} {duration:f}] {sql}',
             'style': '{',
             'datefmt': '%d/%b/%Y %H:%M:%S',
         },
