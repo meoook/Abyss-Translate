@@ -50,7 +50,7 @@ def folder_update_by_repo(filo):
     return True
 
 @periodic_task(
-    name="Check users files in git repositories",
+    name="Update users files from git repositories",
     run_every=crontab(hour='*/1'),
     max_retries=0,
     soft_time_limit=30,
@@ -60,7 +60,7 @@ def folder_update_by_repo(filo):
     store_errors_even_if_ignored=True
 )
 def check_all_file_repos():
-    """ It's a global app task -> Get all users files that have git repo and update if needed """
+    """ It's a global app task -> Get all users files check git status and update if needed """
     try:
         pass
     except SoftTimeLimitExceeded:
