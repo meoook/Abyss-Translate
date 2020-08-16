@@ -170,7 +170,6 @@ class TransferFileView(viewsets.ViewSet):
                 'codec': get_info.info['codec'],
                 'method': get_info.info['method'],
                 'options': get_info.info['options'],
-                'md5sum': get_info.info['md5sum'],
                 'number_top_rows': get_info.info['first_row'],
             })
             if serializer.is_valid():

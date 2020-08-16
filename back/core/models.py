@@ -126,7 +126,7 @@ class Files(models.Model):
     words = models.PositiveIntegerField(null=True)  # Total words count
     repo_hash = models.CharField(max_length=40, blank=True)     # TODO: Get hash by own
     repo_status = models.BooleanField(null=True)    # Null - no repo for related Folder
-    lang_orig = models.ForeignKey(Languages, on_delete=models.DO_NOTHING, related_name='files')
+    lang_orig = models.ForeignKey(Languages, on_delete=models.DO_NOTHING, related_name='files')  # , null=True)
     translate_to = models.ManyToManyField(Languages, related_name='files_m')
     error = models.CharField(max_length=255, blank=True)
 
@@ -143,7 +143,7 @@ class Translated(models.Model):
     items = models.PositiveIntegerField(default=0)  # To count total progress
     finished = models.BooleanField(default=False)   #
     checked = models.BooleanField(default=False)    # Translations checked by admin?
-    translate_copy = models.FileField(max_length=255, blank=True)
+    translate_copy = models.FileField(max_length=255, blank=True, storage=settings.STORAGE_ROOT)
 
     class Meta:
         unique_together = [('file', 'language')]
