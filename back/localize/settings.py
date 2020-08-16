@@ -146,13 +146,25 @@ LOGGING = {
     'version': 1,
     'disable_existing_loggers': False,
     'formatters': {
-        'fulli': {
-            'format': '{levelname} {asctime} {module} {process:d} {thread:d} {message}',
+        'sql': {
+            'format': '[SQL {module} {duration:.7}] {sql}',
             'style': '{',
+            'datefmt': '%d/%b/%Y %H:%M:%S',
         },
-        'simplei': {
-            'format': '{asctime} {levelname} {message}',
+        'file': {
+            'format': '[{asctime} {levelname}/{module}] {message}',
             'style': '{',
+            'datefmt': '%d/%m/%Y %H:%M:%S',
+        },
+        'full': {
+            'format': '[{asctime} {levelname}/{name} in {module}] {message}',
+            'style': '{',
+            'datefmt': '%d/%b/%Y %H:%M:%S',
+        },
+        'simple': {
+            'format': '[{levelname:.4}] {message}',
+            'style': '{',
+            'datefmt': '%d.%m.%Y %H:%M:%S',
         },
     },
     'filters': {
@@ -164,37 +176,69 @@ LOGGING = {
         },
     },
     'handlers': {
-        'console': {
-            # 'level': 'INFO',
-            # 'filters': ['require_debug_true'],
+        'sql': {
+            'level': 'DEBUG',
+            'filters': ['require_debug_true'],
             'class': 'logging.StreamHandler',
-            'formatter': 'simplei',
+            'formatter': 'sql',
         },
-        'filei': {
-            # 'level': 'WARNING',
+        'debug': {
+            'level': 'INFO',
+            'filters': ['require_debug_true'],
+            'class': 'logging.StreamHandler',
+            'formatter': 'simple',
+        },
+        'console': {
+            'level': os.getenv('DJANGO_LOG_LEVEL', 'INFO'),
+            'filters': ['require_debug_false'],
+            'class': 'logging.StreamHandler',
+            'formatter': 'full',
+        },
+        'file': {
+            'level': 'WARNING',
+            # 'filters': ['require_debug_false'],
             'class': 'logging.FileHandler',
-            'filename': os.path.join(BASE_DIR, 'logs', 'log2.log'),
-            'formatter': 'fulli',
+            'filename': os.path.join(BASE_DIR, 'logs', 'log.log'),
+            'formatter': 'file',
         },
-        # 'mail_admins': {
-        #     'level': 'ERROR',
-        #     'filters': ['require_debug_false'],
-        #     'class': 'django.utils.log.AdminEmailHandler',
-        #     'email_backend': 'django.core.mail.backends.filebased.EmailBackend',
-        #     'include_html': True,
-        # },
+        'mail_admins': {
+            'level': 'ERROR',
+            'filters': ['require_debug_false'],
+            'class': 'django.utils.log.AdminEmailHandler',
+            'email_backend': 'django.core.mail.backends.filebased.EmailBackend',
+            'include_html': True,
+        },
     },
     'loggers': {
-        'djangoi': {
-            'handlers': ['console'],
-            # 'level': os.getenv('DJANGO_LOG_LEVEL', 'INFO'),
-            # 'propagate': False,
+        'django': {
+            'handlers': ['console', 'file', 'debug'],
+            'level': 'DEBUG',
+            'propagate': True,
         },
-        'djangoi.errors': {
-            # 'handlers': ['file', 'mail_admins'],
-            'handlers': ['filei'],
-            # 'level': 'WARNING',
-            # 'propagate': False,
+        'django.request': {
+            'handlers': ['console', 'file', 'debug'],
+            'level': 'ERROR',
+            'propagate': False,
+        },
+        'django.server': {
+            'handlers': ['console', 'file', 'debug'],
+            'level': 'ERROR',
+            'propagate': False,
+        },
+        'django.db.backends': {
+            'handlers': ['sql'],
+            'level': 'DEBUG',   # set DEBUG for debug sql queries :)
+            'propagate': False,
+        },
+        'logfile': {
+            'handlers': ['file'],
+            'level': 'INFO',    # When to log in file
+            'propagate': True,
+        },
+        'django.mail': {
+            'handlers': ['mail_admins'],
+            'level': 'ERROR',   # When to send mails 
+            'propagate': True,
         },
     },
 }

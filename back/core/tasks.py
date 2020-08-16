@@ -8,7 +8,7 @@ from celery.task import periodic_task
 from celery.schedules import crontab
 from datetime import timedelta
 
-logger = logging.getLogger(__name__)
+logger = logging.getLogger('logfile')
 
 @shared_task(name="Get file info then parse")
 def file_parse(filo):
