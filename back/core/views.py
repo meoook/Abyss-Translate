@@ -144,7 +144,7 @@ class TransferFileView(viewsets.ViewSet):
     def create(self, request):
         req_data = request.data.get('data')
         req_folder = request.data.get('folder')
-        req_lang = request.data.get('lang_orig', None)
+        req_lang = request.data.get('lang_orig')
         folder = Folders.objects.get(id=req_folder, project__owner=request.user)
         if folder:
             if req_lang:    # FIXME: lang_orig is required or not ?

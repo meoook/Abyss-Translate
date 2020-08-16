@@ -62,7 +62,8 @@ class Folders(models.Model):
     project = models.ForeignKey(Projects, on_delete=models.CASCADE)
     position = models.PositiveIntegerField()
     name = models.CharField(max_length=50)
-    repository = models.URLField(null=True, blank=True)
+    repo_url = models.URLField(blank=True)
+    repo_status = models.BooleanField(default=False)
 
     class Meta:
         # db_table = 'folders'
@@ -105,34 +106,29 @@ class Files(models.Model):
     """" File model with auto delete. File is unique for folder. """
     # TODO: FileStats - @property
     FILE_STATE_CHOICES = [
-        (0, 'deleted'),
+        (0, 'error'),        # Error while parsing
         (1, 'uploaded'),     # Is parsing
         (2, 'parsed'),       # Ready to translate
-        (3, 'parse error'),  # Error while parsing
-        (4, 'started'),      # Order created
-        (5, 'translated'),   # Have all translations\ Order finish
     ]
 
     owner = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE)
     folder = models.ForeignKey(Folders, on_delete=models.CASCADE)
     name = models.CharField(max_length=50)
     state = models.SmallIntegerField(choices=FILE_STATE_CHOICES, default=1)
-    method = models.CharField(max_length=10)
-    options = models.JSONField(null=True)      # csv delimiter and fields, quotes,
+    codec = models.CharField(max_length=20)
+    method = models.CharField(max_length=10)  # csv, ue, html
+    options = models.JSONField(null=True)     # csv delimiter and fields, quotes. Mb some info about PO files.
     data = models.FileField(upload_to=user_directory_path, max_length=255, storage=settings.STORAGE_ROOT)
-    md5sum = models.CharField(max_length=32)    # TODO: Do we need it ?
     created = models.DateTimeField(auto_now_add=True)
     updated = models.DateTimeField(auto_now=True)   # File updated
-    new_translate_time = models.DateTimeField(null=True)
-    items_count = models.PositiveIntegerField(null=True)
-    words = models.PositiveIntegerField(null=True)
-    repo_hash = models.CharField(max_length=40, blank=True)     # TODO: Check max length
-    repo_founded = models.BooleanField(null=True)   # Null - no repo for related Folder
-    codec = models.CharField(max_length=20)
+    # new_translate_time = models.DateTimeField(null=True)
+    items = models.PositiveIntegerField(null=True)  # FileMarks count
+    words = models.PositiveIntegerField(null=True)  # Total words count
+    repo_hash = models.CharField(max_length=40, blank=True)     # TODO: Get hash by own
+    repo_status = models.BooleanField(null=True)    # Null - no repo for related Folder
     lang_orig = models.ForeignKey(Languages, on_delete=models.DO_NOTHING, related_name='files')
     translate_to = models.ManyToManyField(Languages, related_name='files_m')
-    number_top_rows = models.PositiveSmallIntegerField(null=True)   # Header
-    number_bot_rows = models.PositiveSmallIntegerField(null=True)   # Footer
+    error = models.CharField(max_length=255, blank=True)
 
     class Meta:
         # db_table = 'folders'
@@ -144,18 +140,17 @@ class Translated(models.Model):
     """ File translate progress and language copy """
     file = models.ForeignKey(Files, on_delete=models.CASCADE)
     language = models.ForeignKey(Languages, on_delete=models.DO_NOTHING)
-    items_count = models.PositiveIntegerField(default=0)
-    # words = models.PositiveIntegerField(default=0)
-    finished = models.BooleanField(default=False)
-    checked = models.BooleanField(default=False)
-    translate_copy = models.FileField(max_length=255, blank=True)   # storage=settings.STORAGE_ROOT,
+    items = models.PositiveIntegerField(default=0)  # To count total progress
+    finished = models.BooleanField(default=False)   #
+    checked = models.BooleanField(default=False)    # Translations checked by admin?
+    translate_copy = models.FileField(max_length=255, blank=True)
 
     class Meta:
         unique_together = [('file', 'language')]
 
 
 class ErrorFiles(models.Model):
-    """ If file codec or language not detected - file put here to upgrade check system """
+    """ Put files here to analyze to upgrade check system """
     data = models.FileField(upload_to='%Y/%m/%d/', max_length=255, storage=settings.STORAGE_ERRORS)
     error = models.CharField(max_length=255)
 
@@ -164,8 +159,8 @@ class FileMarks(models.Model):
     """ Mark targets where translate must be placed in file (based on method). """
     file = models.ForeignKey(Files, on_delete=models.CASCADE)
     mark_number = models.PositiveIntegerField()
-    col_number = models.PositiveIntegerField(null=True)  # For CSV method
-    options = models.JSONField(null=True)                       # key for UE method, tag for html,
+    col_number = models.PositiveIntegerField()           # Col for CSV
+    options = models.JSONField(null=True)                # Key for UE method, tag for html,
     md5sum = models.CharField(max_length=32)             # Check same values
     md5sum_clear = models.CharField(max_length=32)       # Help translate - MD5 without special chars or digits
     words = models.PositiveIntegerField()                # The words more then 2 letter count
@@ -227,7 +222,7 @@ def auto_delete_folder_on_delete(sender, instance, **kwargs):
 
 
 def auto_delete_project_on_delete(sender, instance, **kwargs):
-    """ TRIGGER: Deletes folder from filesystem when corresponding `Folder` object is deleted. """
+    """ TRIGGER: Deletes folder from filesystem when corresponding `Project` object is deleted. """
     path_to_delete = '{}/{}/'.format(instance.owner.username, instance.id)
     folder = os.path.join(settings.MEDIA_ROOT, path_to_delete)
     if os.path.isdir(folder):

@@ -86,7 +86,6 @@ def check_all_file_repos():
         pass
 
 
-
 @periodic_task(run_every=timedelta(seconds=10), name="Task to check celery. Run each 10 seconds.")
 def test_task():
     logger.error('TEST ERROR')
