@@ -18,6 +18,7 @@ from .models import Languages, Projects, Folders, FolderRepo, Files, Translated,
 from core.utils.get_data_info import GetDataInfo
 from core.utils.git_manager import GitManage
 
+from core.tasks import file_parse
 
 # TODO: CHECK USER RIGHTS/PERMISSIONS
 
@@ -171,7 +172,7 @@ class TransferFileView(viewsets.ViewSet):
             objs = [Translated(file_id=serializer.data.get('id'), language_id=lang_id) for lang_id in translate_to_ids]
             Translated.objects.bulk_create(objs)
             # Run celery parse delay task
-            management.call_command('file_rebuild', file_id)
+            file_parse.delay(file_id)
             return Response(serializer.data, status=status.HTTP_201_CREATED)
         # return Response({'err': 'file already exist'}, status=status.HTTP_400_BAD_REQUEST)
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)

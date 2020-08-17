@@ -6,6 +6,8 @@ from celery.task import periodic_task
 from celery.schedules import crontab
 from celery.exceptions import SoftTimeLimitExceeded
 
+from services.file_manager import LocalizeFileManager
+
 from datetime import timedelta
 
 logger = logging.getLogger('logfile')
@@ -19,9 +21,12 @@ logger = logging.getLogger('logfile')
     rate_limit='1/h',
     ignore_result=True
 )
-def file_parse(filo):
+def file_parse(file_id):
     """ Get file info and parse file data into text to translate """
-    return True
+    file_manager = LocalizeFileManager(file_id)
+    if not file_manager.success or not file_manager.parse():
+        if file_parse.request.retries < 3:
+            file_parse.retry()
 
 
 @shared_task(
