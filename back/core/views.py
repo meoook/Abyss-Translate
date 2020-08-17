@@ -150,11 +150,12 @@ class TransferFileView(viewsets.ViewSet):
         req_folder = request.data.get('folder')
         # TODO: Check user rights to create file
         try:    # TODO: Check need related lang_orig to get id
-            folder = Folders.objects.select_related('project__lang_orig').get(id=req_folder, project__owner=request.user)
+            folder = Folders.objects.select_related('project__lang_orig', 'project__translate_to').get(id=req_folder, project__owner=request.user)
         except ObjectDoesNotExist:
             return Response({'err': 'folder not found'}, status=status.HTTP_404_NOT_FOUND)
-        lang_orig_id = folder.project.lang_orig.id
 
+        lang_orig_id = folder.project.lang_orig.id
+        # Create file obejct
         serializer = self.serializer_class(data={
             'owner': request.user.id,
             'name': request.data.get('name'),
@@ -164,9 +165,14 @@ class TransferFileView(viewsets.ViewSet):
         })
         if serializer.is_valid():
             serializer.save()
-            management.call_command('file_rebuild', serializer.data.get('id'))
-            return Response({'id': serializer.data.get('id'), 'name': serializer.data.get('name')}
-                            , status=status.HTTP_201_CREATED)
+            # Create related translated progress objects
+            file_id = serializer.data.get('id')  # TODO: check this method
+            translate_to_ids = folder.project.translate_to.values_list('id', flat=True)
+            objs = [Translated(file_id=serializer.data.get('id'), language_id=lang_id) for lang_id in translate_to_ids]
+            Translated.objects.bulk_create(objs)
+            # Run celery parse delay task
+            management.call_command('file_rebuild', file_id)
+            return Response(serializer.data, status=status.HTTP_201_CREATED)
         # return Response({'err': 'file already exist'}, status=status.HTTP_400_BAD_REQUEST)
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 

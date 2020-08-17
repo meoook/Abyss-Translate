@@ -50,7 +50,7 @@ class DataGetInfo:
             'codec': self.__codec,
             'method': self.__method,
             'options': self.__options,
-            'language': self.__lang,
+            'language': self.__lang,    # detected language
             'error': self.__error
         }
 
@@ -181,7 +181,7 @@ class DataGetInfo:
             if row_n > 30:
                 self.__error = 'first row height to big for UE file'
                 break
-            if row in ('', '\r'):
+            if row in ('', '\r'):       # Usefull data palced after first empty row
                 if start:
                     height = row_n - start
                     if height != 7:     # Default number of rows for 1 obj in UE file

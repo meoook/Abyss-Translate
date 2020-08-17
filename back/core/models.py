@@ -126,8 +126,7 @@ class Files(models.Model):
     words = models.PositiveIntegerField(null=True)  # Total words count
     repo_hash = models.CharField(max_length=40, blank=True)     # TODO: Get hash by own
     repo_status = models.BooleanField(null=True)    # Null - no repo for related Folder
-    lang_orig = models.ForeignKey(Languages, on_delete=models.DO_NOTHING, related_name='files')  # , null=True)
-    translate_to = models.ManyToManyField(Languages, related_name='files_m')
+    lang_orig = models.ForeignKey(Languages, on_delete=models.DO_NOTHING, null=True)
     error = models.CharField(max_length=255, blank=True)
 
     class Meta:
