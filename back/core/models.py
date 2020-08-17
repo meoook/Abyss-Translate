@@ -50,7 +50,7 @@ class Projects(models.Model):
     icon_chars = models.CharField(max_length=2)
     created = models.DateTimeField(auto_now_add=True)
     updated = models.DateTimeField(auto_now=True)
-    lang_orig = models.ForeignKey(Languages, null=True, on_delete=models.DO_NOTHING, related_name='projects')
+    lang_orig = models.ForeignKey(Languages, on_delete=models.DO_NOTHING, related_name='projects')
     translate_to = models.ManyToManyField(Languages, related_name='projects_m')
 
     class Meta:
@@ -126,7 +126,7 @@ class Files(models.Model):
     words = models.PositiveIntegerField(null=True)  # Total words count
     repo_hash = models.CharField(max_length=40, blank=True)     # TODO: Get hash by own
     repo_status = models.BooleanField(null=True)    # Null - no repo for related Folder
-    lang_orig = models.ForeignKey(Languages, on_delete=models.DO_NOTHING, null=True)
+    lang_orig = models.ForeignKey(Languages, on_delete=models.DO_NOTHING)
     error = models.CharField(max_length=255, blank=True)
 
     class Meta:
@@ -158,7 +158,7 @@ class FileMarks(models.Model):
     """ Mark targets where translate must be placed in file (based on method). """
     file = models.ForeignKey(Files, on_delete=models.CASCADE)
     mark_number = models.PositiveIntegerField()
-    col_number = models.PositiveIntegerField()           # Col for CSV
+    col_number = models.PositiveIntegerField(null=True)  # Col for CSV
     options = models.JSONField(null=True)                # Key for UE method, tag for html,
     md5sum = models.CharField(max_length=32)             # Check same values
     md5sum_clear = models.CharField(max_length=32)       # Help translate - MD5 without special chars or digits

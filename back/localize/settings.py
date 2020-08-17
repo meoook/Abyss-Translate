@@ -182,7 +182,7 @@ LOGGING = {
     },
     'handlers': {
         'sql': {
-            'level': 'DEBUG',
+            'level': 'WARNING',
             'filters': ['require_debug_true'],
             'class': 'logging.StreamHandler',
             'formatter': 'sql',

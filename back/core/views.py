@@ -137,7 +137,7 @@ class TransferFileView(viewsets.ViewSet):
         except Translated.DoesNotExist:
             return Response({'err': 'File not found'}, status=status.HTTP_404_NOT_FOUND)
         if progress.finished:
-            file_path = progress.translate_copy.path  # r'C:\MIS\Projects\PY\AbbyTrans\users\meok\7\56\_html-en.txt'
+            file_path = progress.translate_copy.path
             if os.path.exists(file_path):
                 # TODO: StreamingHttpResponse
                 return FileResponse(open(file_path, 'rb'), as_attachment=True, filename=os.path.basename(file_path))
@@ -156,6 +156,7 @@ class TransferFileView(viewsets.ViewSet):
             return Response({'err': 'folder not found'}, status=status.HTTP_404_NOT_FOUND)
 
         lang_orig_id = folder.project.lang_orig.id
+        print('XXXXXXXXXXXXXXXXXXXXXX', lang_orig_id)
         # Create file obejct
         serializer = self.serializer_class(data={
             'owner': request.user.id,
@@ -164,17 +165,22 @@ class TransferFileView(viewsets.ViewSet):
             'lang_orig': lang_orig_id,
             'data': req_data,
         })
+        print('XXXXXXXXXXXXXXXXXXXXXX', 2)
         if serializer.is_valid():
             serializer.save()
             # Create related translated progress objects
+            print('XXXXXXXXXXXXXXXXXXXXXX', 33)
             file_id = serializer.data.get('id')  # TODO: check this method
             translate_to_ids = folder.project.translate_to.values_list('id', flat=True)
             objs = [Translated(file_id=serializer.data.get('id'), language_id=lang_id) for lang_id in translate_to_ids]
             Translated.objects.bulk_create(objs)
+            print('XXXXXXXXXXXXXXXXXXXXXX', 4)
             # Run celery parse delay task
             file_parse.delay(file_id)
+            print('XXXXXXXXXXXXXXXXXXXXXX', 45)
             return Response(serializer.data, status=status.HTTP_201_CREATED)
         # return Response({'err': 'file already exist'}, status=status.HTTP_400_BAD_REQUEST)
+        print('XXXXXXXXXXXXXXXXXXXXXX', 5)
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
 
@@ -233,7 +239,7 @@ class FolderViewSet(viewsets.ModelViewSet):
         project = Projects.objects.get(save_id=request.data['project'])
         if project:
             position = self.get_queryset().filter(project=project).aggregate(m=Max('position')).get('m') or 0
-            serializer = FoldersSerializer(data=request.data)
+            serializer = self.serializer_class(data=request.data)
             if serializer.is_valid():
                 serializer.save(position=position + 1, project=project)
                 return Response(serializer.data, status=status.HTTP_201_CREATED)

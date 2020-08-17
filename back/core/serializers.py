@@ -20,20 +20,10 @@ https://www.django-rest-framework.org/api-guide/fields/
 
 class TranslatesSerializer(serializers.ModelSerializer):
     """ TRANSLATES: To display translates related to Mark (and to add new?) """
-    # translates_set = FoldersSerializer(many=True, read_only=True)
 
     class Meta:
         model = Translates
         fields = ["text", "translator", "language"]
-        # exclude = ['id', 'mark']
-        # extra_kwargs = {
-            # 'translator': {'read_only': True},
-            # 'mark': {'read_only': True},
-            # 'number': {'read_only': True},
-            # 'language': {'required': False},
-            # 'created': {'read_only': True},
-            # 'updated': {'read_only': True},
-        # }
 
 
 class FileMarksSerializer(serializers.ModelSerializer):
@@ -49,32 +39,19 @@ class FileMarksSerializer(serializers.ModelSerializer):
         }
 
 
-class ErrorFileSerializer(serializers.ModelSerializer):
-    """ UPLOAD: If errors on upload - save them """
-    class Meta:
-        model = ErrorFiles
-        fields = '__all__'
-
-
 class TransferFileSerializer(serializers.ModelSerializer):
     """ UPLOAD: On upload file serializer """
     class Meta:
         model = Files
-        exclude = ['translate_to']
-        # extra_kwargs = {
-        #     'id': {'read_only': True},
-        # }
+        fields = ['owner', 'name', 'folder', 'lang_orig', 'data']
 
 
 class TranslatedSerializer(serializers.ModelSerializer):
-    """ UPLOAD: On upload file serializer """
+    """ To display file translate progress to other langs """
     class Meta:
         model = Translated
         # fields = '__all__'
         exclude = ['translate_copy']
-        # extra_kwargs = {
-        #     'id': {'read_only': True},
-        # }
 
 
 class FilesSerializer(serializers.ModelSerializer):
@@ -83,17 +60,16 @@ class FilesSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = Files
-        # fields = '__all__'
-        exclude = ['data', 'owner', 'folder', 'codec', 'md5sum', 'options', 'number_top_rows', 'number_bot_rows', 'repo_hash']
+        fields = ['id', 'name', 'state', 'method', 'items', 'words', 'repo_status', 'created', 'updated']
+        # exclude = ['data', 'owner', 'folder', 'codec', 'options', 'repo_hash']
         extra_kwargs = {
             'state': {'read_only': True, 'source': 'get_state_display'},
-            'translate_to': {'read_only': True},
-            'items_count': {'read_only': True},
+            'method': {'read_only': True},
+            'items': {'read_only': True},
             'words': {'read_only': True},
-            'repo_founded': {'read_only': True},
-            # 'repo_hash': {'read_only': True},
-            # 'number_top_rows': {'write_only': True},  # , 'required': False},
-            # 'number_bot_rows': {'write_only': True},
+            'repo_status': {'read_only': True},
+            # 'created': {'read_only': True},
+            # 'updated': {'read_only': True},
         }
 
 
@@ -108,15 +84,13 @@ class FoldersSerializer(serializers.ModelSerializer):
     """ To manage and display with projects """
     class Meta:
         model = Folders
-        fields = ['id', 'position', 'name', 'repository']
+        fields = ['id', 'position', 'name', 'repo_url', 'repo_status']
         extra_kwargs = {'position': {'required': False}}
 
 
 class ProjectSerializer(serializers.ModelSerializer):
     """ Project manager serializer """
-    # save_id = serializers.UUIDField(read_only=True)
     folders_set = FoldersSerializer(many=True, read_only=True)
-    # lang_orig = serializers.ChoiceField(source='get_lang_orig_display', required=False, choices=LANG_CHOICES)
 
     class Meta:
         model = Projects
