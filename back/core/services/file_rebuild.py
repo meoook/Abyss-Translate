@@ -12,7 +12,7 @@ class FileRebuild:
         self.__marks_to_check = {}
         self.__marks_to_update = []
         self.__marks_to_add = []
-		self.stats = {}
+        self.stats = {}
         self.error = None
         # Check params
         if not isinstance(file_id, int) or not isinstance(lang_orig_id, int) or not f_method or not f_path:
@@ -20,7 +20,7 @@ class FileRebuild:
         else:
         	self.__init_build(file_id, f_method, f_path, codec, f_lang_id, f_options)
 
-	def __init_build(self, file_id, method, file_path, codec, lang_orig_id, options):
+    def __itit_build(self, file_id, method, file_path, codec, lang_orig_id, options):
         # Get file marks if file was before
         for x in FileMarks.objects.filter(file_id=file_id):
             self.__marks_to_check[x.id] = {

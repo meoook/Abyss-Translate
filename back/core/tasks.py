@@ -6,7 +6,7 @@ from celery.task import periodic_task
 from celery.schedules import crontab
 from celery.exceptions import SoftTimeLimitExceeded
 
-from services.file_manager import LocalizeFileManager
+from core.services.file_manager import LocalizeFileManager
 
 from datetime import timedelta
 
