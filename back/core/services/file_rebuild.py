@@ -48,7 +48,7 @@ class FileRebuild:
         elif work_file.method == 'html':
             self.parse_as_html(work_file)
         else:
-            self.stderr.write(f"For file {work_file.id} wrong method : {work_file.method}")
+            logger.error(f"Wrong method {work_file.method} for file {work_file.id}")
             return False
         self.__build_marks(work_file, rebuild)
         # Update file stats

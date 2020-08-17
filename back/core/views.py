@@ -4,8 +4,11 @@ from rest_framework.parsers import MultiPartParser
 from rest_framework.pagination import PageNumberPagination
 from rest_framework.response import Response
 from django.db.models import Max, Subquery, Q
+from django.core.exceptions import ObjectDoesNotExist, ValidationError
+
 from django.core import management
 from django.http import FileResponse, HttpResponse, Http404
+
 
 from core.serializers import ProjectSerializer, FoldersSerializer, LanguagesSerializer,\
     FilesSerializer, TransferFileSerializer, ErrorFileSerializer, TranslatesSerializer, FileMarksSerializer
@@ -135,6 +138,7 @@ class TransferFileView(viewsets.ViewSet):
         if progress.finished:
             file_path = progress.translate_copy.path  # r'C:\MIS\Projects\PY\AbbyTrans\users\meok\7\56\_html-en.txt'
             if os.path.exists(file_path):
+                # TODO: StreamingHttpResponse
                 return FileResponse(open(file_path, 'rb'), as_attachment=True, filename=os.path.basename(file_path))
             return Response({'err': f'File {progress.file.name} translated to {progress.language.name} not found'},
                             status=status.HTTP_500_INTERNAL_SERVER_ERROR)
@@ -144,43 +148,27 @@ class TransferFileView(viewsets.ViewSet):
     def create(self, request):
         req_data = request.data.get('data')
         req_folder = request.data.get('folder')
-        req_lang = request.data.get('lang_orig')
-        folder = Folders.objects.get(id=req_folder, project__owner=request.user)
-        if folder:
-            if req_lang:    # FIXME: lang_orig is required or not ?
-                language = Languages.objects.get(id=req_lang, active=True)
-                get_info = GetDataInfo(req_data.read(), language.short_name)
-            else:
-                get_info = GetDataInfo(req_data.read())
-            if get_info.info['error']:
-                serializer = ErrorFileSerializer(data={'error': get_info.info['error'], 'data': req_data})
-                if serializer.is_valid():
-                    serializer.save()
-                else:
-                    print("CRITICAL, can't save error file")
-                return Response(get_info.info['error'], status=status.HTTP_406_NOT_ACCEPTABLE)
-            # If no errors
-            language_checked = Languages.objects.get(short_name=get_info.info['language'], active=True)
-            serializer = self.serializer_class(data={
-                'owner': request.user.id,
-                'name': request.data.get('name'),
-                'folder': req_folder,
-                'lang_orig': language_checked.id,
-                'data': req_data,
-                'codec': get_info.info['codec'],
-                'method': get_info.info['method'],
-                'options': get_info.info['options'],
-                'number_top_rows': get_info.info['first_row'],
-            })
-            if serializer.is_valid():
-                serializer.save()
-                # TODO: StreamingHttpResponse
-                management.call_command('file_rebuild', serializer.data.get('id'))
-                return Response({'id': serializer.data.get('id'), 'name': serializer.data.get('name')}
-                                , status=status.HTTP_201_CREATED)
-            # return Response({'err': 'file already exist'}, status=status.HTTP_400_BAD_REQUEST)
-            return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
-        return Response({'err': 'folder not found'}, status=status.HTTP_404_NOT_FOUND)
+        # TODO: Check user rights to create file
+        try:    # TODO: Check need related lang_orig to get id
+            folder = Folders.objects.select_related('project__lang_orig').get(id=req_folder, project__owner=request.user)
+        except ObjectDoesNotExist:
+            return Response({'err': 'folder not found'}, status=status.HTTP_404_NOT_FOUND)
+        lang_orig_id = folder.project.lang_orig.id
+
+        serializer = self.serializer_class(data={
+            'owner': request.user.id,
+            'name': request.data.get('name'),
+            'folder': folder.id,
+            'lang_orig': lang_orig_id,
+            'data': req_data,
+        })
+        if serializer.is_valid():
+            serializer.save()
+            management.call_command('file_rebuild', serializer.data.get('id'))
+            return Response({'id': serializer.data.get('id'), 'name': serializer.data.get('name')}
+                            , status=status.HTTP_201_CREATED)
+        # return Response({'err': 'file already exist'}, status=status.HTTP_400_BAD_REQUEST)
+        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
 
 class LanguageViewSet(viewsets.ModelViewSet):

@@ -37,11 +37,12 @@ class DataGetInfo:
         self.__codec = chardet.detect(data[:1024*1024])['encoding']  # 1Mb ~ 8sec
         try:
             self.__data_decoded = self.__data.decode(self.__codec)
-            self.__get_info_init()
         except TypeError:
             self.__error = 'codec not found'
         except UnicodeDecodeError:
             self.__error = 'codec found with error'
+        else:
+            self.__get_info_init()
 
     @property
     def info(self):
