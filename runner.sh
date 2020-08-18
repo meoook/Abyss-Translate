@@ -1,6 +1,6 @@
 #!/bin/bash
 MYCUSTOMTAB='   '
-
+clear
 function echo_line {
     echo "====================================="
 }
@@ -23,9 +23,11 @@ if [ "$#" -eq 1 ]; then
     selected=$1
 elif [ "$#" -eq 2 ]; then
     echo_line
-    if [ $1 -eq 3 ]; then
+    if [ $1 -eq 1 ]; then
+        echo "${MYCUSTOMTAB}Django srv options..."
+    elif [ $1 -eq 2 ]; then
         echo "${MYCUSTOMTAB}Display logs..."
-    elif [ $1 -eq 4 ]; then
+    elif [ $1 -eq 3 ]; then
         echo "${MYCUSTOMTAB}Go sh..."
     else
         echo "${MYCUSTOMTAB}Second parameter ignored"
@@ -88,7 +90,7 @@ case "$selected" in
             1) docker-compose exec react sh ;;
             2) docker-compose exec celery sh ;;
             3) docker-compose exec redis sh ;;
-            3) docker-compose exec postgres sh ;;
+            4) docker-compose exec postgres sh ;;
             *) docker-compose exec django sh ;;
         esac ;;
     5) docker-compose up -d --build ;;
@@ -100,5 +102,3 @@ case "$selected" in
     *)  docker-compose down -v
         docker-compose up -d --build ;;
 esac
-
-echo_line
