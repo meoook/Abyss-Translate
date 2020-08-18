@@ -13,7 +13,11 @@ def get_languages(apps, schema_editor):
     languages = apps.get_model('core', 'Languages')
     for language in LANGUAGES:
         language_to_add = languages(name=language[1], short_name=language[0])
-        language_to_add.save()
+        if language[0] in ('en', 'ru', 'de', 'es'):
+            language_to_add.active = True
+            language_to_add.save()
+        else:
+            language_to_add.save()
 
 
 class Migration(migrations.Migration):
@@ -29,7 +33,7 @@ class Migration(migrations.Migration):
             name='ErrorFiles',
             fields=[
                 ('id', models.AutoField(auto_created=True, primary_key=True, serialize=False, verbose_name='ID')),
-                ('data', models.FileField(max_length=255, storage=django.core.files.storage.FileSystemStorage(base_url='/errors/', location='Abyss-Translate\\back\\users\\errors'), upload_to='%Y/%m/%d/')),
+                ('data', models.FileField(max_length=255, storage=django.core.files.storage.FileSystemStorage(base_url='/errors/', location='/usr/src/back/users/errors'), upload_to='%Y/%m/%d/')),
                 ('error', models.CharField(max_length=255)),
             ],
         ),
@@ -147,7 +151,7 @@ class Migration(migrations.Migration):
                 ('codec', models.CharField(blank=True, max_length=20)),
                 ('method', models.CharField(blank=True, max_length=10)),
                 ('options', models.JSONField(null=True)),
-                ('data', models.FileField(max_length=255, storage=django.core.files.storage.FileSystemStorage(base_url='/users/', location='Abyss-Translate\\back\\users'), upload_to=core.models.user_directory_path)),
+                ('data', models.FileField(max_length=255, storage=django.core.files.storage.FileSystemStorage(base_url='/users/', location='/usr/src/back/users'), upload_to=core.models.user_directory_path)),
                 ('created', models.DateTimeField(auto_now_add=True)),
                 ('updated', models.DateTimeField(auto_now=True)),
                 ('items', models.PositiveIntegerField(null=True)),
@@ -175,7 +179,7 @@ class Migration(migrations.Migration):
                 ('items', models.PositiveIntegerField(default=0)),
                 ('finished', models.BooleanField(default=False)),
                 ('checked', models.BooleanField(default=False)),
-                ('translate_copy', models.FileField(blank=True, max_length=255, storage=django.core.files.storage.FileSystemStorage(base_url='/users/', location='Abyss-Translate\\back\\users'), upload_to='')),
+                ('translate_copy', models.FileField(blank=True, max_length=255, storage=django.core.files.storage.FileSystemStorage(base_url='/users/', location='/usr/src/back/users'), upload_to='')),
                 ('file', models.ForeignKey(on_delete=django.db.models.deletion.CASCADE, to='core.files')),
                 ('language', models.ForeignKey(on_delete=django.db.models.deletion.DO_NOTHING, to='core.languages')),
             ],

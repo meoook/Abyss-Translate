@@ -1,7 +1,7 @@
 import os
 import logging
 from rest_framework import viewsets, status
-from rest_framework.parsers import MultiPartParser
+from rest_framework.parsers import MultiPartParser, FileUploadParser
 from rest_framework.pagination import PageNumberPagination
 from rest_framework.response import Response
 from django.db.models import Max, Subquery, Q
@@ -135,7 +135,7 @@ class FileMarksView(viewsets.ModelViewSet):
 
 class TransferFileView(viewsets.ViewSet):
     """ FILE TRANSFER VIEW: Upload/Download files """
-    parser_classes = (MultiPartParser,)
+    parser_classes = (MultiPartParser, FileUploadParser)
     serializer_class = TransferFileSerializer
 
     def retrieve(self, request, pk=None):
@@ -157,8 +157,12 @@ class TransferFileView(viewsets.ViewSet):
 
     def create(self, request):
         """ Create file obj and related translated progress after file download (uploaded by user) """
-        req_data = request.data.get('data')
+        logger.warning(f'XXXXXXXXXXXXXXXXXXXXXX START DATA')
         req_folder = request.data.get('folder')
+        logger.warning(f'XXXXXXXXXXXXXXXXXXXXXX X')
+        # req_data = request.data.get('data')
+        req_data = request.FILES['data']
+        logger.warning(f'XXXXXXXXXXXXXXXXXXXXXX XX')
         # TODO: Check user rights to create file
         try:    # TODO: Check need related lang_orig to get id
             folder = Folders.objects.select_related('project__lang_orig', 'project__translate_to').get(id=req_folder, project__owner=request.user)
@@ -166,7 +170,7 @@ class TransferFileView(viewsets.ViewSet):
             return Response({'err': 'folder not found'}, status=status.HTTP_404_NOT_FOUND)
 
         lang_orig_id = folder.project.lang_orig.id
-        print('XXXXXXXXXXXXXXXXXXXXXX', lang_orig_id)
+        logger.warning(f'XXXXXXXXXXXXXXXXXXXXXX{lang_orig_id}')
         # Create file obejct
         serializer = self.serializer_class(data={
             'owner': request.user.id,
@@ -175,7 +179,7 @@ class TransferFileView(viewsets.ViewSet):
             'lang_orig': lang_orig_id,
             'data': req_data,
         })
-        print('XXXXXXXXXXXXXXXXXXXXXX', 2)
+        logger.warning(f'XXXXXXXXXXXXXXXXXXXXXX{2}')
         if serializer.is_valid():
             serializer.save()
             # Create related translated progress objects
@@ -184,13 +188,17 @@ class TransferFileView(viewsets.ViewSet):
             # translate_to_ids = folder.project.translate_to.values_list('id', flat=True)
             # objs = [Translated(file_id=serializer.data.get('id'), language_id=lang_id) for lang_id in translate_to_ids]
             # Translated.objects.bulk_create(objs)
-            print('XXXXXXXXXXXXXXXXXXXXXX', 4)
+            logger.warning(f'XXXXXXXXXXXXXXXXXXXXXX{4}')
+
             # Run celery parse delay task
             file_parse.delay(file_id)
-            print('XXXXXXXXXXXXXXXXXXXXXX', 45)
+            logger.warning(f'XXXXXXXXXXXXXXXXXXXXXX{45}')
+
             return Response(serializer.data, status=status.HTTP_201_CREATED)
         # return Response({'err': 'file already exist'}, status=status.HTTP_400_BAD_REQUEST)
-        print('XXXXXXXXXXXXXXXXXXXXXX', 5)
+        logger.warning(f'XXXXXXXXXXXXXXXXXXXXXX{5}')
+
+
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
 
