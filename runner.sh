@@ -34,13 +34,14 @@ elif [ "$#" -eq 2 ]; then
     selected2=$2
 else
     echo_line
-    echo "${MYCUSTOMTAB}1 - make migrations and migrate (django)"
-    echo "${MYCUSTOMTAB}2 - create superuser (django)"
-    echo "${MYCUSTOMTAB}3 - display logs (srv select)"
-    echo "${MYCUSTOMTAB}4 - sh command line (srv select)"
+    echo "${MYCUSTOMTAB}1 - options with django srv (django)"
+    echo "${MYCUSTOMTAB}2 - display logs (srv select)"
+    echo "${MYCUSTOMTAB}3 - sh command line (srv select)"
     echo "${MYCUSTOMTAB}5 - build and run server (all)"
-    echo "${MYCUSTOMTAB}0 - down server and volumes (all & vols)"
-    echo "${MYCUSTOMTAB}* - rebuild and start"
+    echo "${MYCUSTOMTAB}6 - down srvs without vols (all)"
+    echo "${MYCUSTOMTAB}9 - clear unused data and images (images)"
+    echo "${MYCUSTOMTAB}0 - !!! clear all data and images !!! (images)"
+    echo "${MYCUSTOMTAB}* - rebuild and restart (all & vols)"
     echo_line
     read -p "Select option to do: " option
     selected=$option
@@ -48,10 +49,25 @@ fi
 
 echo_line
 case "$selected" in
-    1) docker-compose run --rm django sh -c "python manage.py makemigrations"
-       docker-compose run --rm django sh -c "python manage.py migrate" ;;
-    2) docker-compose run --rm django sh -c "python manage.py createsuperuser" ;;
-    3)  if [ -z "$selected2" ]; then
+
+    1)  if [ -z "$selected2" ]; then
+            echo "${MYCUSTOMTAB}1 - create superuser"
+            echo "${MYCUSTOMTAB}2 - development tests"
+            echo "${MYCUSTOMTAB}5 - production tests"
+            echo "${MYCUSTOMTAB}* - make migrations and migrate"
+            echo_line
+            read -p "Select action for django srv: " log_option
+            selected2=$log_option
+        fi
+        case "$selected2" in
+            1) docker-compose run --rm django sh -c "python manage.py createsuperuser" ;;
+            2) docker-compose run --rm django sh -c "python manage.py test" ;;
+            5) docker-compose -f docker-compose.prod.yml run --rm django sh -c "python manage.py test" ;;
+            *)  docker-compose run --rm django sh -c "python manage.py makemigrations"
+                docker-compose run --rm django sh -c "python manage.py migrate" ;;
+        esac ;;
+
+    2)  if [ -z "$selected2" ]; then
             echo_servers
             read -p "Select srv to display logs for: " log_option
             selected2=$log_option
@@ -63,7 +79,7 @@ case "$selected" in
             3) docker-compose logs -f postgres ;;
             *) docker-compose logs -f django ;;
         esac ;;
-    4)  if [ -z "$selected2" ]; then
+    3)  if [ -z "$selected2" ]; then
             echo_servers
             read -p "Select srv to go command line for: " option2
             selected2=$option2
@@ -76,8 +92,13 @@ case "$selected" in
             *) docker-compose exec django sh ;;
         esac ;;
     5) docker-compose up -d --build ;;
-    0) docker-compose down -v ;;
-    *) docker-compose down && docker-compose up -d --build ;;
+    6) docker-compose down ;;
+    9)  docker-compose up -d --build
+        docker system prune -a --volumes ;;
+    0)  docker-compose down -v
+        docker system prune -a -f --volumes ;;
+    *)  docker-compose down -v
+        docker-compose up -d --build ;;
 esac
 
 echo_line

@@ -11,7 +11,7 @@ from django.http import FileResponse, HttpResponse, Http404
 
 
 from core.serializers import ProjectSerializer, FoldersSerializer, LanguagesSerializer,\
-    FilesSerializer, TransferFileSerializer, ErrorFileSerializer, TranslatesSerializer, FileMarksSerializer
+    FilesSerializer, TransferFileSerializer, TranslatesSerializer, FileMarksSerializer
 
 from .models import Languages, Projects, Folders, FolderRepo, Files, Translated, FileMarks, Translates
 
