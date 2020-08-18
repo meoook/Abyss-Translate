@@ -1,10 +1,15 @@
+from django.urls import reverse
+from rest_framework import status
+from rest_framework.test import APITestCase
+from django.contrib.auth.models import User
 
-
+from core.models import Languages, Projects
+from core.serializers import ProjectSerializer
 
 
 class ProjectsApiTestCase(APITestCase):
     def test_get_list(self):
-        user = Users.objects.create_user(username='a', email='a@a.ru', password='123')
+        user = User.objects.create_user(username='a', email='a@a.ru', password='123')
         language1 = Languages.objects.create(name='Russian', short_name='ru', active=True)
         language2 = Languages.objects.create(name='English', short_name='en', active=True)
         prj1 = Projects.objects.create(name='Project1', icon_chars='P1', owner=user, lang_orig=language1)
