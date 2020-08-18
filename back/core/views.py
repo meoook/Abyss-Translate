@@ -1,7 +1,7 @@
 import os
 import logging
 from rest_framework import viewsets, status
-from rest_framework.parsers import MultiPartParser, FileUploadParser
+from rest_framework.parsers import MultiPartParser, FileUploadParser, JSONParser
 from rest_framework.pagination import PageNumberPagination
 from rest_framework.response import Response
 from django.db.models import Max, Subquery, Q
@@ -173,18 +173,17 @@ class TransferFileView(viewsets.ViewSet):
         else:
             to_print = request.FILES['file']
             logger.warning(f"XXXXXXXXXXXXXXXXXXXXXX 3333333 DATA {to_print}") 
-            fitxer = File(request.FILES['file'])
-            content = fitxer.read()
-            stream = BytesIO(content)
+            # fitxer = File(request.FILES['file'])
+            # content = fitxer.read()
+            # stream = BytesIO(content)
             if request.FILES['file'].content_type == 'application/json':
                 logger.warning(f"444444444444 3333333 DATA") 
-                input_data = JSONParser().parse(stream)
+                # input_data = JSONParser().parse(stream)
             else:
                 logger.warning(f"No parser for content type: {to_print.content_type}")
                 errors = dict()
-                errors['error'] =  f"No parser for content type: {to_print.content_type}"
-                return Response(errors,status=status.HTTP_400_BAD_REQUEST)
-            fitxer.close()
+                errors['error'] = f"No parser for content type: {to_print.content_type}"
+                return Response(errors, status=status.HTTP_400_BAD_REQUEST)
         return
 
 
