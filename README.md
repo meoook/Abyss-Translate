@@ -36,16 +36,8 @@
 
 ```sh
 $ apt-get install -y docker
-$ docker version
-Client:
- Version:           19.03.12
- API version:       1.40
-...
-Server:
- Engine:
-  Version:          19.03.12
-  API version:      1.40 (minimum version 1.12)
-...
+$ docker --version
+Docker version 19.03.8, build afacb8b7f0
 ```
 
 и **Docker-Compose 1.26.2**
@@ -117,6 +109,7 @@ $ sh ./runner.sh 5
 
 ## Gold 🏆 12%
 
-`gunicorn --bind :8000 --workers 3 mysite.wsgi:application`
+`gunicorn --bind :8000 --workers 3 localize.wsgi:application`
+gunicorn localize.wsgi --workers 3 -b 0.0.0.0:8000
 
 end :+1:

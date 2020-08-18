@@ -56,6 +56,7 @@ def folder_update_by_repo(filo):
     """ After changing git url -> Update folder files in git repository folder """
     return True
 
+
 @periodic_task(
     name="Update users files from git repositories",
     run_every=crontab(hour='*/1'),
@@ -74,6 +75,7 @@ def check_all_file_repos():
         logger.warning('Checking files too slow')
         pass
 
+
 @periodic_task(
     name="Upload translated files into git repositories",
     run_every=crontab(hour='*/1'),
@@ -84,7 +86,7 @@ def check_all_file_repos():
     ignore_result=True,
     store_errors_even_if_ignored=True
 )
-def check_all_file_repos():
+def upload_translated():
     """ It's a global app task -> Get all users translated files and upload them in git repos """
     try:
         pass

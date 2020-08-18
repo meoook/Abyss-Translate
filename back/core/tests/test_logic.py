@@ -23,7 +23,6 @@ class ProjectsSerializerTestCase(TestCase):
         prj2.translate_to.set([language2])
 
         data = ProjectSerializer([prj1, prj2], many=True).data
-        
         to_check_with = [
             {'id': prj1.id, 'name': 'Project1', 'icon_chars': 'P1', 'owner': user.username},
             {'id': prj2.id, 'name': 'Project2', 'icon_chars': 'P2', 'owner': user.username},

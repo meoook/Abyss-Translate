@@ -190,14 +190,14 @@ LOGGING = {
             'formatter': 'sql',
         },
         'debug': {
-            'level': 'INFO',
+            'level': 'CRITICAL',
             'filters': ['require_debug_true'],
             'class': 'logging.StreamHandler',
             'formatter': 'simple',
         },
         'console': {
-            'level': os.getenv('DJANGO_LOG_LEVEL', 'INFO'),
-            'filters': ['require_debug_false'],
+            'level': os.getenv('DJANGO_LOG_LEVEL', 'DEBUG'),
+            # 'filters': ['require_debug_false'],
             'class': 'logging.StreamHandler',
             'formatter': 'full',
         },

@@ -136,7 +136,7 @@ class FileMarksView(viewsets.ModelViewSet):
 class TransferFileView(viewsets.ViewSet):
     """ FILE TRANSFER VIEW: Upload/Download files """
     # parser_classes = (MultiPartParser, FileUploadParser, )
-    # parser_classes = (FileUploadParser, )
+    # parser_classes = (MultiPartParser,)
     parser_classes = (JSONParser, MultiPartParser, )
     serializer_class = TransferFileSerializer
 
@@ -159,25 +159,27 @@ class TransferFileView(viewsets.ViewSet):
 
     def create(self, request):
         """ Create file obj and related translated progress after file download (uploaded by user) """
-        logger.warning(f'XXXXXXXXXXXXXXXXXXXXXX START DATA')
+        logger.warning('XXXXXXXXXXXXXXXXXXXXXX START DATA')
         data = None
+        logger.warning(f'XXXXXXXXXXXXXXXXXXXXXX {dir(request.data)}')
         # data is sent as direct json (literally or from file: @) (JSONParser):
         # curl -X POST -H "Content-Type:application/json" -u admin:admin http://127.0.0.1:8000/totos/ -d @toto.json
         # curl -X POST -H "Content-Type:application/json"
         if request._content_type == 'application/json':
-            data = request.DATA
+            data = request.data
             logger.warning(f'XXXXXXXXXXXXXXXXXXXXXX 22222222 DATA{data}')
         # data is sent inside a file that is uploaded (MultiPartParser):
         # curl -X POST -H "Content-Type:multipart/form-data" -u admin:admin http://127.0.0.1:8000/totos/ -F "file=@toto.json;type=application/json"
         # note: if type is not specified, it defaults to "application/octet-stream"
         else:
-            to_print = request.FILES['file']
-            logger.warning(f"XXXXXXXXXXXXXXXXXXXXXX 3333333 DATA {to_print}") 
+            logger.warning(f"XXXXXXXXXXXXXXXXXXXXXX 3333333 DATA {request._content_type}")
+            to_print = dir(request.FILES)
+            logger.warning(f"XXXXXXXXXXXXXXXXXXXXXX 3333333 DATA {to_print}")
             # fitxer = File(request.FILES['file'])
             # content = fitxer.read()
             # stream = BytesIO(content)
-            if request.FILES['file'].content_type == 'application/json':
-                logger.warning(f"444444444444 3333333 DATA") 
+            if request.FILES['data'].content_type == 'application/json':
+                logger.warning("444444444444 3333333 DATA")
                 # input_data = JSONParser().parse(stream)
             else:
                 logger.warning(f"No parser for content type: {to_print.content_type}")
@@ -186,13 +188,12 @@ class TransferFileView(viewsets.ViewSet):
                 return Response(errors, status=status.HTTP_400_BAD_REQUEST)
         return
 
-
-        logger.warning(f'XXXXXXXXXXXXXXXXXXXXXX 000')
+        logger.warning('XXXXXXXXXXXXXXXXXXXXXX 000')
         req_folder = request.data.get('folder')
-        logger.warning(f'XXXXXXXXXXXXXXXXXXXXXX X')
+        logger.warning('XXXXXXXXXXXXXXXXXXXXXX X')
         # req_data = request.data.get('data')
         req_data = request.FILES['file']
-        logger.warning(f'XXXXXXXXXXXXXXXXXXXXXX XX')
+        logger.warning('XXXXXXXXXXXXXXXXXXXXXX XX')
         # TODO: Check user rights to create file
         try:    # TODO: Check need related lang_orig to get id
             folder = Folders.objects.select_related('project__lang_orig', 'project__translate_to').get(id=req_folder, project__owner=request.user)
@@ -227,7 +228,6 @@ class TransferFileView(viewsets.ViewSet):
             return Response(serializer.data, status=status.HTTP_201_CREATED)
         # return Response({'err': 'file already exist'}, status=status.HTTP_400_BAD_REQUEST)
         logger.warning(f'XXXXXXXXXXXXXXXXXXXXXX{5}')
-
 
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
@@ -314,7 +314,6 @@ class FolderViewSet(viewsets.ModelViewSet):
                 else:
                     pass
 
-
                 if git_manager.new_hash:  # Folder exist
                     folder_files.update(repo_founded=False, repo_hash=False)    # SET founded - false for all files
 
@@ -388,4 +387,3 @@ class FileViewSet(viewsets.ModelViewSet):
             return self.get_paginated_response(data=serializer.data)
         return Response({'err': 'folder not found'}, status=status.HTTP_404_NOT_FOUND)
         # raise APIException('folder not found') # CODE:500
-

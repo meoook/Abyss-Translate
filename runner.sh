@@ -99,6 +99,6 @@ case "$selected" in
         docker system prune -a --volumes ;;
     0)  docker-compose down -v
         docker system prune -a -f --volumes ;;
-    *)  docker-compose down -v
+    *)  docker-compose down
         docker-compose up -d --build ;;
 esac

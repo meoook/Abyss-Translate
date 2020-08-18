@@ -14,3 +14,6 @@ with mail.get_connection() as connection:
         subject2, body2, from2, [to2],
         connection=connection,
     ).send()
+
+
+    command: sh -c "python manage.py migrate --no-input && gunicorn localize.wsgi --workers 3 -b 0.0.0.0:8000"

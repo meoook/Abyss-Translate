@@ -22,7 +22,7 @@ class ProjectsApiTestCase(APITestCase):
 
         url = reverse('projects-list')
         response = self.client.get(url)
-        
+
         serializer_data = ProjectSerializer([prj1, prj2], many=True).data
 
         # self.assertEqual(status.HTTP_200_OK, response.status_code)

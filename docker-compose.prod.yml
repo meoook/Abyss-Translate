@@ -2,6 +2,8 @@ version: '3.7'
 
 services:
   redis:
+    container_name: redis
+    hostname: redis
     image: redis:alpine
     command: redis-server
     expose:
@@ -10,6 +12,8 @@ services:
       - main
     restart: always
   postgres:
+    container_name: postgres
+    hostname: postgres
     image: postgres:12-alpine
     volumes:
       - postgres_data:/var/lib/postgresql/data/
@@ -21,12 +25,14 @@ services:
       - main
     restart: always
   django:
+    container_name: django
+    hostname: django
+    image: localize-django
     build:
       context: ./back
       dockerfile: Dockerfile.prod
-    command: sh -c "python manage.py migrate --no-input && gunicorn localize.wsgi --workers 3 -b 0.0.0.0:8000"
+    command: sh -c "python manage.py migrate --no-input && gunicorn localize.wsgi -b 0.0.0.0:8000"
     volumes:
-      - ./back/:/usr/src/back/
       - users_files:/usr/src/back/users/
     expose:
       - 8000
@@ -37,13 +43,13 @@ services:
     networks:
       - main
     restart: always
-  celery:
-    build:
-      context: ./back
-      dockerfile: Dockerfile.prod
+  celery-worker:
+    container_name: celery-worker
+    hostname: celery-worker
+    image: localize-django
     command: celery -A localize worker -l INFO
     volumes:
-      - ./back/:/usr/src/back/
+      - django_files:/usr/src/back/
     env_file:
       - ./.env
     depends_on:
@@ -53,12 +59,12 @@ services:
       - main
     restart: always
   celery-beat:
-    build:
-      context: ./back
-      dockerfile: Dockerfile.prod
+    container_name: celery-beat
+    hostname: celery-beat
+    image: localize-django
     command: celery -A localize beat -l INFO
     volumes:
-      - ./back/:/usr/src/back/
+      - django_files:/usr/src/back/
     env_file:
       - ./.env
     depends_on:
@@ -67,6 +73,7 @@ services:
     networks:
       - main
     restart: always
+
   nginx:
     build:
       context: ./front
@@ -87,6 +94,7 @@ volumes:
   postgres_data:
   users_files:
   static_volume:
+  django_files:
 
 networks:
   main:

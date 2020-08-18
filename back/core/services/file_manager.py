@@ -33,12 +33,12 @@ class LocalizeFileManager:
     def parse(self):
         """ Get file info then parse """
         if not self.__work_file:
-            logger.warning(f"Set file before parsing")
+            logger.warning("Set file before parsing")
             return False
         logger.info(f"Starting parse file ID: {self.__work_file.id}")
         # Null file object fields
         self.__null_file_fields()
-        # Get codec, parse method and check original language texts exist in file 
+        # Get codec, parse method and check original language texts exist in file
         info = DataGetInfo(self.__data_binary, self.__lang_orig.short_name)
         if info.info['error']:
             logger.warning(f"File {self.__log_name} get info error: {info.info['error']}")
@@ -65,7 +65,7 @@ class LocalizeFileManager:
         self.__work_file.items = file_rebuilder.stats['items']
         self.__work_file.save()
         return True
-    
+
     def create_progress(self):
         """ Create related translate progress to file """
         # TODO: Check related exist
@@ -100,4 +100,3 @@ class LocalizeFileManager:
             logger.error(f"Can't save error file for {self.__log_name} ")
             return False
         return True
-

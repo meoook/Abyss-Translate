@@ -34,7 +34,7 @@ class DataGetInfo:
         self.__method = None
         self.__lang = None
 
-        self.__codec = chardet.detect(data[:1024*1024])['encoding']  # 1Mb ~ 8sec
+        self.__codec = chardet.detect(data[:1024 * 1024])['encoding']  # 1Mb ~ 8sec
         try:
             self.__data_decoded = self.__data.decode(self.__codec)
         except TypeError:
