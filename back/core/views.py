@@ -1,4 +1,5 @@
 import os
+import logging
 from rest_framework import viewsets, status
 from rest_framework.parsers import MultiPartParser
 from rest_framework.pagination import PageNumberPagination
@@ -9,7 +10,6 @@ from django.core.exceptions import ObjectDoesNotExist, ValidationError
 from django.core import management
 from django.http import FileResponse, HttpResponse, Http404
 
-
 from core.serializers import ProjectSerializer, FoldersSerializer, LanguagesSerializer,\
     FilesSerializer, TransferFileSerializer, TranslatesSerializer, FileMarksSerializer
 
@@ -19,6 +19,8 @@ from core.utils.get_data_info import GetDataInfo
 from core.utils.git_manager import GitManage
 
 from core.tasks import file_parse
+
+logger = logging.getLogger('django')
 
 # TODO: CHECK USER RIGHTS/PERMISSIONS
 
@@ -44,7 +46,7 @@ class FileMarksView(viewsets.ModelViewSet):
             queryset = self.get_queryset().get(pk=kwargs['pk'], file__owner=request.user)
             serializer = self.get_serializer(queryset, many=False)
             return Response(serializer.data, status=status.HTTP_404_NOT_FOUND)
-        except FileMarks.DoesNotExist:
+        except ObjectDoesNotExist:
             return Response({'err': 'mark not found'}, status=status.HTTP_404_NOT_FOUND)
 
     def list(self, request, *args, **kwargs):
@@ -54,7 +56,7 @@ class FileMarksView(viewsets.ModelViewSet):
         no_trans = request.query_params.get('nt')
         try:
             file_obj = Files.objects.get(pk=file_id, owner=request.user)
-        except Files.DoesNotExist:
+        except ObjectDoesNotExist:
             return Response({'err': 'file not found'}, status=status.HTTP_404_NOT_FOUND)
         # FIXME: mb other issue
         if distinct == 'true':
@@ -80,7 +82,7 @@ class FileMarksView(viewsets.ModelViewSet):
         if file_id and mark_id and lang_translate:
             try:
                 file_obj = Files.objects.get(pk=file_id, owner=request.user)
-            except Files.DoesNotExist:
+            except ObjectDoesNotExist:
                 return Response({'err': 'file not found'}, status=status.HTTP_404_NOT_FOUND)
             # Check lang_translate in list of need translate languages
             if lang_translate not in file_obj.translate_to.values_list('id', flat=True):
@@ -108,14 +110,21 @@ class FileMarksView(viewsets.ModelViewSet):
             return_trans = translates.get(mark_id=mark_id)
             serializer = TranslatesSerializer(return_trans, many=False)
             # Get file progress for language
-            progress = Translated.objects.get(file=file_obj, language=lang_translate)
+            try:
+                progress = Translated.objects.get(file=file_obj, language=lang_translate)
+            except ObjectDoesNotExist:
+                logger.error(f"For file {file_obj.id} related translated object not found: language {lang_translate}")
+                return Response({'err': 'related translated object not found'}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
             how_much_translated = self.get_queryset().filter(Q(translates__language=lang_translate), Q(file=file_obj), ~Q(translates__text__exact='')).count()
-            if file_obj.items_count == how_much_translated:
+            if file_obj.items == how_much_translated:
                 progress.finished = True
                 # FIXME: create file must be triggered by "file checked state or cron"
+            elif file_obj.items < how_much_translated:
+                logging.error(f'For file {file_obj.id} translates items more then file have')
+                progress.finished = True    # But it's error
             elif progress.finished:
                 progress.finished = False
-            progress.items_count = how_much_translated
+            progress.items = how_much_translated
             progress.save()
             # print(f'File {file_obj.name}(id:{file_obj.id}) translated {round(how_much_translated / file_obj.items_count * 100)}%')
             if progress.finished:
@@ -134,7 +143,7 @@ class TransferFileView(viewsets.ViewSet):
         try:
             # progress = Translated.objects.get(file_id=pk, language_id=lang_id)   <-- retrieve by fileID and langID
             progress = Translated.objects.select_related('language', 'file').get(id=pk, file__owner=request.user)
-        except Translated.DoesNotExist:
+        except ObjectDoesNotExist:
             return Response({'err': 'File not found'}, status=status.HTTP_404_NOT_FOUND)
         if progress.finished:
             file_path = progress.translate_copy.path
@@ -147,6 +156,7 @@ class TransferFileView(viewsets.ViewSet):
                         status=status.HTTP_404_NOT_FOUND)
 
     def create(self, request):
+        """ Create file obj and related translated progress after file download (uploaded by user) """
         req_data = request.data.get('data')
         req_folder = request.data.get('folder')
         # TODO: Check user rights to create file
@@ -169,11 +179,11 @@ class TransferFileView(viewsets.ViewSet):
         if serializer.is_valid():
             serializer.save()
             # Create related translated progress objects
-            print('XXXXXXXXXXXXXXXXXXXXXX', 33)
+            # print('XXXXXXXXXXXXXXXXXXXXXX', 33)
             file_id = serializer.data.get('id')  # TODO: check this method
-            translate_to_ids = folder.project.translate_to.values_list('id', flat=True)
-            objs = [Translated(file_id=serializer.data.get('id'), language_id=lang_id) for lang_id in translate_to_ids]
-            Translated.objects.bulk_create(objs)
+            # translate_to_ids = folder.project.translate_to.values_list('id', flat=True)
+            # objs = [Translated(file_id=serializer.data.get('id'), language_id=lang_id) for lang_id in translate_to_ids]
+            # Translated.objects.bulk_create(objs)
             print('XXXXXXXXXXXXXXXXXXXXXX', 4)
             # Run celery parse delay task
             file_parse.delay(file_id)

@@ -66,6 +66,13 @@ class LocalizeFileManager:
         self.__work_file.save()
         return True
     
+    def create_progress(self):
+        """ Create related translate progress to file """
+        # TODO: Check related exist
+        translate_to_ids = self.__work_file.folder.project.translate_to.values_list('id', flat=True)
+        objs = [Translated(file_id=self.__work_file.id, language_id=lang_id) for lang_id in translate_to_ids]
+        Translated.objects.bulk_create(objs)
+
     def create_translation(self, language):
         """ Create translation copy of the file """
         pass

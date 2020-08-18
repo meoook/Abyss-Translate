@@ -21,12 +21,14 @@ logger = logging.getLogger('logfile')
     rate_limit='1/h',
     ignore_result=True
 )
-def file_parse(file_id):
+def file_parse(file_id, new=True):
     """ Get file info and parse file data into text to translate """
     file_manager = LocalizeFileManager(file_id)
     if not file_manager.success or not file_manager.parse():
         if file_parse.request.retries < 3:
             file_parse.retry()
+    elif new:
+        file_manager.create_progress()
 
 
 @shared_task(
