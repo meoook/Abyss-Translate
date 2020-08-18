@@ -158,6 +158,8 @@ class TransferFileView(viewsets.ViewSet):
     def create(self, request):
         """ Create file obj and related translated progress after file download (uploaded by user) """
         logger.warning(f'XXXXXXXXXXXXXXXXXXXXXX START DATA')
+        test = dir(request)
+        logger.warning(f'XXXXXXXXXXXXXXXXXXXXXX {test}')
         req_folder = request.data.get('folder')
         logger.warning(f'XXXXXXXXXXXXXXXXXXXXXX X')
         # req_data = request.data.get('data')

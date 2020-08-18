@@ -112,7 +112,8 @@ STORAGE_ERRORS = FileSystemStorage(location=os.path.join(MEDIA_ROOT, 'errors'), 
 REST_FRAMEWORK = {
     'DEFAULT_AUTHENTICATION_CLASSES': ('knox.auth.TokenAuthentication',),
     'DEFAULT_PERMISSION_CLASSES': ('rest_framework.permissions.IsAuthenticated',),
-    'DEFAULT_PARSER_CLASSES': ['rest_framework.parsers.JSONParser', ]
+    'DEFAULT_PARSER_CLASSES': ['rest_framework.parsers.JSONParser', ],
+    # 'FILE_UPLOAD_HANDLERS': ,
 }
 
 # If this is used then `CORS_ORIGIN_WHITELIST` will not have any effect
