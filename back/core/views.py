@@ -135,7 +135,9 @@ class FileMarksView(viewsets.ModelViewSet):
 
 class TransferFileView(viewsets.ViewSet):
     """ FILE TRANSFER VIEW: Upload/Download files """
-    parser_classes = (MultiPartParser, FileUploadParser)
+    # parser_classes = (MultiPartParser, FileUploadParser, )
+    # parser_classes = (FileUploadParser, )
+    parser_classes = (JSONParser, MultiPartParser, )
     serializer_class = TransferFileSerializer
 
     def retrieve(self, request, pk=None):
@@ -158,12 +160,39 @@ class TransferFileView(viewsets.ViewSet):
     def create(self, request):
         """ Create file obj and related translated progress after file download (uploaded by user) """
         logger.warning(f'XXXXXXXXXXXXXXXXXXXXXX START DATA')
-        test = dir(request)
-        logger.warning(f'XXXXXXXXXXXXXXXXXXXXXX {test}')
+        data = None
+        # data is sent as direct json (literally or from file: @) (JSONParser):
+        # curl -X POST -H "Content-Type:application/json" -u admin:admin http://127.0.0.1:8000/totos/ -d @toto.json
+        # curl -X POST -H "Content-Type:application/json"
+        if request._content_type == 'application/json':
+            data = request.DATA
+            logger.warning(f'XXXXXXXXXXXXXXXXXXXXXX 22222222 DATA{data}')
+        # data is sent inside a file that is uploaded (MultiPartParser):
+        # curl -X POST -H "Content-Type:multipart/form-data" -u admin:admin http://127.0.0.1:8000/totos/ -F "file=@toto.json;type=application/json"
+        # note: if type is not specified, it defaults to "application/octet-stream"
+        else:
+            to_print = request.FILES['file']
+            logger.warning(f"XXXXXXXXXXXXXXXXXXXXXX 3333333 DATA {to_print}") 
+            fitxer = File(request.FILES['file'])
+            content = fitxer.read()
+            stream = BytesIO(content)
+            if request.FILES['file'].content_type == 'application/json':
+                logger.warning(f"444444444444 3333333 DATA") 
+                input_data = JSONParser().parse(stream)
+            else:
+                logger.warning(f"No parser for content type: {to_print.content_type}")
+                errors = dict()
+                errors['error'] =  f"No parser for content type: {to_print.content_type}"
+                return Response(errors,status=status.HTTP_400_BAD_REQUEST)
+            fitxer.close()
+        return
+
+
+        logger.warning(f'XXXXXXXXXXXXXXXXXXXXXX 000')
         req_folder = request.data.get('folder')
         logger.warning(f'XXXXXXXXXXXXXXXXXXXXXX X')
         # req_data = request.data.get('data')
-        req_data = request.FILES['data']
+        req_data = request.FILES['file']
         logger.warning(f'XXXXXXXXXXXXXXXXXXXXXX XX')
         # TODO: Check user rights to create file
         try:    # TODO: Check need related lang_orig to get id
