@@ -56,7 +56,6 @@ case "$selected" in
             read -p "Select srv to display logs for: " log_option
             selected2=$log_option
         fi
-
         case "$selected2" in
             1) docker-compose logs -f react ;;
             2) docker-compose logs -f celery ;;
@@ -69,7 +68,6 @@ case "$selected" in
             read -p "Select srv to go command line for: " option2
             selected2=$option2
         fi
-
         case "$selected2" in
             1) docker-compose exec react sh ;;
             2) docker-compose exec celery sh ;;
