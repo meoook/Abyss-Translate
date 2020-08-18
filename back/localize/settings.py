@@ -63,9 +63,9 @@ DATABASES = {
         "NAME": os.environ.get("SQL_DATABASE", "postgres"),
         "USER": os.environ.get("SQL_USER", "postgres"),
         "PASSWORD": os.environ.get("SQL_PASSWORD", "xaxaxue"),
-        "HOST": os.environ.get("SQL_HOST", "postgres"),
+        "HOST": os.environ.get("SQL_HOST", "127.0.0.1"),
         "PORT": os.environ.get("SQL_PORT", "5432"),
-        "TEST": { 'NAME': 'test_postgres' },
+        "TEST": {'NAME': 'test_postgres'},
     }
 }
 
@@ -168,7 +168,7 @@ LOGGING = {
             'datefmt': '%d/%b/%Y %H:%M:%S',
         },
         'simple': {
-            'format': '[{levelname:.4}] {message}',
+            'format': '[{levelname:.4} {module}] {message}',
             'style': '{',
             'datefmt': '%d.%m.%Y %H:%M:%S',
         },
@@ -202,7 +202,7 @@ LOGGING = {
         },
         'file': {
             'level': 'WARNING',
-            # 'filters': ['require_debug_false'],
+            'filters': ['require_debug_false'],
             'class': 'logging.FileHandler',
             'filename': os.path.join(BASE_DIR, 'logs', 'log.log'),
             'formatter': 'file',
@@ -243,7 +243,7 @@ LOGGING = {
         },
         'django.mail': {
             'handlers': ['mail_admins'],
-            'level': 'ERROR',   # When to send mails 
+            'level': 'ERROR',   # When to send mails
             'propagate': True,
         },
     },
