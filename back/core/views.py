@@ -134,10 +134,7 @@ class FileMarksView(viewsets.ModelViewSet):
 
 class TransferFileView(viewsets.ViewSet):
     """ FILE TRANSFER VIEW: Upload/Download files """
-    # parser_classes = (MultiPartParser, FileUploadParser, FormParser )
-    # parser_classes = (MultiPartParser, JSONParser)
     parser_classes = (MultiPartParser, )
-    # parser_classes = (FileUploadParser, )
     serializer_class = TransferFileSerializer
 
     def retrieve(self, request, pk=None):
@@ -164,7 +161,7 @@ class TransferFileView(viewsets.ViewSet):
         req_folder = request.data.get('folder')
 
         # TODO: Check user rights to create file
-        try:    # TODO: Check need related lang_orig to get id
+        try:
             folder = Folders.objects.select_related('project__lang_orig').get(id=req_folder, project__owner=request.user)
         except ObjectDoesNotExist:
             return Response({'err': 'folder not found'}, status=status.HTTP_404_NOT_FOUND)
@@ -179,10 +176,13 @@ class TransferFileView(viewsets.ViewSet):
             'data': req_data,
         })
         if serializer.is_valid():
-            serializer.save()
+            new_file = serializer.save()
             file_id = serializer.data.get('id')  # TODO: check this method
-            # Translated.objects.bulk_create(objs)
-            logger.warning(f'XXXXXXXXXXXXXXXXXXXXXX{4}')
+            logger.warning(f'XXXXXXXXXXXXXXXXXXXXXX FILE ID: {file_id}')
+            logger.warning(f'{dir(serializer)}')
+
+            logger.warning(f'XXXXXXXXXXXXXXXXXXXXXX SS ID: {new_file.id}')
+            logger.warning(f'{dir(serializer)}')
             # Run celery parse delay task
             file_parse.delay(file_id)
             logger.warning(f'XXXXXXXXXXXXXXXXXXXXXX{45}')

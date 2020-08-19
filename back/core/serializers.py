@@ -41,7 +41,7 @@ class TransferFileSerializer(serializers.ModelSerializer):
     """ UPLOAD: On upload file serializer """
     class Meta:
         model = Files
-        fields = ['owner', 'name', 'folder', 'lang_orig', 'data']
+        fields = ['id', 'owner', 'name', 'folder', 'lang_orig', 'data']
 
 
 class TranslatedSerializer(serializers.ModelSerializer):

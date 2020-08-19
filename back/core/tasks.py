@@ -23,6 +23,7 @@ logger = logging.getLogger('logfile')
 )
 def file_parse(file_id, new=True):
     """ Get file info and parse file data into text to translate """
+    logger.warning(f'DEBUUUUUUUUUUUUUUG {file_id}')
     file_manager = LocalizeFileManager(file_id)
     if not file_manager.success or not file_manager.parse():
         if file_parse.request.retries < 3:
@@ -95,6 +96,6 @@ def upload_translated():
         pass
 
 
-@periodic_task(run_every=crontab(hour='*/1'), name="Check celery. Run each 10 mins.")
+@periodic_task(run_every=crontab(hour='*/6'), name="Check celery. Run each 10 mins.")
 def test_task():
     logger.error('TEST CELERY ERROR')
