@@ -10,13 +10,14 @@ ENV PYTHONDONTWRITEBYTECODE 1
 ENV PYTHONUNBUFFERED 1
 
 # install psycopg2 dependencies
-RUN apk update \
-    && apk add postgresql-dev gcc python3-dev musl-dev libffi-dev
+# RUN apk update \
+#     && apk add postgresql-dev gcc python3-dev musl-dev libffi-dev
 
-# RUN apt-get update \
-#     && apt-get install -y --no-install-recommends \
-#         postgresql-client \
-#     && rm -rf /var/lib/apt/lists/*
+RUN apk upgrade && \
+    apk add --no-cache zlib-dev jpeg-dev gcc python3-dev postgresql-dev \
+    build-base linux-headers musl-dev supervisor nginx postgresql-client \
+    bash bash-completion openssl wget gettext git libxslt-dev libffi-dev && \
+    rm -rf /var/cache/apk/*
 
 # install dependencies
 RUN pip install --upgrade pip
