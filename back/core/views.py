@@ -76,33 +76,33 @@ class FileMarksView(viewsets.ModelViewSet):
         file_id = request.data.get('fileID')
         mark_id = request.data.get('markID')
         md5sum = request.data.get('md5')
-        lang_translate = request.data.get('langID')
+        lang_trans = request.data.get('langID')
         text = request.data.get('text')     # TODO: Check mb can get in binary??
-        if file_id and mark_id and lang_translate:
+        if file_id and mark_id and lang_trans:
             try:
                 file_obj = Files.objects.get(pk=file_id, owner=request.user)
             except ObjectDoesNotExist:
                 return Response({'err': 'file not found'}, status=status.HTTP_404_NOT_FOUND)
             # Check lang_translate in list of need translate languages
-            if lang_translate not in file_obj.translate_to.values_list('id', flat=True):
+            if lang_trans not in file_obj.translate_to.values_list('id', flat=True):
                 return Response({'err': "no need translate to this language"}, status=status.HTTP_400_BAD_REQUEST)
             # Can't change original text
-            if lang_translate == file_obj.lang_orig.id:
+            if lang_trans == file_obj.lang_orig.id:
                 # TODO: permisions check - mb owner can change
                 return Response({'err': "can't change original text"}, status=status.HTTP_404_NOT_FOUND)
 
             # Get or create translate(s)
             if md5sum:  # multi update
                 # Check if translates exist with same md5
-                translates = Translates.objects.filter(mark__file=file_obj, language=lang_translate, mark__md5sum=md5sum)
+                translates = Translates.objects.filter(mark__file=file_obj, language=lang_trans, mark__md5sum=md5sum)
                 control_marks = file_obj.filemarks_set.filter(md5sum=md5sum)
             else:
-                translates = Translates.objects.filter(mark__file=file_obj, language=lang_translate, mark__id=mark_id)
+                translates = Translates.objects.filter(mark__file=file_obj, language=lang_trans, mark__id=mark_id)
                 control_marks = file_obj.filemarks_set.filter(id=mark_id)
             # TODO: check text language and other
             translates.update(text=text)
             if translates.count() != control_marks.count():
-                def_obj = {'translator': request.user, 'text': text, 'language_id': lang_translate}
+                def_obj = {'translator': request.user, 'text': text, 'language_id': lang_trans}
                 objs = [Translates(**def_obj, mark=mark) for mark in control_marks if mark.id not in translates.values_list('mark', flat=True)]
                 Translates.objects.bulk_create(objs)
 
@@ -110,11 +110,12 @@ class FileMarksView(viewsets.ModelViewSet):
             serializer = TranslatesSerializer(return_trans, many=False)
             # Get file progress for language
             try:
-                progress = Translated.objects.get(file=file_obj, language=lang_translate)
+                progress = Translated.objects.get(file=file_obj, language=lang_trans)
             except ObjectDoesNotExist:
-                logger.error(f"For file {file_obj.id} related translated object not found: language {lang_translate}")
-                return Response({'err': 'related translated object not found'}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
-            how_much_translated = self.get_queryset().filter(Q(translates__language=lang_translate), Q(file=file_obj), ~Q(translates__text__exact='')).count()
+                logger.error(f"For file {file_obj.id} related translated object not found: language {lang_trans}")
+                return Response({'err': 'related translated object not found'}, status=status.HTTP_404_NOT_FOUND)
+            how_much_translated = self.get_queryset()\
+                .filter(Q(translates__language=lang_trans), Q(file=file_obj), ~Q(translates__text__exact='')).count()
             if file_obj.items == how_much_translated:
                 progress.finished = True
                 # FIXME: create file must be triggered by "file checked state or cron"
@@ -125,9 +126,8 @@ class FileMarksView(viewsets.ModelViewSet):
                 progress.finished = False
             progress.items = how_much_translated
             progress.save()
-            # print(f'File {file_obj.name}(id:{file_obj.id}) translated {round(how_much_translated / file_obj.items_count * 100)}%')
             if progress.finished:
-                management.call_command('file_create_translated', file_obj.id, lang_translate)
+                management.call_command('file_create_translated', file_obj.id, lang_trans)
             return Response(serializer.data, status=status.HTTP_200_OK)
         return Response({'err': 'request params error'}, status=status.HTTP_400_BAD_REQUEST)
 
@@ -153,6 +153,12 @@ class TransferFileView(viewsets.ViewSet):
                             status=status.HTTP_500_INTERNAL_SERVER_ERROR)
         return Response({'err': f'For file {progress.file.name} translate to {progress.language.name} not done'},
                         status=status.HTTP_404_NOT_FOUND)
+
+
+
+    def update(self, request, *args, **kwargs):
+        logger.warning('XXXXXXXXXXXXXXXXXXXXXX UPDATE UPDATE UPDATE UPDATE')
+        return Response({'success': 'true'}, status=status.HTTP_200_OK)
 
 
     def create(self, request):
