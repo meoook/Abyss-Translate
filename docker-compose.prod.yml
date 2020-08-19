@@ -31,13 +31,13 @@ services:
     build:
       context: ./back
       dockerfile: Dockerfile.prod
-    command: sh -c "python manage.py migrate --no-input && gunicorn localize.wsgi -b 0.0.0.0:8000"
+    command: sh -c "python manage.py migrate --no-input && gunicorn localize.wsgi:application --workers 3 -b 0:8000"
     volumes:
       - users_files:/usr/src/back/users/
     expose:
       - 8000
     env_file:
-      - ./.env
+      - ./.env.dev
     depends_on:
       - postgres
     networks:
@@ -48,10 +48,8 @@ services:
     hostname: celery-worker
     image: localize-django
     command: celery -A localize worker -l INFO
-    volumes:
-      - django_files:/usr/src/back/
     env_file:
-      - ./.env
+      - ./.env.dev
     depends_on:
       - django
       - redis
@@ -63,18 +61,17 @@ services:
     hostname: celery-beat
     image: localize-django
     command: celery -A localize beat -l INFO
-    volumes:
-      - django_files:/usr/src/back/
     env_file:
-      - ./.env
+      - ./.env.dev
     depends_on:
       - django
       - redis
     networks:
       - main
     restart: always
-
   nginx:
+    container_name: nginx
+    hostname: nginx
     build:
       context: ./front
       dockerfile: Dockerfile.prod
@@ -84,6 +81,7 @@ services:
       - REACT_APP_API_URL=http://127.0.0.1:8000/api
     ports:
       - 80:80
+      - 8000:8000
     depends_on:
       - django
     networks:
@@ -94,7 +92,6 @@ volumes:
   postgres_data:
   users_files:
   static_volume:
-  django_files:
 
 networks:
   main:

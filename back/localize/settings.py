@@ -121,12 +121,16 @@ REST_FRAMEWORK = {
 CORS_ALLOW_CREDENTIALS = True
 # If this is used, then not need to use `CORS_ORIGIN_ALLOW_ALL = True`
 CORS_ORIGIN_WHITELIST = [
+    'http://localhost',
     'http://localhost:3000',
+    'http://127.0.0.1',
     'http://127.0.0.1:3000',
     'http://91.225.238.193:3000',
 ]
 CORS_ORIGIN_REGEX_WHITELIST = [
+    'http://localhost',
     'http://localhost:3000',
+    'http://127.0.0.1',
     'http://127.0.0.1:3000',
     'http://91.225.238.193:3000',
 ]

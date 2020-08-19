@@ -2,7 +2,7 @@ import re
 import chardet
 from langdetect import detect, DetectorFactory
 from html.parser import HTMLParser
-from core.utils.utils import get_md5, count_words, csv_validate_text
+from core.services.utils import get_md5, count_words, csv_validate_text
 
 from datetime import datetime
 

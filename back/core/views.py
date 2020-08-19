@@ -15,7 +15,6 @@ from core.serializers import ProjectSerializer, FoldersSerializer, LanguagesSeri
 
 from .models import Languages, Projects, Folders, FolderRepo, Files, Translated, FileMarks, Translates
 
-from core.utils.get_data_info import GetDataInfo
 from core.utils.git_manager import GitManage
 
 from core.tasks import file_parse

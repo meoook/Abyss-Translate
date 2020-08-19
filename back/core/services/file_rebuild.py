@@ -3,7 +3,7 @@ import re
 from django.db.models import Sum, Count
 
 from core.models import FileMarks, Translates
-from core.utils.utils import get_md5, count_words, csv_validate_text
+from core.services.utils import get_md5, count_words, csv_validate_text
 
 
 class FileRebuild:

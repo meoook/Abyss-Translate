@@ -11,17 +11,19 @@ ENV PYTHONDONTWRITEBYTECODE 1
 ENV PYTHONUNBUFFERED 1
 # install psycopg2 dependencies
 RUN apk update \
-    && apk add postgresql-dev gcc python3-dev musl-dev libffi-dev
+    && apk add postgresql-dev gcc python3-dev musl-dev libffi-dev 
 
-# copy project
-COPY . .
 # lint
 RUN pip install --upgrade pip \
     && pip install flake8 \
     && flake8 --ignore=E501,F401 .
 # install dependencies
 COPY ./requirements.txt .
-RUN pip wheel --no-cache-dir --no-deps --wheel-dir /usr/src/back/wheels -r requirements.txt
+RUN pip wheel --no-cache-dir --prefer-binary --wheel-dir /usr/src/back/wheels -r requirements.txt
+
+# copy project
+COPY . .
+
 #########
 # FINAL #
 #########
@@ -29,26 +31,29 @@ RUN pip wheel --no-cache-dir --no-deps --wheel-dir /usr/src/back/wheels -r requi
 # pull official base image
 FROM python:3.8.3-alpine
 # create directory for the app user
-RUN mkdir -p /home/app
-# create the app user
-RUN addgroup -S app && adduser -S app -G app
+# RUN mkdir -p /home/localize
+# create the localize user
+RUN addgroup -S translate && adduser -S localize -G translate
 # create the appropriate directories
-ENV HOME=/home/app
-ENV APP_HOME=/home/app/web
-RUN mkdir $APP_HOME
-WORKDIR $APP_HOME
+WORKDIR /usr/src/localize
+ENV APP_HOME=/usr/src/localize
 # install dependencies
-RUN apk update && apk add libpq
-COPY --from=builder /usr/src/app/wheels /wheels
-COPY --from=builder /usr/src/app/requirements.txt .
-RUN pip install --no-cache /wheels/*
+# RUN apk update && apk add gcc libffi-dev
+# RUN apk update
+RUN apk add libpq
+COPY --from=builder ./usr/src/back/wheels/ /wheels/
+COPY --from=builder ./usr/src/back/requirements.txt .
+RUN pip install --upgrade pip 
+RUN pip install --no-cache-dir /wheels/*
 # copy entrypoint-prod.sh
-COPY ./entrypoint.prod.sh $APP_HOME
+COPY ./entrypoint.sh $HOME
 # copy project
 COPY . $APP_HOME
-# chown all the files to the app user
-RUN chown -R app:app $APP_HOME
-# change to the app user
-USER app
+# chown all the files to the localize user
+RUN chown -R localize:translate $APP_HOME
+# change to the localize user
+USER localize
 # run entrypoint.prod.sh
-ENTRYPOINT ["sh", "/usr/src/back/entrypoint.sh"]
+EXPOSE 8000
+ENTRYPOINT ["sh", "/usr/src/localize/entrypoint.sh"]
+# CMD gunicorn localize.wsgi:application --bind 0.0.0.0:8000

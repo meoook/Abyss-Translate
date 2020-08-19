@@ -3,12 +3,8 @@ version: '3.7'
 services:
   redis:
     image: redis:alpine
-    command: redis-server
     ports:
       - 6379:6379
-    networks:
-      - main
-    restart: always
   postgres:
     image: postgres:12-alpine
     volumes:
@@ -19,33 +15,22 @@ services:
       - POSTGRES_DB=postgres
       - POSTGRES_USER=postgres
       - POSTGRES_PASSWORD=xaxaxue
-    networks:
-      - main
-    restart: always
   django:
     build: ./back
-    command: sh -c "python manage.py migrate --no-input && python manage.py runserver 0.0.0.0:8000"
+    image: localize-django-dev
+    command: sh -c "python manage.py migrate --no-input && gunicorn localize.wsgi -b 0.0.0.0:8000"
     volumes:
-      - django_files:/usr/src/back/
       - users_files:/usr/src/back/users/
     ports:
       - 8000:8000
     depends_on:
       - postgres
-    networks:
-      - main
-    restart: always
   celery:
-    build: ./back
+    image: localize-django-dev
     command: celery -A localize worker -B -l INFO
-    volumes:
-      - django_files:/usr/src/back/
     depends_on:
       - django
       - redis
-    networks:
-      - main
-    restart: always
   react:
     build: ./front
     command: npm start
@@ -57,15 +42,9 @@ services:
       - 3000:3000
     tty: true
     stdin_open: true
-    networks:
-      - main
-    restart: always
 
 volumes:
   postgres_data:
-  django_files:
   users_files:
   node_modules:
 
-networks:
-  main:
