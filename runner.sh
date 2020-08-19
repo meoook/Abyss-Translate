@@ -40,11 +40,11 @@ else
     echo "${MYCUSTOMTAB}2 - display logs (srv select)"
     echo "${MYCUSTOMTAB}3 - sh command line (srv select)"
     echo "${MYCUSTOMTAB}5 - build and run server (all)"
-    echo "${MYCUSTOMTAB}6 - down srvs without vols (all)"
+    echo "${MYCUSTOMTAB}6 - restart srvs with vols (all & vols)"
     echo "${MYCUSTOMTAB}7 - start prod server (all)"
     echo "${MYCUSTOMTAB}9 - clear unused data and images (images)"
     echo "${MYCUSTOMTAB}0 - !!! clear all data and images !!! (images)"
-    echo "${MYCUSTOMTAB}* - rebuild and restart (all & vols)"
+    echo "${MYCUSTOMTAB}* - rebuild and restart (all)"
     echo_line
     read -p "Select option to do: " option
     selected=$option
@@ -95,7 +95,8 @@ case "$selected" in
             *) docker-compose exec django sh ;;
         esac ;;
     5) docker-compose up -d --build ;;
-    6) docker-compose down ;;
+    6)  docker-compose down -v
+        docker-compose up -d --build ;;
     7)  docker-compose -f docker-compose.prod.yml down -v 
         docker-compose -f docker-compose.prod.yml up -d --build ;;
     9)  docker-compose up -d --build

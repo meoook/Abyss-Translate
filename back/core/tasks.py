@@ -95,6 +95,6 @@ def upload_translated():
         pass
 
 
-@periodic_task(run_every=timedelta(seconds=10), name="Task to check celery. Run each 10 seconds.")
+@periodic_task(run_every=crontab(hour='*/1'), name="Check celery. Run each 10 mins.")
 def test_task():
-    logger.error('TEST ERROR')
+    logger.error('TEST CELERY ERROR')

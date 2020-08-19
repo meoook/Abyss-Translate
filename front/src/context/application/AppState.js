@@ -200,10 +200,10 @@ const AppState = ({ children }) => {
     if (!fPrj) throw new Error(`Project not found for this folder ${folderID}`)
 
     let formData = new FormData()
+    if (fPrj.lang_orig) formData.append("lang_orig", fPrj.lang_orig)
     formData.append("data", file)
     formData.append("name", file.name)
     formData.append("folder", folderID)
-    if (fPrj.lang_orig) formData.append("lang_orig", fPrj.lang_orig)
     try {
       await axios.post(`${URL}/transfer/`, formData, {
         headers: { ...config.headers },

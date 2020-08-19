@@ -1,7 +1,7 @@
 import os
 import logging
 from rest_framework import viewsets, status
-from rest_framework.parsers import MultiPartParser, FileUploadParser, JSONParser
+from rest_framework.parsers import MultiPartParser
 from rest_framework.pagination import PageNumberPagination
 from rest_framework.response import Response
 from django.db.models import Max, Subquery, Q
@@ -134,9 +134,10 @@ class FileMarksView(viewsets.ModelViewSet):
 
 class TransferFileView(viewsets.ViewSet):
     """ FILE TRANSFER VIEW: Upload/Download files """
-    # parser_classes = (MultiPartParser, FileUploadParser, )
+    # parser_classes = (MultiPartParser, FileUploadParser, FormParser )
     # parser_classes = (MultiPartParser, JSONParser)
     parser_classes = (MultiPartParser, )
+    # parser_classes = (FileUploadParser, )
     serializer_class = TransferFileSerializer
 
     def retrieve(self, request, pk=None):
@@ -156,51 +157,20 @@ class TransferFileView(viewsets.ViewSet):
         return Response({'err': f'For file {progress.file.name} translate to {progress.language.name} not done'},
                         status=status.HTTP_404_NOT_FOUND)
 
+
     def create(self, request):
         """ Create file obj and related translated progress after file download (uploaded by user) """
-        logger.warning('XXXXXXXXXXXXXXXXXXXXXX START DATA')
-        data = None
-        logger.warning(f'XXXXXXXXXXXXXXXXXXXXXX {request._content_type}')
-        # data is sent as direct json (literally or from file: @) (JSONParser):
-        # curl -X POST -H "Content-Type:application/json" -u admin:admin http://127.0.0.1:8000/totos/ -d @toto.json
-        # curl -X POST -H "Content-Type:application/json"
-        if request._content_type == 'application/json':
-            data = request.data
-            logger.warning(f'XXXXXXXXXXXXXXXXXXXXXX 22222222 DATA{data}')
-        # data is sent inside a file that is uploaded (MultiPartParser):
-        # curl -X POST -H "Content-Type:multipart/form-data" -u admin:admin http://127.0.0.1:8000/totos/ -F "file=@toto.json;type=application/json"
-        # note: if type is not specified, it defaults to "application/octet-stream"
-        else:
-            logger.warning("XXXXXXXXXXXXXXXXXXXXXX 3333333 DATA")
-            to_print = dir(request.FILES)
-            logger.warning(f"XXXXXXXXXXXXXXXXXXXXXX 3333333 DATA {to_print}")
-            # fitxer = File(request.FILES['file'])
-            # content = fitxer.read()
-            # stream = BytesIO(content)
-            if request.FILES['data'].content_type == 'application/json':
-                logger.warning("444444444444 3333333 DATA")
-                # input_data = JSONParser().parse(stream)
-            else:
-                logger.warning(f"No parser for content type: {to_print}")
-                errors = dict()
-                errors['error'] = f"No parser for content type: {to_print}"
-                return Response(errors, status=status.HTTP_400_BAD_REQUEST)
-
-        logger.warning('XXXXXXXXXXXXXXXXXXXXXX 000')
+        req_data = request.data.get('data')
         req_folder = request.data.get('folder')
-        logger.warning('XXXXXXXXXXXXXXXXXXXXXX X')
-        # req_data = request.data.get('data')
-        req_data = request.FILES['file']
-        logger.warning('XXXXXXXXXXXXXXXXXXXXXX XX')
+
         # TODO: Check user rights to create file
         try:    # TODO: Check need related lang_orig to get id
-            folder = Folders.objects.select_related('project__lang_orig', 'project__translate_to').get(id=req_folder, project__owner=request.user)
+            folder = Folders.objects.select_related('project__lang_orig').get(id=req_folder, project__owner=request.user)
         except ObjectDoesNotExist:
             return Response({'err': 'folder not found'}, status=status.HTTP_404_NOT_FOUND)
 
-        lang_orig_id = folder.project.lang_orig.id
-        logger.warning(f'XXXXXXXXXXXXXXXXXXXXXX{lang_orig_id}')
         # Create file obejct
+        lang_orig_id = folder.project.lang_orig.id
         serializer = self.serializer_class(data={
             'owner': request.user.id,
             'name': request.data.get('name'),
@@ -208,25 +178,17 @@ class TransferFileView(viewsets.ViewSet):
             'lang_orig': lang_orig_id,
             'data': req_data,
         })
-        logger.warning(f'XXXXXXXXXXXXXXXXXXXXXX{2}')
         if serializer.is_valid():
             serializer.save()
-            # Create related translated progress objects
-            # print('XXXXXXXXXXXXXXXXXXXXXX', 33)
             file_id = serializer.data.get('id')  # TODO: check this method
-            # translate_to_ids = folder.project.translate_to.values_list('id', flat=True)
-            # objs = [Translated(file_id=serializer.data.get('id'), language_id=lang_id) for lang_id in translate_to_ids]
             # Translated.objects.bulk_create(objs)
             logger.warning(f'XXXXXXXXXXXXXXXXXXXXXX{4}')
-
             # Run celery parse delay task
             file_parse.delay(file_id)
             logger.warning(f'XXXXXXXXXXXXXXXXXXXXXX{45}')
-
             return Response(serializer.data, status=status.HTTP_201_CREATED)
         # return Response({'err': 'file already exist'}, status=status.HTTP_400_BAD_REQUEST)
         logger.warning(f'XXXXXXXXXXXXXXXXXXXXXX{5}')
-
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
 

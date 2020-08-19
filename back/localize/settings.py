@@ -98,7 +98,7 @@ STATIC_URL = '/source/'
 # Maximum size in bytes of request data (excluding file uploads) that will be
 # read before a SuspiciousOperation (RequestDataTooBig) is raised.
 # DATA_UPLOAD_MAX_MEMORY_SIZE = 2621440  # i.e. 2.5 MB
-DATA_UPLOAD_MAX_MEMORY_SIZE = 2.5 * 1024 * 1024
+DATA_UPLOAD_MAX_MEMORY_SIZE = 3 * 1024 * 1024
 # The numeric mode to set newly-uploaded files to. The value should be a mode
 # you'd pass directly to os.chmod; see https://docs.python.org/library/os.html#files-and-directories.
 # FILE_UPLOAD_PERMISSIONS = 0o644
@@ -113,7 +113,6 @@ REST_FRAMEWORK = {
     'DEFAULT_AUTHENTICATION_CLASSES': ('knox.auth.TokenAuthentication',),
     'DEFAULT_PERMISSION_CLASSES': ('rest_framework.permissions.IsAuthenticated',),
     'DEFAULT_PARSER_CLASSES': ['rest_framework.parsers.JSONParser', ],
-    # 'FILE_UPLOAD_HANDLERS': ,
 }
 
 # If this is used then `CORS_ORIGIN_WHITELIST` will not have any effect
@@ -129,10 +128,21 @@ CORS_ORIGIN_WHITELIST = [
 ]
 CORS_ORIGIN_REGEX_WHITELIST = [
     'http://localhost',
-    'http://localhost:3000',
-    'http://127.0.0.1',
+    r"^http://.+\:3000.*$"
     'http://127.0.0.1:3000',
     'http://91.225.238.193:3000',
+]
+CORS_ALLOW_METHODS = [
+    'DELETE',
+    'GET',
+    'OPTIONS',
+    'PATCH',
+    'POST',
+    'PUT',
+]
+CSRF_TRUSTED_ORIGINS = [
+    '127.0.0.1',
+    'localhost'
 ]
 
 # Celery
