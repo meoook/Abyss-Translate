@@ -24,6 +24,7 @@ class ProjectsApiTestCase(APITestCase):
         response = self.client.get(url)
 
         serializer_data = ProjectSerializer([prj1, prj2], many=True).data
+        print(serializer_data)
 
         # self.assertEqual(status.HTTP_200_OK, response.status_code)
         self.assertEqual(serializer_data, response.data)
