@@ -7,6 +7,7 @@ services:
     ports:
       - 6379:6379
   postgres:
+    container_name: localize-postgres-dev
     image: postgres:12-alpine
     volumes:
       - postgres_data:/var/lib/postgresql/data/

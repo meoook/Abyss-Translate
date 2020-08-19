@@ -11,32 +11,38 @@ class Command(BaseCommand):
     help = 'Manager to create test data'
 
     def add_arguments(self, parser):
-        parser.add_argument('amount', type=int, default=None)
+        parser.add_argument('name', type=str, nargs='?', default=None)
+        parser.add_argument('amount', type=int, nargs='*', default=None)
 
     def handle(self, *args, **options):
         if options['amount'] is None:
             self.stderr.write('Amount not set - create one')
-            return False
-        self.stdout.write('Creating basic user')
-        self.create_basic()
+            # return False
+        if not options['name']:
+            name = self.__random_name(6)
+            self.stderr.write(f'Name not set. Use random: {name}')
+        else:
+            name = options['name']
+            self.stdout.write(f'Creating basic user name: {name}')
+        self.create_basic(name)
+        self.stdout.write(f'Success created tested data')
         return False
 
-    def create_basic(self):
+    def create_basic(self, name):
         """ Create test data -> Can be used in tests """
-        name = self.__random_name()
-        password = 'P!pp11qq'
+        password = '1'
         user = User.objects.create_user(username=name, email=f'{name}@gmail.com', password=password)
         self.stdout.write(f'User {name} created with password: {password}')
         project_props = {
             'owner': user,
             'name': f'Project {name}',
             'icon_chars': 'Pr',
-            'lang_orig': 17,
-            'translate_to': [32, 48]
+            'lang_orig_id': 75,
         }
         project = Projects.objects.create(**project_props)
-        folder1 = Folders.objects.create(project=project, name='Folder1')
-        folder2 = Folders.objects.create(project=project, name='Folder2')
+        project.translate_to.set([15, 18, 22])
+        folder1 = Folders.objects.create(project=project, name='Folder1', position=1)
+        folder2 = Folders.objects.create(project=project, name='Folder2', position=2)
 
     @staticmethod
     def _try_create(model_name, fields):
@@ -45,7 +51,7 @@ class Command(BaseCommand):
             obj = model_name.objects.create(**fields)
             return obj
         except Exception as e:
-            print('ERROR: create on model', model_name, e)
+            self.stdout.write('ERROR: create on model', model_name, e)
             return False
     
     @staticmethod
