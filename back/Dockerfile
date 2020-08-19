@@ -31,10 +31,9 @@ COPY . .
 # django default port
 EXPOSE 8000
 
-# create and set user, olso create folder for upload users files
+# create and set user, olso create folder for upload users files   (-D default)
 RUN addgroup -S translate && adduser -S localize -G translate
-RUN adduser -D localize \ 
-    && mkdir -p /usr/src/back/users \
+RUN mkdir -p /usr/src/back/users \
     && mkdir -p /usr/src/back/logs \
     && chown -R localize:translate /usr/src/back/ \
     && chmod -R 755 /usr/src/back/users \

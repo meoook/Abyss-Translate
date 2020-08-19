@@ -2,6 +2,7 @@ version: '3.7'
 
 services:
   redis:
+    container_name: localize-redis-dev
     image: redis:alpine
     ports:
       - 6379:6379
@@ -16,6 +17,7 @@ services:
       - POSTGRES_USER=postgres
       - POSTGRES_PASSWORD=xaxaxue
   django:
+    container_name: localize-django-dev
     build: ./back
     image: localize-django-dev
     command: sh -c "python manage.py migrate --no-input && gunicorn localize.wsgi -b 0:8000"
@@ -26,6 +28,7 @@ services:
     depends_on:
       - postgres
   celery:
+    container_name: localize-celery-dev
     image: localize-django-dev
     command: celery -A localize worker -B -l INFO
     volumes:
@@ -34,6 +37,7 @@ services:
       - django
       - redis
   react:
+    container_name: localize-react-dev
     build: ./front
     command: npm start
     volumes:

@@ -10,6 +10,7 @@ from core.serializers import ProjectSerializer
 
 
 class ProjectsApiTestCase(APITestCase):
+    # First create user -> login -> then test
     @override_settings()
     def test_get_list(self):
         user = User.objects.create_user(username='a', email='a@a.ru', password='123')
