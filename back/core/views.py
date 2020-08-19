@@ -135,8 +135,8 @@ class FileMarksView(viewsets.ModelViewSet):
 class TransferFileView(viewsets.ViewSet):
     """ FILE TRANSFER VIEW: Upload/Download files """
     # parser_classes = (MultiPartParser, FileUploadParser, )
-    # parser_classes = (MultiPartParser,)
-    parser_classes = (JSONParser, MultiPartParser, )
+    # parser_classes = (MultiPartParser, JSONParser)
+    parser_classes = (MultiPartParser, )
     serializer_class = TransferFileSerializer
 
     def retrieve(self, request, pk=None):
@@ -160,7 +160,7 @@ class TransferFileView(viewsets.ViewSet):
         """ Create file obj and related translated progress after file download (uploaded by user) """
         logger.warning('XXXXXXXXXXXXXXXXXXXXXX START DATA')
         data = None
-        logger.warning(f'XXXXXXXXXXXXXXXXXXXXXX {dir(request.data)}')
+        logger.warning(f'XXXXXXXXXXXXXXXXXXXXXX {request._content_type}')
         # data is sent as direct json (literally or from file: @) (JSONParser):
         # curl -X POST -H "Content-Type:application/json" -u admin:admin http://127.0.0.1:8000/totos/ -d @toto.json
         # curl -X POST -H "Content-Type:application/json"
@@ -171,7 +171,7 @@ class TransferFileView(viewsets.ViewSet):
         # curl -X POST -H "Content-Type:multipart/form-data" -u admin:admin http://127.0.0.1:8000/totos/ -F "file=@toto.json;type=application/json"
         # note: if type is not specified, it defaults to "application/octet-stream"
         else:
-            logger.warning(f"XXXXXXXXXXXXXXXXXXXXXX 3333333 DATA {request._content_type}")
+            logger.warning("XXXXXXXXXXXXXXXXXXXXXX 3333333 DATA")
             to_print = dir(request.FILES)
             logger.warning(f"XXXXXXXXXXXXXXXXXXXXXX 3333333 DATA {to_print}")
             # fitxer = File(request.FILES['file'])
@@ -181,11 +181,10 @@ class TransferFileView(viewsets.ViewSet):
                 logger.warning("444444444444 3333333 DATA")
                 # input_data = JSONParser().parse(stream)
             else:
-                logger.warning(f"No parser for content type: {to_print.content_type}")
+                logger.warning(f"No parser for content type: {to_print}")
                 errors = dict()
-                errors['error'] = f"No parser for content type: {to_print.content_type}"
+                errors['error'] = f"No parser for content type: {to_print}"
                 return Response(errors, status=status.HTTP_400_BAD_REQUEST)
-        return
 
         logger.warning('XXXXXXXXXXXXXXXXXXXXXX 000')
         req_folder = request.data.get('folder')
