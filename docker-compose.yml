@@ -18,7 +18,7 @@ services:
   django:
     build: ./back
     image: localize-django-dev
-    command: sh -c "python manage.py migrate --no-input && gunicorn localize.wsgi -b 0.0.0.0:8000"
+    command: sh -c "python manage.py migrate --no-input && gunicorn localize.wsgi -b 0:8000"
     volumes:
       - users_files:/usr/src/back/users/
     ports:
@@ -28,6 +28,8 @@ services:
   celery:
     image: localize-django-dev
     command: celery -A localize worker -B -l INFO
+    volumes:
+      - users_files:/usr/src/back/users/
     depends_on:
       - django
       - redis
@@ -36,7 +38,7 @@ services:
     command: npm start
     volumes:
       - node_modules:/usr/src/front/node_modules
-    environment: 
+    environment:
       - REACT_APP_API_URL=http://127.0.0.1:8000/api
     ports:
       - 3000:3000
@@ -47,4 +49,3 @@ volumes:
   postgres_data:
   users_files:
   node_modules:
-

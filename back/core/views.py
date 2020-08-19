@@ -180,7 +180,6 @@ class TransferFileView(viewsets.ViewSet):
             serializer.save()
             file_id = serializer.data.get('id')  # TODO: check this method
             logger.warning(f'XXXXXXXXXXXXXXXXXXXXXX FILE ID: {file_id}')
-            # logger.warning(f'XXXXXXXXXXXXXXXXXXXXXX SS ID: {new_file.id}')
             # Run celery parse delay task
             file_parse.delay(file_id)
             return Response(serializer.data, status=status.HTTP_201_CREATED)

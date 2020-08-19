@@ -44,7 +44,7 @@ RUN apk add libpq
 COPY --from=builder ./usr/src/back/wheels/ /wheels/
 COPY --from=builder ./usr/src/back/requirements.txt .
 RUN pip install --upgrade pip 
-RUN pip install --no-cache-dir /wheels/*
+RUN pip install --no-cache /wheels/*
 # copy entrypoint-prod.sh
 COPY ./entrypoint.sh $HOME
 # copy project

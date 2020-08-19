@@ -14,7 +14,7 @@ logger = logging.getLogger('logfile')
 
 
 @shared_task(
-    name="Parse file",
+    name="T3: Parse file",
     max_retries=2,
     soft_time_limit=5,
     time_limit=20,
@@ -33,7 +33,7 @@ def file_parse(file_id, new=True):
 
 
 @shared_task(
-    name="Update file from git repository",
+    name="T2: Update file from git repository",
     max_retries=2,
     soft_time_limit=1,
     time_limit=5,
@@ -46,7 +46,7 @@ def file_update_from_repo(filo):
 
 
 @shared_task(
-    name="Update files in git repository folder",
+    name="T1: Update files in git repository folder",
     max_retries=1,
     soft_time_limit=1,
     time_limit=5,
@@ -59,7 +59,7 @@ def folder_update_by_repo(filo):
 
 
 @periodic_task(
-    name="Update users files from git repositories",
+    name="P2: Update users files from git repositories",
     run_every=crontab(hour='*/1'),
     max_retries=0,
     soft_time_limit=30,
@@ -78,7 +78,7 @@ def check_all_file_repos():
 
 
 @periodic_task(
-    name="Upload translated files into git repositories",
+    name="P1: Upload translated files into git repositories",
     run_every=crontab(hour='*/1'),
     max_retries=0,
     soft_time_limit=30,
@@ -96,6 +96,6 @@ def upload_translated():
         pass
 
 
-@periodic_task(run_every=crontab(hour='*/6'), name="Check celery. Run each 10 mins.")
+@periodic_task(run_every=crontab(hour='*/6'), name="P0: Check celery. Run each 10 mins.")
 def test_task():
     logger.error('TEST CELERY ERROR')
