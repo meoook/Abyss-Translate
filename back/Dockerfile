@@ -32,14 +32,14 @@ COPY . .
 EXPOSE 8000
 
 # create and set user, olso create folder for upload users files
-RUN adduser -D user \ 
-    && mkdir -p /usr/src/back/users \
-    && mkdir -p /usr/src/back/logs \
-    && chown -R user:user /usr/src/back/ \
-    && chmod -R 755 /usr/src/back/users \
-    && chmod -R 755 /usr/src/back/logs \
-    && chmod +x /usr/src/back/entrypoint.sh
-USER user
+# RUN adduser -D user \ 
+#     && mkdir -p /usr/src/back/users \
+#     && mkdir -p /usr/src/back/logs \
+#     && chown -R user:user /usr/src/back/ \
+#     && chmod -R 755 /usr/src/back/users \
+#     && chmod -R 755 /usr/src/back/logs \
+#     && chmod +x /usr/src/back/entrypoint.sh
+# USER user
 
 # run entrypoint.sh
 ENTRYPOINT ["sh", "/usr/src/back/entrypoint.sh"]

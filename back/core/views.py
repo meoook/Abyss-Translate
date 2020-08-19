@@ -159,6 +159,7 @@ class TransferFileView(viewsets.ViewSet):
         """ Create file obj and related translated progress after file download (uploaded by user) """
         req_data = request.data.get('data')
         req_folder = request.data.get('folder')
+        logger.warning(f'AAAAAAAAAAAAAAAAAAAA FILE: {req_data}')
 
         # TODO: Check user rights to create file
         try:
@@ -176,19 +177,14 @@ class TransferFileView(viewsets.ViewSet):
             'data': req_data,
         })
         if serializer.is_valid():
-            new_file = serializer.save()
+            serializer.save()
             file_id = serializer.data.get('id')  # TODO: check this method
             logger.warning(f'XXXXXXXXXXXXXXXXXXXXXX FILE ID: {file_id}')
-            logger.warning(f'{dir(serializer)}')
-
-            logger.warning(f'XXXXXXXXXXXXXXXXXXXXXX SS ID: {new_file.id}')
-            logger.warning(f'{dir(serializer)}')
+            # logger.warning(f'XXXXXXXXXXXXXXXXXXXXXX SS ID: {new_file.id}')
             # Run celery parse delay task
             file_parse.delay(file_id)
-            logger.warning(f'XXXXXXXXXXXXXXXXXXXXXX{45}')
             return Response(serializer.data, status=status.HTTP_201_CREATED)
         # return Response({'err': 'file already exist'}, status=status.HTTP_400_BAD_REQUEST)
-        logger.warning(f'XXXXXXXXXXXXXXXXXXXXXX{5}')
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
 
