@@ -5,7 +5,7 @@ from django.contrib.auth.models import User
 
 
 class AuthSystemTestCase(APITestCase):
-
+    # TODO: Rename data to class.value
     def test_account_register(self):
         """ Ensure we can register a new user """
         url = reverse('register')
@@ -45,17 +45,20 @@ class AuthSystemTestCase(APITestCase):
         self.assertEqual(login_token_logoff.status_code, status.HTTP_401_UNAUTHORIZED )
     
     def test_get_user_api(self):
-        url = reverse('user-list')
-        response = self.client.get(url)
-        self.assertEqual(response.status_code, status.HTTP_200_OK)
-
         data = {'username': 'DabApps', 'password': 'QwZ!3klPz', 'email': 'aa@zaz.ru'}
         user = User.objects.create_user(**data)
 
-        url = reverse('user', args=[user.id])
-        response = self.client.get(url)
-        self.assertEqual(response.data, 'ok?')
+        url = reverse('login')
+        response = self.client.post(url, data, format='json')
         self.assertEqual(response.status_code, status.HTTP_200_OK)
+
+        token = response.data.get('token')
+        url = reverse('user')
+        self.client.credentials(HTTP_AUTHORIZATION='Token ' + token)
+        response = self.client.get(url)
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        check_with = {'id': user.id, 'username': data['username'], 'email': data['email']}
+        self.assertEqual(response.data, check_with)
 
 
 # from django.urls import reverse

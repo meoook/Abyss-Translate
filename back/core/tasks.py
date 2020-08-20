@@ -12,7 +12,7 @@ from datetime import timedelta
 
 logger = logging.getLogger('logfile')
 
-
+# retries=3, default_retry_delay=1
 @shared_task(
     name="T3: Parse file",
     max_retries=2,
