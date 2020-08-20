@@ -56,7 +56,7 @@ case "$selected" in
     1)  if [ -z "$selected2" ]; then
             echo "${MYCUSTOMTAB}1 - create superuser"
             echo "${MYCUSTOMTAB}2 - create user with test data"
-            echo "${MYCUSTOMTAB}4 - development tests"
+            echo "${MYCUSTOMTAB}3 - development tests"
             echo "${MYCUSTOMTAB}5 - production tests"
             echo "${MYCUSTOMTAB}* - make migrations and migrate"
             echo_line
@@ -68,7 +68,7 @@ case "$selected" in
             2)  echo_line
                 read -p "Enter user name or leave blank for random: " option_name
                 docker-compose run --rm django sh -c "python manage.py create_test_user $option_name" ;;
-            4) docker-compose run --rm django sh -c "python manage.py test" ;;
+            3) docker-compose run --rm django sh -c "python manage.py test" ;;
             5) docker-compose -f docker-compose.prod.yml run --rm django sh -c "python manage.py test" ;;
             *)  docker-compose run --rm django sh -c "python manage.py makemigrations"
                 docker-compose run --rm django sh -c "python manage.py migrate" ;;

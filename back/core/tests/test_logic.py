@@ -6,14 +6,8 @@ from core.models import Languages, Projects
 from core.serializers import ProjectSerializer
 
 
-class LogicTestCase(TestCase):
-    def test_first_run(self):
-        result = 2 + 2
-        self.assertEqual(4, result)
-
-
 class ProjectsSerializerTestCase(TestCase):
-    def test_serializer_data(self):
+    def test_project_list(self):
         user = User.objects.create_user(username='a', email='a@a.ru', password='123')
         language1 = Languages.objects.create(name='Russian', short_name='ru', active=True)
         language2 = Languages.objects.create(name='English', short_name='en', active=True)
@@ -28,4 +22,4 @@ class ProjectsSerializerTestCase(TestCase):
             {'id': prj2.id, 'name': 'Project2', 'icon_chars': 'P2', 'owner': user.username},
         ]
 
-        self.assertEqual(to_check_with, data)
+        self.assertEqual([x['name'] for x in to_check_with], [x['name'] for x in data])
