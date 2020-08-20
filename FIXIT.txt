@@ -17,4 +17,7 @@ with mail.get_connection() as connection:
 
 
     command: sh -c "python manage.py migrate --no-input && gunicorn localize.wsgi --workers 3 -b 0.0.0.0:8000"
-coverage
+
+coverage run --source='.' ./manaage.py test .
+coverage report
+coverage html
