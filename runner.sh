@@ -29,6 +29,8 @@ elif [ "$#" -eq 2 ]; then
         echo "${MYCUSTOMTAB}Display logs..."
     elif [ $1 -eq 3 ]; then
         echo "${MYCUSTOMTAB}Go sh..."
+    elif [ $1 -eq 4 ]; then
+        echo "${MYCUSTOMTAB}Go restart..."
     else
         echo "${MYCUSTOMTAB}Second parameter ignored"
     fi
@@ -39,6 +41,7 @@ else
     echo "${MYCUSTOMTAB}1 - options with django srv (django)"
     echo "${MYCUSTOMTAB}2 - display logs (srv select)"
     echo "${MYCUSTOMTAB}3 - sh command line (srv select)"
+    echo "${MYCUSTOMTAB}4 - restart srv (srv select)"
     echo "${MYCUSTOMTAB}5 - rebuild & restart with vols (all & vols)"
     echo "${MYCUSTOMTAB}6 - start prod server (all)"
     echo "${MYCUSTOMTAB}8 - Full down (down -v)"
@@ -97,6 +100,18 @@ case "$selected" in
             3) docker-compose exec redis sh ;;
             4) docker-compose exec postgres sh ;;
             *) docker-compose exec django sh ;;
+        esac ;;
+    4)  if [ -z "$selected2" ]; then
+            echo_servers
+            read -p "Select srv to restart: " option2
+            selected2=$option2
+        fi
+        case "$selected2" in
+            1) docker-compose restart react ;;
+            2) docker-compose restart celery ;;
+            3) docker-compose restart redis ;;
+            4) docker-compose restart postgres ;;
+            *) docker-compose restart django ;;
         esac ;;
     5)  docker-compose down -v
         docker-compose up -d --build ;;

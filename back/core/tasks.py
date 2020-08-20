@@ -4,7 +4,7 @@ import logging
 from celery import shared_task
 from celery.task import periodic_task
 from celery.schedules import crontab
-from celery.exceptions import SoftTimeLimitExceeded
+from celery.exceptions import SoftTimeLimitExceeded, MaxRetriesExceededError
 
 from core.services.file_manager import LocalizeFileManager
 
@@ -12,22 +12,26 @@ from datetime import timedelta
 
 logger = logging.getLogger('logfile')
 
+
 # retries=3, default_retry_delay=1
 @shared_task(
-    name="T3: Parse file",
+    name="T3: Parse file XX",
     max_retries=2,
-    soft_time_limit=5,
-    time_limit=20,
-    rate_limit='1/h',
+    # soft_time_limit=5,
+    # time_limit=20,
+    # rate_limit='2/h',
     ignore_result=True
 )
 def file_parse(file_id, new=True):
     """ Get file info and parse file data into text to translate """
     file_manager = LocalizeFileManager(file_id)
-    if not file_manager.success or not file_manager.parse():
-        if file_parse.request.retries < 3:
+    try:
+        if not file_manager.success or not file_manager.parse():
             file_parse.retry()
-    elif new:
+    except MaxRetriesExceededError:
+        err_file_id, err_msg = file_manager.save_error()
+        logger.warning(f'File parse retries limit. Error file (id:{err_file_id}) saved: {err_msg}')
+    if new:
         file_manager.create_progress()
 
 
@@ -49,7 +53,7 @@ def file_update_from_repo(filo):
     max_retries=1,
     soft_time_limit=1,
     time_limit=5,
-    rate_limit='4950/h',
+    rate_limit='12/h',
     ignore_result=True
 )
 def folder_update_by_repo(filo):
@@ -58,12 +62,12 @@ def folder_update_by_repo(filo):
 
 
 @periodic_task(
-    name="P2: Update users files from git repositories",
-    run_every=crontab(hour='*/1'),
+    name="P2: (3h) Update users files from git repositories",
+    run_every=crontab(minute=0, hour='*/3'),
     max_retries=0,
     soft_time_limit=30,
     time_limit=59,
-    rate_limit='1/h',
+    # rate_limit='1/h',
     ignore_result=True,
     store_errors_even_if_ignored=True
 )
@@ -77,12 +81,12 @@ def check_all_file_repos():
 
 
 @periodic_task(
-    name="P1: Upload translated files into git repositories",
-    run_every=crontab(hour='*/1'),
-    max_retries=0,
+    name="P1: (4m) Upload translated files into git repositories",
+    run_every=crontab(minute='*/4'),
+    max_retries=2,
     soft_time_limit=30,
     time_limit=59,
-    rate_limit='1/h',
+    # rate_limit='1/h',
     ignore_result=True,
     store_errors_even_if_ignored=True
 )
@@ -95,8 +99,7 @@ def upload_translated():
     return True
 
 
-@periodic_task(run_every=crontab(hour='*/6'), name="P0: Check celery. Run each 10 mins.")
+@periodic_task(run_every=crontab(minute=0, hour='*/1'), name="P0: (1h) Check celery. Run each hour.")
 def test_task():
     logger.error('TEST CELERY ERROR')
     return True
-

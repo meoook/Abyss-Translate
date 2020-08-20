@@ -98,8 +98,8 @@ class LocalizeFileManager:
         try:
             logger.info(f'Saving error file {self.__log_name}')
             error_file = ErrorFiles(error=self.__error_file_msg, data=self.__work_file.data)
-            error_file.save()
+            err_obj = error_file.save()
         except ValidationError:
             logger.error(f"Can't save error file for {self.__log_name} ")
             return False
-        return True
+        return err_obj.id, self.__error_file_msg
