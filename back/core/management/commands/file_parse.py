@@ -37,7 +37,6 @@ class Command(BaseCommand):
         work_file.words = self.__total_words
         work_file.items = FileMarks.objects.filter(file=work_file).count()
         translate_to_ids = [x['id'] for x in list(work_file.folder.project.translate_to.values('id'))]
-        work_file.translate_to.set(translate_to_ids)
         objs = [Translated(file=work_file, language_id=lang_id) for lang_id in translate_to_ids]
         Translated.objects.bulk_create(objs)
         work_file.state = 2   # parsed

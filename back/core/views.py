@@ -84,7 +84,7 @@ class FileMarksView(viewsets.ModelViewSet):
             except ObjectDoesNotExist:
                 return Response({'err': 'file not found'}, status=status.HTTP_404_NOT_FOUND)
             # Check lang_translate in list of need translate languages
-            if lang_trans not in file_obj.translate_to.values_list('id', flat=True):
+            if lang_trans not in file_obj.translated_set.values_list('id', flat=True):
                 return Response({'err': "no need translate to this language"}, status=status.HTTP_400_BAD_REQUEST)
             # Can't change original text
             if lang_trans == file_obj.lang_orig.id:

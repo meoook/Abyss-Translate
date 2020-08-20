@@ -62,7 +62,6 @@ class Command(BaseCommand):
         work_file.items = stats['items_count']
         if rebuild is False:
             translate_to_ids = work_file.folder.project.translate_to.values_list('id', flat=True)
-            work_file.translate_to.set(translate_to_ids)
             objs = [Translated(file=work_file, language_id=lang_id) for lang_id in translate_to_ids]
             Translated.objects.bulk_create(objs)
             work_file.state = 2   # parsed

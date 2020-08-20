@@ -50,7 +50,7 @@ const OptionsFile = ({ id, fileList }) => {
                 {/* Состояние готовности % скачать */}
                 <td>Необходим перевод</td>
                 <td>
-                  <IcoLangMap mapLanguages={selectedFile.translate_to} />
+                  <IcoLangMap mapLanguages={selectedFile.translated_set.map(item => item.language)} />
                 </td>
               </tr>
               <tr>

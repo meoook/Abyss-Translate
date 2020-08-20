@@ -26,7 +26,7 @@ const PageTranslateFile = (props) => {
     console.log('Langs', langOrig, langTrans)
     if (!translates.lang_orig) return
     if (!langOrig) setLangOrig(translates.lang_orig)
-    if (!langTrans) setLangTrans(translates.translate_to[0]) // TODO: Save this property ?
+    if (!langTrans) setLangTrans(translates.translated_set[0].language) // TODO: Save this property ?
   }, [translates, langOrig, langTrans])
 
   const fixPageNumber = (p, s, count) => (p * s > count ? Math.ceil(count / s) : p)

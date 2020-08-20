@@ -58,8 +58,10 @@ class FilesSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = Files
-        fields = ['id', 'name', 'state', 'method', 'items', 'words', 'repo_status', 'created', 'updated', 'translated_set']
-        # exclude = ['data', 'owner', 'folder', 'codec', 'options', 'repo_hash']
+        # fields = ['id', 'name', 'state', 'method',
+        #           'items', 'words', 'lang_orig', 'repo_status',
+        #           'created', 'updated', 'translated_set']
+        exclude = ['data', 'owner', 'folder', 'codec', 'options', 'repo_hash']
         extra_kwargs = {
             'state': {'read_only': True, 'source': 'get_state_display'},
             'method': {'read_only': True},
