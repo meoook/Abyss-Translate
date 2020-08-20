@@ -154,19 +154,10 @@ class TransferFileView(viewsets.ViewSet):
         return Response({'err': f'For file {progress.file.name} translate to {progress.language.name} not done'},
                         status=status.HTTP_404_NOT_FOUND)
 
-
-
-    def update(self, request, *args, **kwargs):
-        logger.warning('XXXXXXXXXXXXXXXXXXXXXX UPDATE UPDATE UPDATE UPDATE')
-        return Response({'success': 'true'}, status=status.HTTP_200_OK)
-
-
     def create(self, request):
         """ Create file obj and related translated progress after file download (uploaded by user) """
         req_data = request.data.get('data')
         req_folder = request.data.get('folder')
-        logger.warning(f'AAAAAAAAAAAAAAAAAAAA FILE: {req_data}')
-
         # TODO: Check user rights to create file
         try:
             folder = Folders.objects.select_related('project__lang_orig').get(id=req_folder, project__owner=request.user)
@@ -185,10 +176,11 @@ class TransferFileView(viewsets.ViewSet):
         if serializer.is_valid():
             serializer.save()
             file_id = serializer.data.get('id')  # TODO: check this method
-            logger.warning(f'XXXXXXXXXXXXXXXXXXXXXX FILE ID: {file_id}')
             # Run celery parse delay task
+            logger.info(f'File object created ID: {file_id}. Sending parse task to celery.')
             file_parse.delay(file_id)
             return Response(serializer.data, status=status.HTTP_201_CREATED)
+        logger.info(f'Error creating file object: {serializer.errors}')
         # return Response({'err': 'file already exist'}, status=status.HTTP_400_BAD_REQUEST)
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 

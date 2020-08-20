@@ -65,7 +65,7 @@ class DataGetInfo:
                 self.__csv_get_options(csv)
             else:
                 self.__error = 'method csv need original language'
-        elif unreal > html > 50:
+        elif unreal > 50 and unreal > html:
             self.__method = 'ue'
             self.__ue_get_options()
         elif html > 50:
@@ -112,7 +112,7 @@ class DataGetInfo:
         """ Find language, quotes, column numbers(by lang)"""
         quotes = {'l1': [], 'l2': [], 'l3': [], 'l4': [], 'r1': [], 'r2': [], 'r3': [], 'r4': []}
         columns = {}
-        first_row = True
+        top_rows = True
         # This values affect timing
         __row_check = 75          # number of rows to check by default
         __row_check_max = 100     # maximum allow rows to check
@@ -127,10 +127,10 @@ class DataGetInfo:
                     return False
             for col_n, val in enumerate(row.split(delimiter)):
                 text = csv_validate_text(val)
-                if row_n == 0 and first_row:
+                if row_n == 0 and top_rows:
                     try:
                         float(val)
-                        first_row = False
+                        top_rows = False
                     except ValueError:
                         pass
                 elif text and self.__lang_orig == detect(text):
@@ -172,8 +172,8 @@ class DataGetInfo:
         # Method results
         self.__options['fields'] = [k for k, v in columns.items() if v > 1]
         self.__options['quotes'] = f'{left}{right}'
-        if first_row:
-            self.__options['first_row'] = 1
+        if top_rows:
+            self.__options['top_rows'] = 1
 
     def __ue_get_options(self):
         start = None
@@ -189,7 +189,7 @@ class DataGetInfo:
                     break
                 else:
                     start = row_n
-                    self.__options['first_row'] = row_n + 1
+                    self.__options['top_rows'] = row_n
         lang_checker = []
         for row_n, row in enumerate(self.__data_decoded.split('\n')):
             if row_n > 100:
