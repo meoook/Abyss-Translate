@@ -10,9 +10,9 @@ class Migration(migrations.Migration):
 
     initial = True
 
-    # dependencies = [
-    #     ('auth', '0012_alter_user_first_name_max_length'),
-    # ]
+    dependencies = [
+        ('auth', '0012_alter_user_first_name_max_length'),
+    ]
 
     operations = [
         migrations.CreateModel(
@@ -35,7 +35,10 @@ class Migration(migrations.Migration):
                 ('user_permissions', models.ManyToManyField(blank=True, help_text='Specific permissions for this user.', related_name='user_set', related_query_name='user', to='auth.Permission', verbose_name='user permissions')),
             ],
             options={
-                'permissions': [('creator', 'Can create projects and invite'), ('admin', 'Can manage projects where invited'), ('translator', 'Can translate files from projects where invited')],
+                'verbose_name': 'user',
+                'verbose_name_plural': 'users',
+                'abstract': False,
+                # 'permissions': [('creator', 'Can create projects and invite'), ('admin', 'Can manage projects where invited'), ('translator', 'Can translate files from projects where invited')],
             },
             managers=[
                 ('objects', django.contrib.auth.models.UserManager()),
