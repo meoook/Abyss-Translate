@@ -200,6 +200,10 @@ class ProjectViewSet(viewsets.ModelViewSet):
     queryset = Projects.objects.all()
 
     def get_queryset(self):
+        if self.request.user.has_perm('localize.creator'):
+            logger.warning('PERMISION FOUND')
+        else:
+            logger.warning('PERMISION NOT FOUND')
         return self.request.user.projects_set.all()
 
     def perform_create(self, serializer):

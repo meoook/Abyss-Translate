@@ -1,13 +1,13 @@
 from rest_framework import serializers
-# from django.conf import settings
-from django.contrib.auth.models import User
+from django.conf import settings
+# from django.contrib.auth.models import User
 from django.contrib.auth import authenticate
 
 
 # User serializer
 class UserSerializer(serializers.ModelSerializer):
     class Meta:
-        model = User  # settings.AUTH_USER_MODEL
+        model = settings.AUTH_USER_MODEL
         fields = ('id', 'username', 'email')
 
 
@@ -15,7 +15,7 @@ class UserSerializer(serializers.ModelSerializer):
 class RegisterSerializer(serializers.ModelSerializer):
 
     class Meta:
-        model = User  # settings.AUTH_USER_MODEL
+        model = settings.AUTH_USER_MODEL
         fields = ('id', 'username', 'email', 'password')
         extra_kwargs = {'password': {'write_only': True}}
 
@@ -45,7 +45,7 @@ class LoginSerializer(serializers.ModelSerializer):
         raise serializers.ValidationError('Incorrect Credentials')
 
     class Meta:
-        model = User  # settings.AUTH_USER_MODEL
+        model = settings.AUTH_USER_MODEL
         fields = ('id', 'username', 'email', 'password')
         extra_kwargs = {'password': {'write_only': True}}
 

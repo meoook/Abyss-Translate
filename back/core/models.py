@@ -57,6 +57,18 @@ class Projects(models.Model):
         unique_together = ['owner', 'name']
 
 
+class ProjectPermissions(models.Model):
+    """ Permissions for project """
+    PROJECT_PERMISSION_CHOICES = [
+        (0, 'invite translator'),   # Default admin role
+        (1, 'manage'),              # Can create\delete\update - folders\files
+        (9, 'tranlate'),            # Can translate files in project
+    ]
+    user = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE)
+    project = models.ForeignKey(Projects, on_delete=models.CASCADE)
+    permission = models.SmallIntegerField(choices=PROJECT_PERMISSION_CHOICES)
+
+
 class Folders(models.Model):
     """" Folder model with auto delete. Folder created by ID. """
     project = models.ForeignKey(Projects, on_delete=models.CASCADE)
@@ -69,17 +81,6 @@ class Folders(models.Model):
         # db_table = 'folders'
         # verbose_name_plural = 'Users Folders'
         unique_together = [('position', 'project'), ('name', 'project')]
-
-
-class ProjectPermissions(models.Model):
-    """ Admin permissions for project """
-    PROJECT_PERMISSION_CHOICES = [
-        (0, 'invite translator'),   # Default admin role
-        (1, 'manage'),              # Can create\delete\update - folders\files
-    ]
-    user = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE)
-    project = models.ForeignKey(Projects, on_delete=models.CASCADE)
-    permission = models.SmallIntegerField(choices=PROJECT_PERMISSION_CHOICES)
 
 
 class FolderRepo(models.Model):

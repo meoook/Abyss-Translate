@@ -8,7 +8,14 @@ class IsOwnerOrReadOnly(permissions.BasePermission):
         return obj.user == request.user
 
 
+class CanChangePermission(permissions.BasePermission):
+    """ Users who can change object """
+    def has_object_permission(self, request, view, obj):
+        pass
+
+
 class IsOwnerFilterBackend(filters.BaseFilterBackend):
     """ Filter that only allows users to see their own objects. """
     def filter_queryset(self, request, queryset, view):
         return queryset.filter(owner=request.user)
+
