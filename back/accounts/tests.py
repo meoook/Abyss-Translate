@@ -3,7 +3,9 @@ from rest_framework.test import APITestCase
 from rest_framework import status
 from django.contrib.auth.models import User
 
+
 class AuthSystemTestCase(APITestCase):
+
     def test_account_register(self):
         """ Ensure we can register a new user """
         url = reverse('register')
@@ -22,25 +24,38 @@ class AuthSystemTestCase(APITestCase):
         login_status = self.client.login(username=data['username'], password=data['password'])
         self.assertEqual(login_status, True)
 
-    def test_account_login_token(self):
+    def test_account_auth_api(self):
         """ Ensure registred user can login """
         data = {'username': 'DabApps', 'password': 'QwZ!3klPz', 'email': 'aa@zaz.ru'}
         url = reverse('register')
         response = self.client.post(url, data, format='json')
         self.assertEqual(response.status_code, status.HTTP_200_OK)
+
         token = response.data.get('token')
         self.assertEqual(isinstance(token, str), True)
         self.assertEqual(len(token), 64)
-        url = reverse('language-list')
+
+        url = reverse('project-list')
         self.client.credentials(HTTP_AUTHORIZATION='Token ' + token)
-        req_lang = self.client.get(url)
-        self.assertEqual(req_lang.status_code, status.HTTP_200_OK)
-        self.assertEqual(len(req_lang.data), 4)
+        req_prj = self.client.get(url)
+        self.assertEqual(req_prj.status_code, status.HTTP_200_OK)
     
         self.client.logout()
         login_token_logoff = self.client.get(url)
         self.assertEqual(login_token_logoff.status_code, status.HTTP_401_UNAUTHORIZED )
+    
+    def test_get_user_api(self):
+        url = reverse('user-list')
+        response = self.client.get(url)
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
 
+        data = {'username': 'DabApps', 'password': 'QwZ!3klPz', 'email': 'aa@zaz.ru'}
+        user = User.objects.create_user(**data)
+
+        url = reverse('user', args=[user.id])
+        response = self.client.get(url)
+        self.assertEqual(response.data, 'ok?')
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
 
 
 # from django.urls import reverse
