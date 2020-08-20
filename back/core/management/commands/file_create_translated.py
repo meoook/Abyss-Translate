@@ -27,7 +27,7 @@ class Command(BaseCommand):
             progress = Translated.objects.select_related('file', 'file__lang_orig', 'language').get(file__id=options['id'], language=options['language'])
             work_file = progress.file
             create_lang = progress.language
-            if progress.items_count != work_file.items_count:
+            if progress.items != work_file.items:
                 self.stderr.write("File {} don't have full translate to {}".format(work_file.name, create_lang.name))
                 return False
             translates = Translates.objects.select_related('mark').filter(mark__file=work_file)

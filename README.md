@@ -112,3 +112,7 @@ $ sh ./runner.sh 5
 ## Gold 🏆 12%
 
 end :+1:
+
+```
+export PATH="/usr/xaxa/bin:$PATH"
+```

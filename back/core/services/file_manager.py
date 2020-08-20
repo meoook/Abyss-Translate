@@ -43,21 +43,24 @@ class LocalizeFileManager:
         if info.info['error']:
             logger.warning(f"File {self.__log_name} get info error: {info.info['error']}")
             self.__error_file_msg = info.info['error']
-            self.__work_file.save(state=0, error=info.info['error'])
+            self.__work_file.state = 0
+            self.__work_file.error = info.info['error']
+            self.__work_file.save()
             return False
         logger.info(f"File {self.__log_name} get info success")
         self.__work_file.codec = info.info['codec']
         self.__work_file.method = info.info['method']
         self.__work_file.options = info.info['options']
         # Rebuild file
-        file_options = [self.__work_file.name, self.__work_file.id, self.__work_file.lang_orig, info.info['method'], info.info['options']]
+        file_options = [self.__work_file.name, self.__work_file.id, self.__work_file.lang_orig.id, info.info['method'], info.info['options']]
         logger.info('Build marks for file {}(id:{}) language: {} method: {} options: {}'.format(*file_options))
         file_rebuilder = FileRebuild(self.__work_file.data.path, info.info['codec'], *file_options)
         if file_rebuilder.error:
-            logger.warning(f"File {self.__log_name} build error: {info.info['error']}")
-            self.__work_file.state = 0
+            logger.warning(f"File {self.__log_name} build marks error: {file_rebuilder.error}")
             self.__error_file_msg = file_rebuilder.error
-            self.__work_file.save(state=0, error=file_rebuilder.error)
+            self.__work_file.state = 0
+            self.__work_file.error = file_rebuilder.error
+            self.__work_file.save()
             return False
         logger.info(f"File {self.__log_name} rebuild success")
         self.__work_file.state = 2
@@ -84,7 +87,7 @@ class LocalizeFileManager:
             self.__work_file.items = None
             self.__work_file.codec = ''
             self.__work_file.method = ''
-            self.__work_file.error = ''
+            self.__work_file.error = 'x'
             self.__work_file.options = None
 
     def save_error(self):

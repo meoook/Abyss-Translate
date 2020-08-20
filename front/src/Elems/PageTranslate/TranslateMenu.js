@@ -19,7 +19,7 @@ const TranslateMenu = ({ langOrig, langTrans, setLangOrig, setLangTrans, same, s
 
   return (
     <div className='input-group m-2'>
-      <h3 className='input-like'>{`${translates.name} элементов ${translates.items_count} слов ${translates.words}`}</h3>
+      <h3 className='input-like'>{`${translates.name} элементов ${translates.items} слов ${translates.words}`}</h3>
       <button className={`btn${same ? " active" : ""}`} onClick={setSame}>
         same
       </button>

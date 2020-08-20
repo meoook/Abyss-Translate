@@ -59,7 +59,7 @@ class Command(BaseCommand):
         # self.__items_count = FileMarks.objects.filter(file=file_obj, translates__language=file_obj.lang_orig).count()
         stats = FileMarks.objects.filter(file=work_file).aggregate(items_count=Count('id'), total_words=Sum('words'))
         work_file.words = stats['total_words']
-        work_file.items_count = stats['items_count']
+        work_file.items = stats['items_count']
         if rebuild is False:
             translate_to_ids = work_file.folder.project.translate_to.values_list('id', flat=True)
             work_file.translate_to.set(translate_to_ids)

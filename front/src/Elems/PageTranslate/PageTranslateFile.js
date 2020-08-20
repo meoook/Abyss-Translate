@@ -23,6 +23,7 @@ const PageTranslateFile = (props) => {
   }, [id])
 
   useEffect(() => {
+    console.log('Langs', langOrig, langTrans)
     if (!translates.lang_orig) return
     if (!langOrig) setLangOrig(translates.lang_orig)
     if (!langTrans) setLangTrans(translates.translate_to[0]) // TODO: Save this property ?

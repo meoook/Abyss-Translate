@@ -324,7 +324,7 @@ class FileViewSet(viewsets.ModelViewSet):
         except Files.DoesNotExist:
             return Response({'err': 'file not found'}, status=status.HTTP_404_NOT_FOUND)
         serializer = self.get_serializer(instance, many=False)
-        return Response({**serializer.data, 'translate_to': [x.id for x in project.translate_to.all()]})
+        return Response(serializer.data, status=status.HTTP_200_OK)
 
     # def update(self, request, *args, **kwargs):
     #     instance = self.get_object()

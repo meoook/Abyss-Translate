@@ -16,7 +16,7 @@ class FileRebuild:
         self.error = None
         # Check params
         if not isinstance(file_id, int) or not isinstance(f_lang_id, int) or not f_method or not f_path:
-            self.error = 'Wrong arguments'
+            self.error = f'Wrong arguments {type(file_id)} {type(f_lang_id)} {f_method} {f_path}'
         else:
             self.__start_build(file_id, f_method, f_path, codec, f_lang_id, f_options)
 

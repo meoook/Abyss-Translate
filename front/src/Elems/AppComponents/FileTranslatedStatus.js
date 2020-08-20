@@ -18,11 +18,11 @@ const FileTranslatedStatus = ({ fileObj }) => {
   // STATE
   const { downloadFile, languages } = useContext(AppContext)
   const [translates, setTranslates] = useState(fileObj.translated_set)
-  const [total, setTotal] = useState(fileObj.items_count)
+  const [total, setTotal] = useState(fileObj.items)
 
   useEffect(() => {
     setTranslates(fileObj.translated_set)
-    setTotal(fileObj.items_count)
+    setTotal(fileObj.items)
   }, [fileObj])
 
   return (
@@ -40,14 +40,14 @@ const FileTranslatedStatus = ({ fileObj }) => {
               <i className='bd'>
                 <IcoLang language={findLang(item.language, languages).name} />
               </i>
-              {findLang(item.language, languages).short_name} {getProgress(item.items_count, total)}
+              {findLang(item.language, languages).short_name} {getProgress(item.items, total)}
             </div>
           ) : (
             <div className='pr-1'>
               <i className='bd'>
                 <IcoLang language={findLang(item.language, languages).name} />
               </i>
-              {findLang(item.language, languages).short_name} {getProgress(item.items_count, total)}
+              {findLang(item.language, languages).short_name} {getProgress(item.items, total)}
             </div>
           )}
         </React.Fragment>

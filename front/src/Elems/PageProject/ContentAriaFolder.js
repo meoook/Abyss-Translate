@@ -83,7 +83,7 @@ const FileItem = ({ file, selected, selectFile }) => {
         )}
       </div>
       <div className='col col-2'>{file.state}</div>
-      <div className='col col-1 t-center'>{file.items_count}</div>
+      <div className='col col-1 t-center'>{file.items}</div>
       <div className='col col-1 t-center'>{file.words}</div>
       <div className='col col-5 pt-0'>
         <FileTranslatedStatus fileObj={file} />

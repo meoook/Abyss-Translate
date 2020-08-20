@@ -23,7 +23,6 @@ logger = logging.getLogger('logfile')
 )
 def file_parse(file_id, new=True):
     """ Get file info and parse file data into text to translate """
-    logger.warning(f'DEBUUUUUUUUUUUUUUG {file_id}')
     file_manager = LocalizeFileManager(file_id)
     if not file_manager.success or not file_manager.parse():
         if file_parse.request.retries < 3:
@@ -71,10 +70,10 @@ def folder_update_by_repo(filo):
 def check_all_file_repos():
     """ It's a global app task -> Get all users files check git status and update if needed """
     try:
-        pass
+        logger.info('Checking files too slow')
     except SoftTimeLimitExceeded:
         logger.warning('Checking files too slow')
-        pass
+    return True
 
 
 @periodic_task(
@@ -90,12 +89,14 @@ def check_all_file_repos():
 def upload_translated():
     """ It's a global app task -> Get all users translated files and upload them in git repos """
     try:
-        pass
+        logger.info('Checking files too slow')
     except SoftTimeLimitExceeded:
         logger.warning('Checking files too slow')
-        pass
+    return True
 
 
 @periodic_task(run_every=crontab(hour='*/6'), name="P0: Check celery. Run each 10 mins.")
 def test_task():
     logger.error('TEST CELERY ERROR')
+    return True
+
