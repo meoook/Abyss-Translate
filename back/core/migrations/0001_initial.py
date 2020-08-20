@@ -132,7 +132,7 @@ class Migration(migrations.Migration):
             name='ProjectPermissions',
             fields=[
                 ('id', models.AutoField(auto_created=True, primary_key=True, serialize=False, verbose_name='ID')),
-                ('permission', models.SmallIntegerField(choices=[(0, 'invite translator'), (1, 'manage')])),
+                ('permission', models.SmallIntegerField(choices=[(0, 'invite translator'), (1, 'manage'), (9, 'tranlate')])),
                 ('project', models.ForeignKey(on_delete=django.db.models.deletion.CASCADE, to='core.projects')),
                 ('user', models.ForeignKey(on_delete=django.db.models.deletion.CASCADE, to=settings.AUTH_USER_MODEL)),
             ],
