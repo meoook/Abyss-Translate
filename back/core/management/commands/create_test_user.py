@@ -33,7 +33,7 @@ class Command(BaseCommand):
         password = '1'
         user = User.objects.create_user(username=name, email=f'{name}@gmail.com', password=password)
         self.stdout.write(f'User {name} created with password: {password}')
-        user.user_permissions.add('localize.creator')
+        # user.user_permissions.add('localize.creator')
 
         project_props = {
             'owner': user,

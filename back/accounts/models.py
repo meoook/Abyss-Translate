@@ -1,14 +1,14 @@
-from django.db import models
-from django.contrib.auth.models import UserManager, AbstractUser
+# from django.db import models
+# from django.contrib.auth.models import UserManager, AbstractUser
 
 
-class UserProfile(AbstractUser):
-    """ VIP status and user config for UI  """
+# class UserProfile(AbstractUser):
+#     """ VIP status and user config for UI  """
+#     objects = UserManager()
 
-    vip_status = models.BooleanField(default=False)
-    config_o = models.JSONField(null=True)
+#     vip_status = models.BooleanField(default=False)
+#     config_o = models.JSONField(null=True)
 
-    objects = UserManager()
 
     # class Meta:
         # 'verbose_name': 'user',
@@ -19,4 +19,3 @@ class UserProfile(AbstractUser):
     #         ("admin", "Can manage projects where invited"),
     #         ("translator", "Can translate files from projects where invited"),
     #     ]
-

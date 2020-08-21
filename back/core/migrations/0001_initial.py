@@ -136,6 +136,9 @@ class Migration(migrations.Migration):
                 ('project', models.ForeignKey(on_delete=django.db.models.deletion.CASCADE, to='core.projects')),
                 ('user', models.ForeignKey(on_delete=django.db.models.deletion.CASCADE, to=settings.AUTH_USER_MODEL)),
             ],
+            options={
+                'unique_together': {('user', 'project', 'permission')},
+            },
         ),
         migrations.AddField(
             model_name='folders',

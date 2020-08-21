@@ -1,6 +1,6 @@
 import os
 import logging
-from rest_framework import viewsets, status, permisions
+from rest_framework import viewsets, status, permissions
 from rest_framework.parsers import MultiPartParser
 from rest_framework.pagination import PageNumberPagination
 from rest_framework.response import Response
@@ -196,10 +196,8 @@ class ProjectViewSet(viewsets.ModelViewSet):
     """ Project manager view. Only for owner. """
     serializer_class = ProjectSerializer
     lookup_field = 'save_id'
-    filter_class = ProjectFilterBackend
-    permission_classes = [
-        permissions.IsAuthenticated, ProjectCanEditOrReadOnly,
-    ]
+    # filter_class = ProjectFilterBackend
+    permission_classes = [permissions.IsAuthenticated, ProjectCanEditOrReadOnly, ]
     # ordering = ['position']
     queryset = Projects.objects.all()
 
@@ -208,8 +206,8 @@ class ProjectViewSet(viewsets.ModelViewSet):
             logger.warning('PERMISION FOUND')
         else:
             logger.warning('PERMISION NOT FOUND')
-        # return self.request.user.projects_set.all()
-        return self.queryset
+        return self.request.user.projects_set.all()
+        # return self.queryset
 
     def perform_create(self, serializer):
         serializer.save(owner=self.request.user)

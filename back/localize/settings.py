@@ -70,7 +70,7 @@ DATABASES = {
 }
 
 
-AUTH_USER_MODEL = 'accounts.UserProfile'
+# AUTH_USER_MODEL = 'accounts.UserProfile'
 
 # Password validation
 AUTH_PASSWORD_VALIDATORS = [
@@ -265,4 +265,3 @@ LOGGING = {
         },
     },
 }
-
