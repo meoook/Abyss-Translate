@@ -24,9 +24,12 @@ logger = logging.getLogger('django')
 # TODO: CHECK USER RIGHTS/PERMISSIONS
 
 
-def project_check_perm_or_404(project_save_id, user, permission_lvl)
+def project_check_perm_or_404(project_save_id, user, permission_lvl):
     try:
-        user.project_permisions.get(project__save_id=project_save_id, permission=permission_lvl)
+        if user.has_perm('localize.creator'):
+            user.project_set.get(save_id=project_save_id)
+        else:
+            user.project_permisions.get(project__save_id=project_save_id, permission=permission_lvl)
     except ObjectDoesNotExist:
         raise Http404
     return True
@@ -69,9 +72,10 @@ class FileMarksView(viewsets.ModelViewSet):
         distinct = request.query_params.get('d')
         no_trans = request.query_params.get('nt')
         try:
-            file_obj = Files.objects.get(pk=file_id, owner=request.user)
+            file_obj = Files.objects.select_related('folder__project').get(pk=file_id, owner=request.user)
         except ObjectDoesNotExist:
             return Response({'err': 'file not found'}, status=status.HTTP_404_NOT_FOUND)
+        project_check_perm_or_404(file_obj.folder.project.save_id, request.user, 1)
         # FIXME: mb other issue
         if distinct == 'true':
             uniq_md5_id_arr = [x['id'] for x in list(
