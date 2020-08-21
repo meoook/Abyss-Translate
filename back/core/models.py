@@ -68,6 +68,9 @@ class ProjectPermissions(models.Model):
     project = models.ForeignKey(Projects, on_delete=models.CASCADE)
     permission = models.SmallIntegerField(choices=PROJECT_PERMISSION_CHOICES)
 
+    class Meta:
+        unique_together = [('user', 'project', 'permission'),]
+
 
 class Folders(models.Model):
     """" Folder model with auto delete. Folder created by ID. """

@@ -1,6 +1,6 @@
 import os
 import logging
-from rest_framework import viewsets, status
+from rest_framework import viewsets, status, permisions
 from rest_framework.parsers import MultiPartParser
 from rest_framework.pagination import PageNumberPagination
 from rest_framework.response import Response
@@ -16,7 +16,7 @@ from core.serializers import ProjectSerializer, FoldersSerializer, LanguagesSeri
 from .models import Languages, Projects, Folders, FolderRepo, Files, Translated, FileMarks, Translates
 
 from core.utils.git_manager import GitManage
-
+from core.permisions import ProjectFilterBackend, ProjectCanEditOrReadOnly
 from core.tasks import file_parse
 
 logger = logging.getLogger('django')
@@ -196,6 +196,10 @@ class ProjectViewSet(viewsets.ModelViewSet):
     """ Project manager view. Only for owner. """
     serializer_class = ProjectSerializer
     lookup_field = 'save_id'
+    filter_class = ProjectFilterBackend
+    permission_classes = [
+        permissions.IsAuthenticated, ProjectCanEditOrReadOnly,
+    ]
     # ordering = ['position']
     queryset = Projects.objects.all()
 
@@ -204,7 +208,8 @@ class ProjectViewSet(viewsets.ModelViewSet):
             logger.warning('PERMISION FOUND')
         else:
             logger.warning('PERMISION NOT FOUND')
-        return self.request.user.projects_set.all()
+        # return self.request.user.projects_set.all()
+        return self.queryset
 
     def perform_create(self, serializer):
         serializer.save(owner=self.request.user)
@@ -308,6 +313,11 @@ class FileViewSet(viewsets.ModelViewSet):
     def get_queryset(self):
         """ Filter owner files """
         return self.queryset.filter(owner=self.request.user)
+
+    def get_queryset(self):
+        """ Filtering against a `name` query parameter in the URL """
+        name = self.request.query_params.get('username', None)
+        return self.queryset.filter(name=username) if name else self.queryset
 
     def retrieve(self, request, *args, **kwargs):
         """ Filter owner files """
