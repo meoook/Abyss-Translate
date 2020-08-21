@@ -3,6 +3,9 @@ from rest_framework.test import APITestCase
 from rest_framework import status
 from django.contrib.auth.models import User
 
+from django.test import TestCase
+from django.contrib.auth import get_user_model
+
 
 class AuthSystemTestCase(APITestCase):
     # TODO: Rename data to class.value
@@ -39,11 +42,11 @@ class AuthSystemTestCase(APITestCase):
         self.client.credentials(HTTP_AUTHORIZATION='Token ' + token)
         req_prj = self.client.get(url)
         self.assertEqual(req_prj.status_code, status.HTTP_200_OK)
-    
+
         self.client.logout()
         login_token_logoff = self.client.get(url)
-        self.assertEqual(login_token_logoff.status_code, status.HTTP_401_UNAUTHORIZED )
-    
+        self.assertEqual(login_token_logoff.status_code, status.HTTP_401_UNAUTHORIZED)
+
     def test_get_user_api(self):
         data = {'username': 'DabApps', 'password': 'QwZ!3klPz', 'email': 'aa@zaz.ru'}
         user = User.objects.create_user(**data)
@@ -59,6 +62,46 @@ class AuthSystemTestCase(APITestCase):
         self.assertEqual(response.status_code, status.HTTP_200_OK)
         check_with = {'id': user.id, 'username': data['username'], 'email': data['email']}
         self.assertEqual(response.data, check_with)
+
+
+class UsersManagersTests(TestCase):
+
+    def test_create_user(self):
+        User = get_user_model()
+        user = User.objects.create_user(username='normalin', email='normal@user.com', password='foo')
+        self.assertEqual(user.email, 'normal@user.com')
+        self.assertTrue(user.is_active)
+        self.assertFalse(user.is_staff)
+        self.assertFalse(user.is_superuser)
+        try:
+            # username is None for the AbstractUser option
+            # username does not exist for the AbstractBaseUser option
+            self.assertIsNone(user.username)
+        except AttributeError:
+            pass
+        with self.assertRaises(TypeError):
+            User.objects.create_user()
+        with self.assertRaises(TypeError):
+            User.objects.create_user(email='')
+        with self.assertRaises(ValueError):
+            User.objects.create_user(email='', password="foo")
+
+    def test_create_superuser(self):
+        User = get_user_model()
+        admin_user = User.objects.create_superuser('super@user.com', 'foo')
+        self.assertEqual(admin_user.email, 'super@user.com')
+        self.assertTrue(admin_user.is_active)
+        self.assertTrue(admin_user.is_staff)
+        self.assertTrue(admin_user.is_superuser)
+        try:
+            # username is None for the AbstractUser option
+            # username does not exist for the AbstractBaseUser option
+            self.assertIsNone(admin_user.username)
+        except AttributeError:
+            pass
+        with self.assertRaises(ValueError):
+            User.objects.create_superuser(
+                email='super@user.com', password='foo', is_superuser=False)
 
 
 # from django.urls import reverse
@@ -94,7 +137,7 @@ class AuthSystemTestCase(APITestCase):
 
 #         # If you need to explicitly encode the request body, you can do so by setting the content_type flag
 #         request = factory.post('/notes/', json.dumps({'title': 'new idea'}), content_type='application/json')
-    
+
 #     def test_for_test(self):
 #         factory = APIRequestFactory()
 #         user = User.objects.get(username='olivia')

@@ -16,7 +16,7 @@ from core.serializers import ProjectSerializer, FoldersSerializer, LanguagesSeri
 from .models import Languages, Projects, Folders, FolderRepo, Files, Translated, FileMarks, Translates
 
 from core.utils.git_manager import GitManage
-from core.permisions import ProjectFilterBackend, ProjectCanEditOrReadOnly
+# from core.permisions import ProjectFilterBackend, ProjectCanEditOrReadOnly
 from core.tasks import file_parse
 
 logger = logging.getLogger('django')
@@ -197,17 +197,13 @@ class ProjectViewSet(viewsets.ModelViewSet):
     serializer_class = ProjectSerializer
     lookup_field = 'save_id'
     # filter_class = ProjectFilterBackend
-    permission_classes = [permissions.IsAuthenticated, ProjectCanEditOrReadOnly, ]
+    # permission_classes = [permissions.IsAuthenticated, ProjectCanEditOrReadOnly, ]
     # ordering = ['position']
     queryset = Projects.objects.all()
 
     def get_queryset(self):
-        if self.request.user.has_perm('localize.creator'):
-            logger.warning('PERMISION FOUND')
-        else:
-            logger.warning('PERMISION NOT FOUND')
-        return self.request.user.projects_set.all()
         # return self.queryset
+        return self.request.user.projects_set.all()
 
     def perform_create(self, serializer):
         serializer.save(owner=self.request.user)

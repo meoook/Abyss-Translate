@@ -53,7 +53,7 @@ class FileRebuild:
         # Pass header
         if 'top_rows' in f_options and f_options['top_rows']:
             for i, _ in enumerate(filo):
-                if i == f_options['top_rows'] - 1:
+                if i == f_options['top_rows']:
                     break
         # Parsing file
         object_number = 0
