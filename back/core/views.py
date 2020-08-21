@@ -11,9 +11,9 @@ from django.core import management
 from django.http import FileResponse, HttpResponse, Http404
 
 from core.serializers import ProjectSerializer, FoldersSerializer, LanguagesSerializer,\
-    FilesSerializer, TransferFileSerializer, TranslatesSerializer, FileMarksSerializer
+    FilesSerializer, TransferFileSerializer, TranslatesSerializer, FileMarksSerializer, PermissionsSerializer, ProjectsDisplaySerializer
 
-from .models import Languages, Projects, Folders, FolderRepo, Files, Translated, FileMarks, Translates
+from .models import Languages, Projects, Folders, FolderRepo, Files, Translated, FileMarks, Translates, ProjectPermissions
 
 from core.utils.git_manager import GitManage
 # from core.permisions import ProjectFilterBackend, ProjectCanEditOrReadOnly
@@ -24,6 +24,14 @@ logger = logging.getLogger('django')
 # TODO: CHECK USER RIGHTS/PERMISSIONS
 
 
+def project_check_perm_or_404(project_save_id, user, permission_lvl)
+    try:
+        user.project_permisions.get(project__save_id=project_save_id, permission=permission_lvl)
+    except ObjectDoesNotExist:
+        raise Http404
+    return True
+
+
 class DefaultSetPagination(PageNumberPagination):
     page_size = 25
     max_page_size = 100
@@ -31,6 +39,13 @@ class DefaultSetPagination(PageNumberPagination):
     page_size_query_param = 's'
     last_page_strings = 'last'
     template = None
+
+
+class LanguageViewSet(viewsets.ModelViewSet):
+    """ Display all languages on login """
+    serializer_class = LanguagesSerializer
+    http_method_names = ['get']
+    queryset = Languages.objects.filter(active=True)
 
 
 class FileMarksView(viewsets.ModelViewSet):
@@ -185,44 +200,50 @@ class TransferFileView(viewsets.ViewSet):
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
 
-class LanguageViewSet(viewsets.ModelViewSet):
-    """ Display all languages on login """
-    serializer_class = LanguagesSerializer
-    http_method_names = ['get']
-    queryset = Languages.objects.filter(active=True)
-
-
 class ProjectViewSet(viewsets.ModelViewSet):
     """ Project manager view. Only for owner. """
     serializer_class = ProjectSerializer
     lookup_field = 'save_id'
-    # filter_class = ProjectFilterBackend
-    # permission_classes = [permissions.IsAuthenticated, ProjectCanEditOrReadOnly, ]
     # ordering = ['position']
     queryset = Projects.objects.all()
 
+    def get_object(self, pk=None):
+        try:
+            return self.request.user.projects_set.get(id=pk)
+        except ObjectDoesNotExist:
+            raise Http404
+
     def get_queryset(self):
-        # return self.queryset
-        return self.request.user.projects_set.all()
+        user = self.request.user
+        if user.has_perm('localize.creator'):
+            return self.request.user.projects_set.all()
+        return self.queryset.filter(project_permissions_user=user)
 
-    def perform_create(self, serializer):
-        serializer.save(owner=self.request.user)
+    def create(self, request, *args, **kwargs):
+        """ Check if user have rights to create """
+        if not self.request.user.has_perm('localize.creator'):
+            return Response({'err': 'You have no permission to create projects'}, status=status.HTTP_400_BAD_REQUEST)
+        serializer = self.get_serializer(data=request.data)
+        serializer.is_valid(raise_exception=True)
+        serializer.save(owner=request.user)
+        return Response(serializer.data, status=status.HTTP_201_CREATED)
 
-    # def update(self, request, save_id=None, *args, **kwargs):
-    #     project = self.get_object()  # by save_id -> lookup_field
-    #     serializer = ProjectSerializer(project, data=request.data)
-    #     if serializer.is_valid():
-    #         serializer.save()
-    #         return Response(serializer.data)
-    #     return Response('project not found', status=status.HTTP_404_NOT_FOUND)
 
-    # def retrieve(self, request, save_id=None, *args, **kwargs):
-    #     project = self.get_object()  # by save_id -> lookup_field
-    #     serializer = ProjectSerializer(queryset)
-    #     if serializer.is_valid():
-    #         return Response(serializer.data)
-    #     else:
-    #         return Response('project not found', status=status.HTTP_404_NOT_FOUND)
+class ProjectPermsViewSet(viewsets.ModelViewSet):
+    """ Project permission manager """
+    serializer_class = PermissionsSerializer
+    http_method_names = ['get', 'post', 'delete']
+    queryset = ProjectPermissions.objects.all()
+
+    def get_queryset(self):
+        project = self.request.query_params.get('project')
+        if self.request.user.has_perm('localize.creator'):
+            return self.queryset.filter(project__save_id=project, project__owner=self.request.user)
+        try:
+            self.request.user.project_permisions.get(project__save_id=project, permission=9)
+        except ObjectDoesNotExist:
+            raise Http404
+        return self.queryset.filter(project__save_id=project)
 
 
 # Folder ViewSet
@@ -233,9 +254,8 @@ class FolderViewSet(viewsets.ModelViewSet):
 
     def get_object(self):
         try:
-            instance = self.get_queryset().get(id=self.kwargs['pk'], project__owner=self.request.user)
-            return instance
-        except Folders.DoesNotExist:
+            return self.get_queryset().get(id=self.kwargs['pk'], project__owner=self.request.user)
+        except ObjectDoesNotExist:
             raise Http404  # Response({'err': 'folder not found'}, status=status.HTTP_404_NOT_FOUND)
 
     def create(self, request, *args, **kwargs):
@@ -304,24 +324,24 @@ class FileViewSet(viewsets.ModelViewSet):
     pagination_class = DefaultSetPagination
     queryset = Files.objects.all()
 
-    def get_queryset(self):
-        """ Filter owner files """
-        return self.queryset.filter(owner=self.request.user)
+    # def get_queryset(self):
+    #     """ Filter owner files """
+    #     return self.queryset.filter(owner=self.request.user)
 
     def get_queryset(self):
         """ Filtering against a `name` query parameter in the URL """
-        name = self.request.query_params.get('username', None)
-        return self.queryset.filter(name=username) if name else self.queryset
+        name = self.request.query_params.get('name', None)
+        return self.queryset.filter(name=name) if name else self.queryset
 
     def retrieve(self, request, *args, **kwargs):
         """ Filter owner files """
         try:
             project = Projects.objects.get(folders__files=kwargs['pk'])
-        except Projects.DoesNotExist:
+        except ObjectDoesNotExist:
             return Response({'err': 'project not found'}, status=status.HTTP_404_NOT_FOUND)
         try:
             instance = self.queryset.get(owner=request.user, pk=kwargs['pk'])
-        except Files.DoesNotExist:
+        except ObjectDoesNotExist:
             return Response({'err': 'file not found'}, status=status.HTTP_404_NOT_FOUND)
         serializer = self.get_serializer(instance, many=False)
         return Response(serializer.data, status=status.HTTP_200_OK)

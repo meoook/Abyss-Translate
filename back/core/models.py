@@ -49,20 +49,25 @@ class Projects(models.Model):
     name = models.CharField(max_length=50)
     icon_chars = models.CharField(max_length=2)
     created = models.DateTimeField(auto_now_add=True)
-    updated = models.DateTimeField(auto_now=True)
     lang_orig = models.ForeignKey(Languages, on_delete=models.DO_NOTHING, related_name='projects')
     translate_to = models.ManyToManyField(Languages, related_name='projects_m')
 
     class Meta:
         unique_together = ['owner', 'name']
+        permissions = [
+            ("creator", "Can create projects and invite"),
+            ("admin", "Can manage projects where invited"),
+            ("translator", "Can translate files from projects where invited"),
+        ]
 
 
 class ProjectPermissions(models.Model):
     """ Permissions for project """
     PROJECT_PERMISSION_CHOICES = [
-        (0, 'invite translator'),   # Default admin role
-        (1, 'manage'),              # Can create\delete\update - folders\files
-        (9, 'tranlate'),            # Can translate files in project
+        (0, 'tranlate'),            # Can translate files in project
+        (5, 'invite translator'),   # Default admin role
+        (8, 'manage'),              # Can create\delete\update - folders\files
+        (9, 'admin'),               # Can change permissions to other users
     ]
     user = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE)
     project = models.ForeignKey(Projects, on_delete=models.CASCADE)
@@ -214,7 +219,7 @@ def auto_delete_file_on_delete(sender, instance, **kwargs):
         # os.remove(instance.file.path)
         inst_obj.delete(save=False)
 
-
+# TODO: for prj and folder -> one function
 def auto_delete_folder_on_delete(sender, instance, **kwargs):
     """ TRIGGER: Deletes folder from filesystem when corresponding `Folder` object is deleted. """
     path_to_delete = '{}/{}/{}/'.format(instance.project.owner.username, instance.project.id, instance.id)
