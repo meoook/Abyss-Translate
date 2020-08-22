@@ -91,6 +91,7 @@ class TransferFileView(viewsets.ViewSet):
     serializer_class = TransferFileSerializer
 
     def retrieve(self, request, pk=None):
+        # TODO: Check rights
         """ Return file to download by Translated.id (Can be changed to retrieve by fileID and langID) """
         try:
             # progress = Translated.objects.get(file_id=pk, language_id=lang_id)   <-- retrieve by fileID and langID
