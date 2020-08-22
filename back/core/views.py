@@ -10,18 +10,29 @@ from django.core.exceptions import ObjectDoesNotExist, ValidationError
 from django.core import management
 from django.http import FileResponse, HttpResponse, Http404
 
-from .tasks import file_parse
-from .serializers import ProjectSerializer, FoldersSerializer, LanguagesSerializer,\
+from core.serializers import ProjectSerializer, FoldersSerializer, LanguagesSerializer,\
     FilesSerializer, TransferFileSerializer, TranslatesSerializer, FileMarksSerializer, PermissionsSerializer, ProjectsDisplaySerializer
+
 from .models import Languages, Projects, Folders, FolderRepo, Files, Translated, FileMarks, Translates, ProjectPermissions
 
 from core.utils.git_manager import GitManage
-from core.services.access_system import file_check_perm_or_404, folder_check_perm_or_404, project_check_perm_or_404
 # from core.permisions import ProjectFilterBackend, ProjectCanEditOrReadOnly
+from core.tasks import file_parse
 
 logger = logging.getLogger('django')
 
 # TODO: CHECK USER RIGHTS/PERMISSIONS
+
+
+def project_check_perm_or_404(project_save_id, user, permission_lvl):
+    try:
+        if user.has_perm('localize.creator'):
+            user.project_set.get(save_id=project_save_id)
+        else:
+            user.project_permisions.get(project__save_id=project_save_id, permission=permission_lvl)
+    except ObjectDoesNotExist:
+        raise Http404
+    return True
 
 
 class DefaultSetPagination(PageNumberPagination):
@@ -46,20 +57,32 @@ class FileMarksView(viewsets.ModelViewSet):
     pagination_class = DefaultSetPagination
     queryset = FileMarks.objects.all()
 
+    def retrieve(self, request, *args, **kwargs):
+        """ Filter owner files """
+        try:
+            queryset = self.get_queryset().get(pk=kwargs['pk'], file__owner=request.user)
+            serializer = self.get_serializer(queryset, many=False)
+            return Response(serializer.data, status=status.HTTP_404_NOT_FOUND)
+        except ObjectDoesNotExist:
+            return Response({'err': 'mark not found'}, status=status.HTTP_404_NOT_FOUND)
+
     def list(self, request, *args, **kwargs):
         """ Translates with pagination """
         file_id = request.query_params.get('f')
         distinct = request.query_params.get('d')
-        no_trans = request.query_params.get('nt')           # exclude marks that have translates to no_trans lang
-        file_check_perm_or_404(file_id, request.user, 1)    # can translate or owner
-        # FIXME: mb other issue to save order
+        no_trans = request.query_params.get('nt')
+        try:
+            file_obj = Files.objects.select_related('folder__project').get(pk=file_id, owner=request.user)
+        except ObjectDoesNotExist:
+            return Response({'err': 'file not found'}, status=status.HTTP_404_NOT_FOUND)
+        project_check_perm_or_404(file_obj.folder.project.save_id, request.user, 1)
+        # FIXME: mb other issue
         if distinct == 'true':
-            # .values_list('id', flat=True)
             uniq_md5_id_arr = [x['id'] for x in list(
-                self.get_queryset().filter(file_id=file_id).values('md5sum', 'id').distinct('md5sum'))]
+                self.get_queryset().filter(file=file_obj).values('md5sum', 'id').distinct('md5sum'))]
             queryset = self.get_queryset().filter(pk__in=uniq_md5_id_arr).order_by('mark_number', 'col_number')
         else:
-            queryset = self.get_queryset().filter(file_id=file_id).order_by('mark_number', 'col_number')
+            queryset = self.get_queryset().filter(file=file_obj).order_by('mark_number', 'col_number')
         if no_trans and int(no_trans) > 0:
             to_filter = queryset.filter(Q(translates__language=no_trans), ~Q(translates__text__exact=''))
             queryset = queryset.exclude(id__in=to_filter)
@@ -74,60 +97,58 @@ class FileMarksView(viewsets.ModelViewSet):
         md5sum = request.data.get('md5')
         lang_trans = request.data.get('langID')
         text = request.data.get('text')     # TODO: Check mb can get in binary??
+        if file_id and mark_id and lang_trans:
+            try:
+                file_obj = Files.objects.get(pk=file_id, owner=request.user)
+            except ObjectDoesNotExist:
+                return Response({'err': 'file not found'}, status=status.HTTP_404_NOT_FOUND)
+            # Check lang_translate in list of need translate languages
+            if lang_trans not in file_obj.translated_set.values_list('id', flat=True):
+                return Response({'err': "no need translate to this language"}, status=status.HTTP_400_BAD_REQUEST)
+            # Can't change original text
+            if lang_trans == file_obj.lang_orig.id:
+                # TODO: permisions check - mb owner can change
+                return Response({'err': "can't change original text"}, status=status.HTTP_404_NOT_FOUND)
 
-        if not file_id or not mark_id or not lang_trans:
-            return Response({'err': 'request params error'}, status=status.HTTP_400_BAD_REQUEST)
-        file_check_perm_or_404(file_id, request.user, 1)    # can translate or owner
-        try:
-            file_obj = Files.objects.get(pk=file_id)
-        except ObjectDoesNotExist:
-            return Response({'err': 'file not found'}, status=status.HTTP_404_NOT_FOUND)
-        # Check lang_translate in list of need translate languages
-        if lang_trans not in file_obj.translated_set.values_list('id', flat=True):
-            return Response({'err': "no need translate to this language"}, status=status.HTTP_400_BAD_REQUEST)
-        # Can't change original text
-        if lang_trans == file_obj.lang_orig.id:
-            # TODO: permisions check - mb owner can change
-            return Response({'err': "can't change original text"}, status=status.HTTP_404_NOT_FOUND)
+            # Get or create translate(s)
+            if md5sum:  # multi update
+                # Check if translates exist with same md5
+                translates = Translates.objects.filter(mark__file=file_obj, language=lang_trans, mark__md5sum=md5sum)
+                control_marks = file_obj.filemarks_set.filter(md5sum=md5sum)
+            else:
+                translates = Translates.objects.filter(mark__file=file_obj, language=lang_trans, mark__id=mark_id)
+                control_marks = file_obj.filemarks_set.filter(id=mark_id)
+            # TODO: check text language and other
+            translates.update(text=text)
+            if translates.count() != control_marks.count():
+                def_obj = {'translator': request.user, 'text': text, 'language_id': lang_trans}
+                objs = [Translates(**def_obj, mark=mark) for mark in control_marks if mark.id not in translates.values_list('mark', flat=True)]
+                Translates.objects.bulk_create(objs)
 
-        # Get or create translate(s)
-        if md5sum:  # multi update
-            # Check if translates exist with same md5
-            translates = Translates.objects.filter(mark__file=file_obj, language=lang_trans, mark__md5sum=md5sum)
-            control_marks = file_obj.filemarks_set.filter(md5sum=md5sum)
-        else:
-            translates = Translates.objects.filter(mark__file=file_obj, language=lang_trans, mark__id=mark_id)
-            control_marks = file_obj.filemarks_set.filter(id=mark_id)
-        # TODO: check text language and other
-        translates.update(text=text)
-        # Add new translates if mark(marks for md5) have no translates
-        if translates.count() != control_marks.count():
-            def_obj = {'translator': request.user, 'text': text, 'language_id': lang_trans}
-            objs = [Translates(**def_obj, mark=mark) for mark in control_marks if mark.id not in translates.values_list('mark', flat=True)]
-            Translates.objects.bulk_create(objs)
-
-        return_trans = translates.get(mark_id=mark_id)
-        serializer = TranslatesSerializer(return_trans, many=False)
-        # Get file progress for language
-        try:
-            progress = Translated.objects.get(file=file_obj, language=lang_trans)
-        except ObjectDoesNotExist:
-            logger.error(f"For file {file_obj.id} related translated object not found: language {lang_trans}")
-            return Response({'err': 'related translated object not found'}, status=status.HTTP_404_NOT_FOUND)
-        how_much_translated = self.get_queryset()\
-            .filter(Q(translates__language=lang_trans), Q(file=file_obj), ~Q(translates__text__exact='')).count()
-        if file_obj.items == how_much_translated:
-            progress.finished = True
-        elif file_obj.items < how_much_translated:
-            logging.error(f'For file {file_obj.id} translates items more then file have')
-            progress.finished = True    # But it's error
-        elif progress.finished:
-            progress.finished = False
-        progress.items = how_much_translated
-        progress.save()
-        if progress.finished:
-            management.call_command('file_create_translated', file_obj.id, lang_trans)
-        return Response(serializer.data, status=status.HTTP_200_OK)
+            return_trans = translates.get(mark_id=mark_id)
+            serializer = TranslatesSerializer(return_trans, many=False)
+            # Get file progress for language
+            try:
+                progress = Translated.objects.get(file=file_obj, language=lang_trans)
+            except ObjectDoesNotExist:
+                logger.error(f"For file {file_obj.id} related translated object not found: language {lang_trans}")
+                return Response({'err': 'related translated object not found'}, status=status.HTTP_404_NOT_FOUND)
+            how_much_translated = self.get_queryset()\
+                .filter(Q(translates__language=lang_trans), Q(file=file_obj), ~Q(translates__text__exact='')).count()
+            if file_obj.items == how_much_translated:
+                progress.finished = True
+                # FIXME: create file must be triggered by "file checked state or cron"
+            elif file_obj.items < how_much_translated:
+                logging.error(f'For file {file_obj.id} translates items more then file have')
+                progress.finished = True    # But it's error
+            elif progress.finished:
+                progress.finished = False
+            progress.items = how_much_translated
+            progress.save()
+            if progress.finished:
+                management.call_command('file_create_translated', file_obj.id, lang_trans)
+            return Response(serializer.data, status=status.HTTP_200_OK)
+        return Response({'err': 'request params error'}, status=status.HTTP_400_BAD_REQUEST)
 
 
 class TransferFileView(viewsets.ViewSet):
