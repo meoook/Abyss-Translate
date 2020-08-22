@@ -12,12 +12,11 @@ from django.http import FileResponse, HttpResponse, Http404
 
 from core.serializers import ProjectSerializer, FoldersSerializer, LanguagesSerializer,\
     FilesSerializer, TransferFileSerializer, TranslatesSerializer, FileMarksSerializer, PermissionsSerializer, ProjectsDisplaySerializer
-
 from .models import Languages, Projects, Folders, FolderRepo, Files, Translated, FileMarks, Translates, ProjectPermissions
+from .tasks import file_parse, upload_translated
 
 from core.utils.git_manager import GitManage
-# from core.permisions import ProjectFilterBackend, ProjectCanEditOrReadOnly
-from core.tasks import file_parse
+from core.services.access_system_ import project_check_perm_or_404, folder_check_perm_or_404, file_check_perm_or_404
 
 logger = logging.getLogger('django')
 
@@ -70,19 +69,15 @@ class FileMarksView(viewsets.ModelViewSet):
         """ Translates with pagination """
         file_id = request.query_params.get('f')
         distinct = request.query_params.get('d')
-        no_trans = request.query_params.get('nt')
-        try:
-            file_obj = Files.objects.select_related('folder__project').get(pk=file_id, owner=request.user)
-        except ObjectDoesNotExist:
-            return Response({'err': 'file not found'}, status=status.HTTP_404_NOT_FOUND)
-        project_check_perm_or_404(file_obj.folder.project.save_id, request.user, 1)
-        # FIXME: mb other issue
+        no_trans = request.query_params.get('nt')           # exclude marks that have translates to no_trans lang
+        file_check_perm_or_404(file_id, request.user, 1)    # can translate or owner
+        # FIXME: mb other issue to save order
         if distinct == 'true':
             uniq_md5_id_arr = [x['id'] for x in list(
-                self.get_queryset().filter(file=file_obj).values('md5sum', 'id').distinct('md5sum'))]
+                self.get_queryset().filter(file_id=file_id).values('md5sum', 'id').distinct('md5sum'))]
             queryset = self.get_queryset().filter(pk__in=uniq_md5_id_arr).order_by('mark_number', 'col_number')
         else:
-            queryset = self.get_queryset().filter(file=file_obj).order_by('mark_number', 'col_number')
+            queryset = self.get_queryset().filter(file_id=file_id).order_by('mark_number', 'col_number')
         if no_trans and int(no_trans) > 0:
             to_filter = queryset.filter(Q(translates__language=no_trans), ~Q(translates__text__exact=''))
             queryset = queryset.exclude(id__in=to_filter)
