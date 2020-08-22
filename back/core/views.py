@@ -13,7 +13,7 @@ from django.http import FileResponse, HttpResponse, Http404
 from core.serializers import ProjectSerializer, FoldersSerializer, LanguagesSerializer, FilesSerializer, TransferFileSerializer, TranslatesSerializer, FileMarksSerializer, PermissionsSerializer, FilesDisplaySerializer
 from .models import Languages, Projects, Folders, FolderRepo, Files, Translated, FileMarks, Translates, ProjectPermissions
 from .tasks import file_parse, upload_translated
-
+from .permisions import IsFileOwner, IsProjectOwnerOrReadOnly
 from core.utils.git_manager import GitManage
 from core.services.access_system_ import project_check_perm_or_404, folder_check_perm_or_404, file_check_perm_or_404
 from core.services.translate_manage import translate_create
@@ -37,6 +37,149 @@ class LanguageViewSet(viewsets.ModelViewSet):
     serializer_class = LanguagesSerializer
     http_method_names = ['get']
     queryset = Languages.objects.filter(active=True)
+
+
+class ProjectViewSet(viewsets.ModelViewSet):
+    """ Project manager view. Only for owner. """
+    serializer_class = ProjectSerializer
+    lookup_field = 'save_id'
+    permission_classes = [IsAuthenticated, IsProjectOwnerOrReadOnly]
+    # ordering = ['position']
+    queryset = Projects.objects.all()
+
+    def get_queryset(self):
+        """ Get projects that user have permissions """
+        if self.request.user.has_perm('localize.creator'):
+            return self.request.user.projects_set.all()
+        return self.queryset.filter(project_permissions__user=self.request.user)  # Distinct ?
+
+    def create(self, request, *args, **kwargs):
+        """ Check if user have rights to create """
+        serializer = self.get_serializer(data=request.data)
+        serializer.is_valid(raise_exception=True)
+        serializer.save(owner=request.user)
+        return Response(serializer.data, status=status.HTTP_201_CREATED)
+
+
+class ProjectPermsViewSet(viewsets.ModelViewSet):
+    """ Project permission manager """
+    serializer_class = PermissionsSerializer
+    http_method_names = ['get', 'post', 'delete']
+    queryset = ProjectPermissions.objects.all()
+
+    def get_queryset(self):
+        if self.request.method == 'GET':
+            save_id = self.request.query_params.get('project')
+        save_id = self.request.data.get('project')
+        project_check_perm_or_404(save_id, self.request.user, 9)    # Can manage roles
+        return self.queryset.filter(project__save_id=save_id)
+
+
+# Folder ViewSet
+class FolderViewSet(viewsets.ModelViewSet):
+    serializer_class = FoldersSerializer
+    http_method_names = ['get', 'post', 'put', 'delete']
+    queryset = Folders.objects.all()
+
+    def get_queryset(self):
+        save_id = self.request.data['project']
+        project_check_perm_or_404(save_id, self.request.user, 8)   # Can manage
+        return self.queryset.filter(project__save_id=save_id)
+
+    def create(self, request, *args, **kwargs):
+        """ Increment position. ID is hidden from users - using save_id """
+        save_id = request.data.get('project')
+        project = Projects.objects.get(save_id=save_id)
+        if not project:
+            return Response({'err': 'project not found'}, status=status.HTTP_404_NOT_FOUND)
+        position = self.get_queryset().aggregate(m=Max('position')).get('m') or 0
+        serializer = self.get_serializer(data=request.data)
+        serializer.is_valid(raise_exception=True)
+        serializer.save(position=position + 1, project=project)
+        return Response(serializer.data, status=status.HTTP_201_CREATED)
+
+    def update(self, request, *args, **kwargs):
+        """ Check changing repository on update. If updated - update """
+        folder_instance = self.get_object()
+        repo_url = request.data.get('repository')
+
+        serializer = self.get_serializer(folder_instance, data=request.data)
+        serializer.is_valid(raise_exception=True)
+
+        if repo_url != folder_instance.repository:   # Repository URL have been changed
+            folder_files = Files.objects.filter(folder=folder_instance)
+            if repo_url:    # Input URL not empty
+                git_manager = GitManage()
+                git_manager.check_url(repo_url)
+                if git_manager.repo:   # URL parsed success
+                    defaults = {**git_manager.repo, 'hash': git_manager.new_hash}
+                    repo_obj, created = FolderRepo.objects.update_or_create(folder=folder_instance, defaults=defaults)
+                    # repo_obj.error = git_manager.error
+                else:
+                    pass
+
+                if git_manager.new_hash:  # Folder exist
+                    folder_files.update(repo_founded=False, repo_hash=False)    # SET founded - false for all files
+
+                    file_list = []
+                    for filo in folder_files:
+                        file_list.append({'id': filo.id, 'name': filo.name, 'hash': filo.repo_hash, 'path': filo.data.path})
+                    updated_files = git_manager.update_files(file_list)
+                    if updated_files:
+                        for filo in updated_files:
+                            Files.objects.filter(id=filo['id']).update(repo_founded=True, repo_hash=filo['hash'])
+                            # FIXME: Get file info
+                            management.call_command('file_rebuild', filo['id'])
+                else:
+                    folder_files.update(repo_founded=None, repo_hash=False)
+            else:
+                FolderRepo.objects.filter(folder=folder_instance).delete()
+                folder_files.update(repo_founded=None, repo_hash=False)
+
+        self.perform_update(serializer)
+        return Response(serializer.data)
+
+    def destroy(self, request, *args, **kwargs):
+        self.get_object().delete()
+        return Response(status=status.HTTP_204_NO_CONTENT)
+
+
+# Folder ViewSet
+class FileViewSet(viewsets.ModelViewSet):
+    # serializer_class = FilesSerializer
+    filter_backends = [filters.SearchFilter]
+    search_fields = ['name']
+    # permission_classes = [IsAuthenticated, IsFileOwner|IsFileTranslator]
+    http_method_names = ['get', 'put', 'delete']
+    pagination_class = DefaultSetPagination
+    queryset = Files.objects.all().order_by('state', '-created')
+
+
+    def get_serializer_class(self):
+        if self.request.user.has_perm('localize.translator'):
+            return FilesDisplaySerializer
+        return FilesSerializer
+
+    def get_queryset(self):
+        """ Filter files for tranlator or search by name """
+        search = self.request.query_params.get('search', None)
+        qs = self.queryset.filter(name__icontains=search) if search else self.queryset
+        return qs.filter(state=2) if self.request.user.has_perm('localize.translator') else qs
+
+    def get_object(self, pk=None):
+        """ Manage file by access """
+        file_check_perm_or_404(pk, self.request.user, 8)  # Can manage
+        return self.queryset.get(pk=pk)
+
+    def list(self, request, *args, **kwargs):
+        """ Filter files with pagination """
+        if request.user.has_perm('localize.translator'):
+            qs = self.get_queryset().filter(folder__project_save_id=request.query_params.get('save_id'))
+        else:
+            qs = self.get_queryset().filter(folder_id=request.query_params.get('folder'))
+        page = self.paginate_queryset(qs)
+        serializer = self.get_serializer(page, many=True)
+        return self.get_paginated_response(data=serializer.data)
 
 
 class FileMarksView(viewsets.ModelViewSet):
@@ -131,151 +274,3 @@ class TransferFileView(viewsets.ViewSet):
             return Response(serializer.data, status=status.HTTP_201_CREATED)
         logger.warning(f'Error creating file object: {serializer.errors}')
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
-
-
-class ProjectViewSet(viewsets.ModelViewSet):
-    """ Project manager view. Only for owner. """
-    serializer_class = ProjectSerializer
-    lookup_field = 'save_id'
-    # ordering = ['position']
-    queryset = Projects.objects.all()
-
-    def get_object(self, pk=None):
-        """ Can get only own projects """
-        try:
-            return self.request.user.projects_set.get(id=pk)
-        except ObjectDoesNotExist:
-            raise Http404
-
-    def get_queryset(self):
-        """ Get projects that user have permissions """
-        user = self.request.user
-        if user.has_perm('localize.creator'):
-            return self.request.user.projects_set.all()
-        return self.queryset.filter(project_permissions_user=user)
-
-    def create(self, request, *args, **kwargs):
-        """ Check if user have rights to create """
-        if not self.request.user.has_perm('localize.creator'):
-            return Response({'err': 'You have no permission to create projects'}, status=status.HTTP_400_BAD_REQUEST)
-        serializer = self.get_serializer(data=request.data)
-        serializer.is_valid(raise_exception=True)
-        serializer.save(owner=request.user)
-        return Response(serializer.data, status=status.HTTP_201_CREATED)
-
-
-class ProjectPermsViewSet(viewsets.ModelViewSet):
-    """ Project permission manager """
-    serializer_class = PermissionsSerializer
-    http_method_names = ['get', 'post', 'delete']
-    queryset = ProjectPermissions.objects.all()
-
-    def get_queryset(self):
-        if self.request.method == 'GET':
-            save_id = self.request.query_params.get('project')
-        save_id = self.request.data.get('project')
-        project_check_perm_or_404(save_id, self.request.user, 9)    # Can manage roles
-        return self.queryset.filter(project__save_id=save_id)
-
-
-# Folder ViewSet
-class FolderViewSet(viewsets.ModelViewSet):
-    serializer_class = FoldersSerializer
-    http_method_names = ['get', 'post', 'put', 'delete']
-    queryset = Folders.objects.all()
-
-    def get_queryset(self):
-        save_id = self.request.data['project']
-        project_check_perm_or_404(save_id, self.request.user, 8)   # Can manage
-        return self.queryset.filter(project__save_id=save_id)
-
-    def create(self, request, *args, **kwargs):
-        """ Increment position. ID is hidden from users - using save_id """
-        save_id = request.data.get('project')
-        project = Projects.objects.get(save_id=save_id)
-        if not project:
-            return Response({'err': 'project not found'}, status=status.HTTP_404_NOT_FOUND)
-        position = self.get_queryset().aggregate(m=Max('position')).get('m') or 0
-        serializer = self.get_serializer(data=request.data)
-        serializer.is_valid(raise_exception=True)
-        serializer.save(position=position + 1, project=project)
-        return Response(serializer.data, status=status.HTTP_201_CREATED)
-
-    def update(self, request, *args, **kwargs):
-        """ Check changing repository on update. If updated - update """
-        folder_instance = self.get_object()
-        repo_url = request.data.get('repository')
-
-        serializer = self.get_serializer(folder_instance, data=request.data)
-        serializer.is_valid(raise_exception=True)
-
-        if repo_url != folder_instance.repository:   # Repository URL have been changed
-            folder_files = Files.objects.filter(folder=folder_instance)
-            if repo_url:    # Input URL not empty
-                git_manager = GitManage()
-                git_manager.check_url(repo_url)
-                if git_manager.repo:   # URL parsed success
-                    defaults = {**git_manager.repo, 'hash': git_manager.new_hash}
-                    repo_obj, created = FolderRepo.objects.update_or_create(folder=folder_instance, defaults=defaults)
-                    # repo_obj.error = git_manager.error
-                else:
-                    pass
-
-                if git_manager.new_hash:  # Folder exist
-                    folder_files.update(repo_founded=False, repo_hash=False)    # SET founded - false for all files
-
-                    file_list = []
-                    for filo in folder_files:
-                        file_list.append({'id': filo.id, 'name': filo.name, 'hash': filo.repo_hash, 'path': filo.data.path})
-                    updated_files = git_manager.update_files(file_list)
-                    if updated_files:
-                        for filo in updated_files:
-                            Files.objects.filter(id=filo['id']).update(repo_founded=True, repo_hash=filo['hash'])
-                            # FIXME: Get file info
-                            management.call_command('file_rebuild', filo['id'])
-                else:
-                    folder_files.update(repo_founded=None, repo_hash=False)
-            else:
-                FolderRepo.objects.filter(folder=folder_instance).delete()
-                folder_files.update(repo_founded=None, repo_hash=False)
-
-        self.perform_update(serializer)
-        return Response(serializer.data)
-
-    def destroy(self, request, *args, **kwargs):
-        self.get_object().delete()
-        return Response(status=status.HTTP_204_NO_CONTENT)
-
-
-# Folder ViewSet
-class FileViewSet(viewsets.ModelViewSet):
-    # serializer_class = FilesSerializer
-    http_method_names = ['get', 'put', 'delete']
-    pagination_class = DefaultSetPagination
-    queryset = Files.objects.all().order_by('state', '-created')
-
-    def get_serializer_class(self):
-        if self.request.user.has_perm('localize.translator'):
-            return FilesDisplaySerializer
-        return FilesSerializer
-
-    def get_queryset(self):
-        """ Filter files for tranlator or search by name """
-        search = self.request.query_params.get('search', None)
-        qs = self.queryset.filter(name__icontains=search) if search else self.queryset
-        return qs.filter(state=2) if self.request.user.has_perm('localize.translator') else qs
-
-    def get_object(self, pk=None):
-        """ Manage file by access """
-        file_check_perm_or_404(pk, self.request.user, 8)  # Can manage
-        return self.queryset.get(pk=pk)
-
-    def list(self, request, *args, **kwargs):
-        """ Filter files with pagination """
-        if request.user.has_perm('localize.translator'):
-            qs = self.get_queryset().filter(folder__project_save_id=request.query_params.get('save_id'))
-        else:
-            qs = self.get_queryset().filter(folder_id=request.query_params.get('folder'))
-        page = self.paginate_queryset(qs)
-        serializer = self.get_serializer(page, many=True)
-        return self.get_paginated_response(data=serializer.data)
