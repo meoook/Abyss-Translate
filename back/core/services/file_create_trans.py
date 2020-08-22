@@ -58,6 +58,7 @@ class CreateTranslated:
         self.__translate_file.close()
         # FIXME: put file_obj with File Storage - or no need?
         progress.translate_copy = self.__translate_file.name
+        progress.finished = True
         progress.save()
         self.stdout.write(f"File {self.__translate_file.name} successfully created")
 

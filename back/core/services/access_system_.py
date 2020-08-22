@@ -51,4 +51,4 @@ def get_user_perms(user, obj_id, obj_class):
         return user.project_permisions_set.filter(project__folder_id=obj_id)
     elif obj_class == 'project':
         return user.project_permisions_set.filter(project_save_id=obj_id)
-    return 'owner' if owner else []
+    return [x for x in range(20)] if owner else []

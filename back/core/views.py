@@ -10,28 +10,17 @@ from django.core.exceptions import ObjectDoesNotExist, ValidationError
 from django.core import management
 from django.http import FileResponse, HttpResponse, Http404
 
-from core.serializers import ProjectSerializer, FoldersSerializer, LanguagesSerializer,\
-    FilesSerializer, TransferFileSerializer, TranslatesSerializer, FileMarksSerializer, PermissionsSerializer, ProjectsDisplaySerializer
+from core.serializers import ProjectSerializer, FoldersSerializer, LanguagesSerializer, FilesSerializer, TransferFileSerializer, TranslatesSerializer, FileMarksSerializer, PermissionsSerializer, FilesDisplaySerializer
 from .models import Languages, Projects, Folders, FolderRepo, Files, Translated, FileMarks, Translates, ProjectPermissions
 from .tasks import file_parse, upload_translated
 
 from core.utils.git_manager import GitManage
 from core.services.access_system_ import project_check_perm_or_404, folder_check_perm_or_404, file_check_perm_or_404
+from core.services.translate_manage import translate_create
 
 logger = logging.getLogger('django')
 
 # TODO: CHECK USER RIGHTS/PERMISSIONS
-
-
-def project_check_perm_or_404(project_save_id, user, permission_lvl):
-    try:
-        if user.has_perm('localize.creator'):
-            user.project_set.get(save_id=project_save_id)
-        else:
-            user.project_permisions.get(project__save_id=project_save_id, permission=permission_lvl)
-    except ObjectDoesNotExist:
-        raise Http404
-    return True
 
 
 class DefaultSetPagination(PageNumberPagination):
@@ -92,58 +81,8 @@ class FileMarksView(viewsets.ModelViewSet):
         md5sum = request.data.get('md5')
         lang_trans = request.data.get('langID')
         text = request.data.get('text')     # TODO: Check mb can get in binary??
-        if file_id and mark_id and lang_trans:
-            try:
-                file_obj = Files.objects.get(pk=file_id, owner=request.user)
-            except ObjectDoesNotExist:
-                return Response({'err': 'file not found'}, status=status.HTTP_404_NOT_FOUND)
-            # Check lang_translate in list of need translate languages
-            if lang_trans not in file_obj.translated_set.values_list('id', flat=True):
-                return Response({'err': "no need translate to this language"}, status=status.HTTP_400_BAD_REQUEST)
-            # Can't change original text
-            if lang_trans == file_obj.lang_orig.id:
-                # TODO: permisions check - mb owner can change
-                return Response({'err': "can't change original text"}, status=status.HTTP_404_NOT_FOUND)
-
-            # Get or create translate(s)
-            if md5sum:  # multi update
-                # Check if translates exist with same md5
-                translates = Translates.objects.filter(mark__file=file_obj, language=lang_trans, mark__md5sum=md5sum)
-                control_marks = file_obj.filemarks_set.filter(md5sum=md5sum)
-            else:
-                translates = Translates.objects.filter(mark__file=file_obj, language=lang_trans, mark__id=mark_id)
-                control_marks = file_obj.filemarks_set.filter(id=mark_id)
-            # TODO: check text language and other
-            translates.update(text=text)
-            if translates.count() != control_marks.count():
-                def_obj = {'translator': request.user, 'text': text, 'language_id': lang_trans}
-                objs = [Translates(**def_obj, mark=mark) for mark in control_marks if mark.id not in translates.values_list('mark', flat=True)]
-                Translates.objects.bulk_create(objs)
-
-            return_trans = translates.get(mark_id=mark_id)
-            serializer = TranslatesSerializer(return_trans, many=False)
-            # Get file progress for language
-            try:
-                progress = Translated.objects.get(file=file_obj, language=lang_trans)
-            except ObjectDoesNotExist:
-                logger.error(f"For file {file_obj.id} related translated object not found: language {lang_trans}")
-                return Response({'err': 'related translated object not found'}, status=status.HTTP_404_NOT_FOUND)
-            how_much_translated = self.get_queryset()\
-                .filter(Q(translates__language=lang_trans), Q(file=file_obj), ~Q(translates__text__exact='')).count()
-            if file_obj.items == how_much_translated:
-                progress.finished = True
-                # FIXME: create file must be triggered by "file checked state or cron"
-            elif file_obj.items < how_much_translated:
-                logging.error(f'For file {file_obj.id} translates items more then file have')
-                progress.finished = True    # But it's error
-            elif progress.finished:
-                progress.finished = False
-            progress.items = how_much_translated
-            progress.save()
-            if progress.finished:
-                management.call_command('file_create_translated', file_obj.id, lang_trans)
-            return Response(serializer.data, status=status.HTTP_200_OK)
-        return Response({'err': 'request params error'}, status=status.HTTP_400_BAD_REQUEST)
+        file_check_perm_or_404(file_id, request.user, 1)    # can translate or owner
+        return translate_create(file_id, mark_id, lang_trans, request.user.id, text, md5sum)
 
 
 class TransferFileView(viewsets.ViewSet):
@@ -170,22 +109,17 @@ class TransferFileView(viewsets.ViewSet):
 
     def create(self, request):
         """ Create file obj and related translated progress after file download (uploaded by user) """
-        req_data = request.data.get('data')
-        req_folder = request.data.get('folder')
-        # TODO: Check user rights to create file
-        try:
-            folder = Folders.objects.select_related('project__lang_orig').get(id=req_folder, project__owner=request.user)
-        except ObjectDoesNotExist:
-            return Response({'err': 'folder not found'}, status=status.HTTP_404_NOT_FOUND)
-
+        folder_id = request.data.get('folder')
+        folder_check_perm_or_404(folder_id, request.user, 8)  # Can manage
+        folder = Folders.objects.select_related('project__lang_orig').get(id=folder_id)
         # Create file obejct
         lang_orig_id = folder.project.lang_orig.id
-        serializer = self.serializer_class(data={
+        serializer = self.get_serializer(data={
             'owner': request.user.id,
             'name': request.data.get('name'),
-            'folder': folder.id,
+            'folder': folder_id,
             'lang_orig': lang_orig_id,
-            'data': req_data,
+            'data': request.data.get('data'),
         })
         if serializer.is_valid():
             serializer.save()
@@ -194,8 +128,7 @@ class TransferFileView(viewsets.ViewSet):
             logger.info(f'File object created ID: {file_id}. Sending parse task to celery.')
             file_parse.delay(file_id)
             return Response(serializer.data, status=status.HTTP_201_CREATED)
-        logger.info(f'Error creating file object: {serializer.errors}')
-        # return Response({'err': 'file already exist'}, status=status.HTTP_400_BAD_REQUEST)
+        logger.warning(f'Error creating file object: {serializer.errors}')
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
 
@@ -207,12 +140,14 @@ class ProjectViewSet(viewsets.ModelViewSet):
     queryset = Projects.objects.all()
 
     def get_object(self, pk=None):
+        """ Can get only own projects """
         try:
             return self.request.user.projects_set.get(id=pk)
         except ObjectDoesNotExist:
             raise Http404
 
     def get_queryset(self):
+        """ Get projects that user have permissions """
         user = self.request.user
         if user.has_perm('localize.creator'):
             return self.request.user.projects_set.all()
@@ -235,39 +170,35 @@ class ProjectPermsViewSet(viewsets.ModelViewSet):
     queryset = ProjectPermissions.objects.all()
 
     def get_queryset(self):
-        project = self.request.query_params.get('project')
-        if self.request.user.has_perm('localize.creator'):
-            return self.queryset.filter(project__save_id=project, project__owner=self.request.user)
-        try:
-            self.request.user.project_permisions.get(project__save_id=project, permission=9)
-        except ObjectDoesNotExist:
-            raise Http404
-        return self.queryset.filter(project__save_id=project)
+        if self.request.method == 'GET':
+            save_id = self.request.query_params.get('project')
+        save_id = self.request.data.get('project')
+        project_check_perm_or_404(save_id, self.request.user, 9)    # Can manage roles
+        return self.queryset.filter(project__save_id=save_id)
 
 
 # Folder ViewSet
 class FolderViewSet(viewsets.ModelViewSet):
     serializer_class = FoldersSerializer
-    http_method_names = ['post', 'put', 'delete']
+    http_method_names = ['get', 'post', 'put', 'delete']
     queryset = Folders.objects.all()
 
-    def get_object(self):
-        try:
-            return self.get_queryset().get(id=self.kwargs['pk'], project__owner=self.request.user)
-        except ObjectDoesNotExist:
-            raise Http404  # Response({'err': 'folder not found'}, status=status.HTTP_404_NOT_FOUND)
+    def get_queryset(self):
+        save_id = self.request.data['project']
+        project_check_perm_or_404(save_id, self.request.user, 8)   # Can manage
+        return self.queryset.filter(project__save_id=save_id)
 
     def create(self, request, *args, **kwargs):
         """ Increment position. ID is hidden from users - using save_id """
-        project = Projects.objects.get(save_id=request.data['project'])
-        if project:
-            position = self.get_queryset().filter(project=project).aggregate(m=Max('position')).get('m') or 0
-            serializer = self.serializer_class(data=request.data)
-            if serializer.is_valid():
-                serializer.save(position=position + 1, project=project)
-                return Response(serializer.data, status=status.HTTP_201_CREATED)
-            return Response({'err': 'fail to create folder'}, status=status.HTTP_400_BAD_REQUEST)
-        return Response({'err': 'project not found'}, status=status.HTTP_404_NOT_FOUND)
+        save_id = request.data.get('project')
+        project = Projects.objects.get(save_id=save_id)
+        if not project:
+            return Response({'err': 'project not found'}, status=status.HTTP_404_NOT_FOUND)
+        position = self.get_queryset().aggregate(m=Max('position')).get('m') or 0
+        serializer = self.get_serializer(data=request.data)
+        serializer.is_valid(raise_exception=True)
+        serializer.save(position=position + 1, project=project)
+        return Response(serializer.data, status=status.HTTP_201_CREATED)
 
     def update(self, request, *args, **kwargs):
         """ Check changing repository on update. If updated - update """
@@ -311,59 +242,39 @@ class FolderViewSet(viewsets.ModelViewSet):
         return Response(serializer.data)
 
     def destroy(self, request, *args, **kwargs):
-        instance = self.get_object()
-        instance.delete()
+        self.get_object().delete()
         return Response(status=status.HTTP_204_NO_CONTENT)
 
 
 # Folder ViewSet
 class FileViewSet(viewsets.ModelViewSet):
-    serializer_class = FilesSerializer
+    # serializer_class = FilesSerializer
     http_method_names = ['get', 'put', 'delete']
     pagination_class = DefaultSetPagination
-    queryset = Files.objects.all()
+    queryset = Files.objects.all().order_by('state', '-created')
 
-    # def get_queryset(self):
-    #     """ Filter owner files """
-    #     return self.queryset.filter(owner=self.request.user)
+    def get_serializer_class(self):
+        if self.request.user.has_perm('localize.translator'):
+            return FilesDisplaySerializer
+        return FilesSerializer
 
     def get_queryset(self):
-        """ Filtering against a `name` query parameter in the URL """
-        name = self.request.query_params.get('name', None)
-        return self.queryset.filter(name=name) if name else self.queryset
+        """ Filter files for tranlator or search by name """
+        search = self.request.query_params.get('search', None)
+        qs = self.queryset.filter(name__icontains=search) if search else self.queryset
+        return qs.filter(state=2) if self.request.user.has_perm('localize.translator') else qs
 
-    def retrieve(self, request, *args, **kwargs):
-        """ Filter owner files """
-        try:
-            project = Projects.objects.get(folders__files=kwargs['pk'])
-        except ObjectDoesNotExist:
-            return Response({'err': 'project not found'}, status=status.HTTP_404_NOT_FOUND)
-        try:
-            instance = self.queryset.get(owner=request.user, pk=kwargs['pk'])
-        except ObjectDoesNotExist:
-            return Response({'err': 'file not found'}, status=status.HTTP_404_NOT_FOUND)
-        serializer = self.get_serializer(instance, many=False)
-        return Response(serializer.data, status=status.HTTP_200_OK)
-
-    # def update(self, request, *args, **kwargs):
-    #     instance = self.get_object()
-    #     instance.name = request.data.get("name")
-    #     instance.save()
-    #
-    #     serializer = self.get_serializer(instance)
-    #     serializer.is_valid(raise_exception=True)
-    #     self.perform_update(serializer)
-    #
-    #     return Response(serializer.data)
+    def get_object(self, pk=None):
+        """ Manage file by access """
+        file_check_perm_or_404(pk, self.request.user, 8)  # Can manage
+        return self.queryset.get(pk=pk)
 
     def list(self, request, *args, **kwargs):
-        """ Filter owner files with pagination """
-        folder = request.query_params.get('f')
-        if folder:
-            # queryset = self.get_queryset().filter(folder_id=folder, owner=self.request.user).order_by('state', '-created')
-            queryset = self.get_queryset().filter(folder_id=folder).order_by('state', '-created')
-            page = self.paginate_queryset(queryset)
-            serializer = self.get_serializer(page, many=True)
-            return self.get_paginated_response(data=serializer.data)
-        return Response({'err': 'folder not found'}, status=status.HTTP_404_NOT_FOUND)
-        # raise APIException('folder not found') # CODE:500
+        """ Filter files with pagination """
+        if request.user.has_perm('localize.translator'):
+            qs = self.get_queryset().filter(folder__project_save_id=request.query_params.get('save_id'))
+        else:
+            qs = self.get_queryset().filter(folder_id=request.query_params.get('folder'))
+        page = self.paginate_queryset(qs)
+        serializer = self.get_serializer(page, many=True)
+        return self.get_paginated_response(data=serializer.data)

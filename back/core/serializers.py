@@ -81,6 +81,15 @@ class FilesSerializer(serializers.ModelSerializer):
         }
 
 
+class FilesDisplaySerializer(serializers.ModelSerializer):
+    """ Display files to translator (Read only) """
+    translated_set = TranslatedSerializer(many=True, read_only=True)
+
+    class Meta:
+        model = Files
+        fields = ['id', 'name', 'items', 'words', 'lang_orig', 'translated_set', 'created']
+
+
 class FoldersSerializer(serializers.ModelSerializer):
     """ To manage and display with projects """
     class Meta:
@@ -117,11 +126,3 @@ class ProjectSerializer(serializers.ModelSerializer):
             'translate_to': {'required': True},
             'save_id': {'read_only': True},
         }
-
-
-class ProjectsDisplaySerializer(serializers.ModelSerializer):
-    """ To display projects that user have access """
-
-    class Meta:
-        model = Projects
-        fields = ['save_id', 'icon_chars', 'name', 'lang_orig', 'translate_to']
