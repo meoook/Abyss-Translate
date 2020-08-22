@@ -37,10 +37,6 @@ class Languages(models.Model):
     def __str__(self):
         return self.name
 
-    # class Meta:
-    #     db_table = 'app_languages'
-    #     verbose_name_plural = 'App Languages'
-
 
 class Projects(models.Model):
     """ Set up default languages and namespace. Folder created by ID. """
@@ -74,7 +70,7 @@ class ProjectPermissions(models.Model):
     permission = models.SmallIntegerField(choices=PROJECT_PERMISSION_CHOICES)
 
     class Meta:
-        unique_together = [('user', 'project', 'permission'),]
+        unique_together = ['user', 'project', 'permission']
 
 
 class Folders(models.Model):
@@ -86,8 +82,6 @@ class Folders(models.Model):
     repo_status = models.BooleanField(default=False)
 
     class Meta:
-        # db_table = 'folders'
-        # verbose_name_plural = 'Users Folders'
         unique_together = [('position', 'project'), ('name', 'project')]
 
 
@@ -105,7 +99,7 @@ class FolderRepo(models.Model):
 
 
 def user_directory_path(instance, filename):
-    # file will be uploaded to MEDIA_ROOT/user_<id>/<filename>
+    # file will be uploaded to users/username/prj_id/folder_id/<filename>
     project = Folders.objects.get(id=instance.folder.id).project
     new_path = '{}/{}/{}/{}'.format(instance.owner, project.id, instance.folder.id, filename)
     return new_path
@@ -120,7 +114,6 @@ class Files(models.Model):
         (2, 'parsed'),       # Ready to translate
     ]
 
-    owner = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE)
     folder = models.ForeignKey(Folders, on_delete=models.CASCADE)
     name = models.CharField(max_length=50)
     state = models.SmallIntegerField(choices=FILE_STATE_CHOICES, default=1)
@@ -130,7 +123,6 @@ class Files(models.Model):
     data = models.FileField(upload_to=user_directory_path, max_length=255, storage=settings.STORAGE_ROOT)
     created = models.DateTimeField(auto_now_add=True)
     updated = models.DateTimeField(auto_now=True)   # File updated
-    # new_translate_time = models.DateTimeField(null=True)
     items = models.PositiveIntegerField(null=True)  # FileMarks count
     words = models.PositiveIntegerField(null=True)  # Total words count
     repo_hash = models.CharField(max_length=40, blank=True)     # TODO: Get hash by own
@@ -139,8 +131,6 @@ class Files(models.Model):
     error = models.CharField(max_length=255, blank=True)
 
     class Meta:
-        # db_table = 'folders'
-        # verbose_name_plural = 'Users Folders'
         unique_together = [('owner', 'folder', 'name')]
 
 
@@ -149,7 +139,7 @@ class Translated(models.Model):
     file = models.ForeignKey(Files, on_delete=models.CASCADE)
     language = models.ForeignKey(Languages, on_delete=models.DO_NOTHING)
     items = models.PositiveIntegerField(default=0)  # To count total progress
-    finished = models.BooleanField(default=False)   #
+    finished = models.BooleanField(default=False)   # All items have translations
     checked = models.BooleanField(default=False)    # Translations checked by admin?
     translate_copy = models.FileField(max_length=255, blank=True, storage=settings.STORAGE_ROOT)
 
@@ -218,6 +208,7 @@ def auto_delete_file_on_delete(sender, instance, **kwargs):
         print('Delete file -> onDelete Files object', inst_obj.path)
         # os.remove(instance.file.path)
         inst_obj.delete(save=False)
+
 
 # TODO: for prj and folder -> one function
 def auto_delete_folder_on_delete(sender, instance, **kwargs):
