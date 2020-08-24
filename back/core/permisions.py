@@ -6,7 +6,7 @@ from .models import ProjectPermissions
 
 class IsFileOwner(permissions.BasePermission):
     def has_permission(self, request, view):
-        if not request.user.has_perm('localize.creator'):
+        if not request.user.has_perm('core.creator'):
             return False
         if request.method in permissions.SAFE_METHODS:
             file_id = request.query_params.get('file_id')
@@ -17,7 +17,7 @@ class IsFileOwner(permissions.BasePermission):
 
 class IsProjectOwner(permissions.BasePermission):
     def has_permission(self, request, view):
-        if not request.user.has_perm('localize.creator'):
+        if not request.user.has_perm('core.creator'):
             return False
         if request.method in permissions.SAFE_METHODS:
             save_id = request.query_params.get('save_id')
@@ -29,7 +29,7 @@ class IsProjectOwner(permissions.BasePermission):
 class IsProjectOwnerOrReadOnly(permissions.BasePermission):
     def has_permission(self, request, view):                # GET, POST, PUT, DELETE
         if view.action == 'create':
-            return request.user.has_perm('localize.creator')
+            return request.user.has_perm('core.creator')
         return True
 
     def has_object_permission(self, request, view, obj):    # GET-ID, PUT, DELETE

@@ -131,7 +131,7 @@ class Files(models.Model):
     error = models.CharField(max_length=255, blank=True)
 
     class Meta:
-        unique_together = [('owner', 'folder', 'name')]
+        unique_together = [('folder', 'name')]
 
 
 class Translated(models.Model):

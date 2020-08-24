@@ -1,8 +1,9 @@
 import os
 import logging
-from rest_framework import viewsets, status, permissions
+from rest_framework import viewsets, status, permissions, filters
 from rest_framework.parsers import MultiPartParser
 from rest_framework.pagination import PageNumberPagination
+from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response
 from django.db.models import Max, Subquery, Q
 from django.core.exceptions import ObjectDoesNotExist, ValidationError
@@ -10,10 +11,12 @@ from django.core.exceptions import ObjectDoesNotExist, ValidationError
 from django.core import management
 from django.http import FileResponse, HttpResponse, Http404
 
-from core.serializers import ProjectSerializer, FoldersSerializer, LanguagesSerializer, FilesSerializer, TransferFileSerializer, TranslatesSerializer, FileMarksSerializer, PermissionsSerializer, FilesDisplaySerializer
-from .models import Languages, Projects, Folders, FolderRepo, Files, Translated, FileMarks, Translates, ProjectPermissions
+from .serializers import ProjectSerializer, FoldersSerializer, LanguagesSerializer, FilesSerializer,\
+    TransferFileSerializer, TranslatesSerializer, FileMarksSerializer, PermissionsSerializer, FilesDisplaySerializer
+from .models import Languages, Projects, Folders, FolderRepo, Files, Translated, FileMarks, ProjectPermissions
 from .tasks import file_parse, upload_translated
 from .permisions import IsFileOwner, IsProjectOwnerOrReadOnly
+
 from core.utils.git_manager import GitManage
 from core.services.access_system_ import project_check_perm_or_404, folder_check_perm_or_404, file_check_perm_or_404
 from core.services.translate_manage import translate_create
@@ -51,7 +54,7 @@ class ProjectViewSet(viewsets.ModelViewSet):
         """ Get projects that user have permissions """
         if self.request.user.has_perm('localize.creator'):
             return self.request.user.projects_set.all()
-        return self.queryset.filter(project_permissions__user=self.request.user)  # Distinct ?
+        return self.queryset.filter(projectpermissions__user=self.request.user)  # Distinct ?
 
     def create(self, request, *args, **kwargs):
         """ Check if user have rights to create """
