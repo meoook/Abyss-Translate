@@ -15,15 +15,13 @@ from .serializers import ProjectSerializer, FoldersSerializer, LanguagesSerializ
     TransferFileSerializer, TranslatesSerializer, FileMarksSerializer, PermissionsSerializer, FilesDisplaySerializer
 from .models import Languages, Projects, Folders, FolderRepo, Files, Translated, FileMarks, ProjectPermissions
 from .tasks import file_parse, upload_translated
-from .permisions import IsFileOwner, IsProjectOwnerOrReadOnly
+from .permisions import IsFileOwner, IsProjectOwnerOrReadOnly, IsProjectOwnerOrAdmin
 
 from core.utils.git_manager import GitManage
 from core.services.access_system_ import project_check_perm_or_404, folder_check_perm_or_404, file_check_perm_or_404
 from core.services.translate_manage import translate_create
 
 logger = logging.getLogger('django')
-
-# TODO: CHECK USER RIGHTS/PERMISSIONS
 
 
 class DefaultSetPagination(PageNumberPagination):
@@ -56,32 +54,29 @@ class ProjectViewSet(viewsets.ModelViewSet):
             return self.request.user.projects_set.all()
         return self.queryset.filter(projectpermissions__user=self.request.user)  # Distinct ?
 
-    def create(self, request, *args, **kwargs):
-        """ Check if user have rights to create """
-        serializer = self.get_serializer(data=request.data)
-        serializer.is_valid(raise_exception=True)
-        serializer.save(owner=request.user)
-        return Response(serializer.data, status=status.HTTP_201_CREATED)
+    def perform_update(self, serializer):
+        serializer.save(owner=self.request.user)
 
 
 class ProjectPermsViewSet(viewsets.ModelViewSet):
     """ Project permission manager """
     serializer_class = PermissionsSerializer
     http_method_names = ['get', 'post', 'delete']
+    permission_classes = [IsAuthenticated, IsProjectOwnerOrAdmin]
     queryset = ProjectPermissions.objects.all()
 
     def get_queryset(self):
         if self.request.method == 'GET':
-            save_id = self.request.query_params.get('project')
-        save_id = self.request.data.get('project')
-        project_check_perm_or_404(save_id, self.request.user, 9)    # Can manage roles
+            save_id = self.request.query_params.get('save_id')
+        else:
+            save_id = self.request.data.get('save_id')
         return self.queryset.filter(project__save_id=save_id)
 
 
 # Folder ViewSet
 class FolderViewSet(viewsets.ModelViewSet):
     serializer_class = FoldersSerializer
-    http_method_names = ['get', 'post', 'put', 'delete']
+    # http_method_names = ['get', 'post', 'put', 'delete']
     queryset = Folders.objects.all()
 
     def get_queryset(self):
@@ -104,12 +99,12 @@ class FolderViewSet(viewsets.ModelViewSet):
     def update(self, request, *args, **kwargs):
         """ Check changing repository on update. If updated - update """
         folder_instance = self.get_object()
-        repo_url = request.data.get('repository')
+        repo_url = request.data.get('repo_url')
 
         serializer = self.get_serializer(folder_instance, data=request.data)
         serializer.is_valid(raise_exception=True)
 
-        if repo_url != folder_instance.repository:   # Repository URL have been changed
+        if repo_url != folder_instance.repo_url:   # Repository URL have been changed
             folder_files = Files.objects.filter(folder=folder_instance)
             if repo_url:    # Input URL not empty
                 git_manager = GitManage()

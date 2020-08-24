@@ -1,10 +1,9 @@
 from django.urls import reverse
-from django.test import override_settings
 from rest_framework import status
-from rest_framework.test import APITestCase
-from django.contrib.auth.models import User, Permission
 from rest_framework.utils import json
+from rest_framework.test import APITestCase
 
+from django.contrib.auth.models import User, Permission
 from core.models import Languages, Projects, ProjectPermissions
 from core.serializers import ProjectSerializer
 
@@ -15,13 +14,9 @@ class ProjectsApiTestCase(APITestCase):
     def setUp(self):
         self.url = reverse('project-list')
         creator = Permission.objects.get(codename='creator')
-        # translator = Permission.objects.get(codename='translator')
-        # admin = Permission.objects.get(codename='admin')
         self.user1 = User.objects.create_user(username='a', email='a@a.ru', password='123')
         self.user1.user_permissions.add(creator)
         self.user2 = User.objects.create_user(username='b', email='b@b.ru', password='123')
-        # self.user3 = User.objects.create_user(username='c', email='c@c.ru', password='123')
-        # self.user2.user_permissions.add(translator)
         self.lang1 = Languages.objects.create(name='Russian', short_name='ru', active=True)
         self.lang2 = Languages.objects.create(name='English', short_name='en', active=True)
         self.prj1 = Projects.objects.create(name='Project1', icon_chars='P1', owner=self.user1, lang_orig=self.lang1)
@@ -40,7 +35,7 @@ class ProjectsApiTestCase(APITestCase):
     def test_set_up_data(self):
         """ Check setup data """
         self.assertEqual('/api/prj/', self.url)
-        self.assertEqual(3, User.objects.count())
+        self.assertEqual(2, User.objects.count())
         self.assertEqual(2, Projects.objects.count())
         self.assertEqual(2, Languages.objects.count())
         self.assertEqual(2, self.user1.projects_set.count())
@@ -51,7 +46,6 @@ class ProjectsApiTestCase(APITestCase):
     def test_project_serializer(self):
         """ Ensure project serializer work properly """
         serializer_data = ProjectSerializer([self.prj1, self.prj2], many=True).data
-        srlz_list = ProjectSerializer([self.prj1, self.prj2], many=True).data
         to_check_with = ['Project1', 'Project2']
         self.assertEqual(to_check_with, [x['name'] for x in serializer_data])
 
@@ -65,78 +59,78 @@ class ProjectsApiTestCase(APITestCase):
         srlz_obj.save()
         self.assertEqual(srlz_obj.data, self.mock_prj)
 
-
+    # GET OBJECT
     def test_project_get_obj(self):
         """ Ensure we can get project by API """
         pass
 
-    @override_settings()
-    def test_project_owner_get_list(self):
+    # GET LIST
+     def test_project_owner_get_list(self):
         """ API - Get list of projects where user is owner """
         self.client.force_authenticate(user=self.user1)
         response = self.client.get(self.url)
-        self.assertEqual(status.HTTP_200_OK, response.status_code)
+        assert status.HTTP_200_OK == response.status_code
         assert 2 == len(response.data)
 
-    def test_project_translator_get_list(self):
-        """ API - Get list of projects where user is translator """
+   def test_project_access_get_list(self):
+        """ API - Check get list response if changing permissions """
+        srlz_one = ProjectSerializer([self.prj1], many=True).data
+        srlz_two = ProjectSerializer([self.prj1, self.prj2], many=True).data
+
+        response = self.client.get(self.url)
+        assert status.HTTP_200_OK == response.status_code   # 403 perms
+        assert 0 == len(response.data)
+
         self.client.force_authenticate(user=self.user2)
+
+        response = self.client.get(self.url)
+        assert status.HTTP_200_OK == response.status_code
+        assert 0 == len(response.data)
+
         ProjectPermissions.objects.create(user=self.user2, project=self.prj1, permission=0)
         response = self.client.get(self.url)
         assert status.HTTP_200_OK == response.status_code
         assert 1 == len(response.data)
-        ProjectPermissions.objects.create(user=self.user2, project=self.prj2, permission=0)
+        assert srlz_one == response.data
+
+        ProjectPermissions.objects.create(user=self.user2, project=self.prj1, permission=5)
+        ProjectPermissions.objects.create(user=self.user2, project=self.prj1, permission=8)
+        ProjectPermissions.objects.create(user=self.user2, project=self.prj1, permission=9)
+        response = self.client.get(self.url)
+        assert status.HTTP_200_OK == response.status_code
+        assert 1 == len(response.data)
+        assert srlz_one == response.data
+        assert [0, 5, 8, 9] == response.data[0].get('permissions_set')
+
+        test_perm = ProjectPermissions.objects.create(user=self.user2, project=self.prj2, permission=0)
         response = self.client.get(self.url)
         assert status.HTTP_200_OK == response.status_code
         assert 2 == len(response.data)
+        assert srlz_two == response.data
+        assert [0] == response.data[1].get('permissions_set')
 
-    def test_project_invite_get_list(self):
-        """ API - Get list of projects where user is translator """
-        """ Ensure we can get list of projects by API """
-        ProjectPermissions.objects.create(user=self.user2, project=self.prj1, permission=5)
-        self.client.force_authenticate(user=self.user2)
+        test_perm.delete()
+        test_perm = ProjectPermissions.objects.create(user=self.user2, project=self.prj2, permission=5)
         response = self.client.get(self.url)
         assert status.HTTP_200_OK == response.status_code
-        assert 1 == len(response.data)
+        assert 2 == len(response.data)
+        assert [5] == response.data[1].get('permissions_set')
 
-    def test_project_manage_get_list(self):
-        """ API - Get list of projects where user is translator """
-        """ Ensure we can get list of projects by API """
-        ProjectPermissions.objects.create(user=self.user2, project=self.prj1, permission=8)
-        self.client.force_authenticate(user=self.user2)
+        test_perm.delete()
+        test_perm = ProjectPermissions.objects.create(user=self.user2, project=self.prj2, permission=8)
         response = self.client.get(self.url)
         assert status.HTTP_200_OK == response.status_code
-        assert 1 == len(response.data)
+        assert 2 == len(response.data)
+        assert [5] == response.data[1].get('permissions_set')
 
-    def test_project_admin_get_list(self):
-        """ API - Get list of projects where user is translator """
-        ProjectPermissions.objects.create(user=self.user2, project=self.prj1, permission=9)
-        self.client.force_authenticate(user=self.user2)
+        test_perm.delete()
+        test_perm = ProjectPermissions.objects.create(user=self.user2, project=self.prj2, permission=9)
         response = self.client.get(self.url)
         assert status.HTTP_200_OK == response.status_code
-        assert 1 == len(response.data)
+        assert 2 == len(response.data)
+        assert [9] == response.data[1].get('permissions_set')
 
-    def test_project_no_access_get_list(self):
-        """ API - Get list of projects where user is translator """
-        """ Check other users have no access users projects """
-        self.client.force_authenticate(user=self.user2)
-        response = self.client.get(self.url)
-        self.assertEqual(status.HTTP_200_OK, response.status_code)
-        self.assertEqual(0, len(response.data))
-
-    def test_project_access_get_list(self):
-        """ API - Check project permissions in response """
-        ProjectPermissions.objects.create(user=self.user2, project=self.prj1, permission=0)
-        ProjectPermissions.objects.create(user=self.user2, project=self.prj1, permission=5)
-        ProjectPermissions.objects.create(user=self.user2, project=self.prj1, permission=8)
-        ProjectPermissions.objects.create(user=self.user2, project=self.prj1, permission=9)
-        self.client.force_authenticate(user=self.user2)
-        response = self.client.get(self.url)
-        self.assertEqual(status.HTTP_200_OK, response.status_code)
-        assert 1 == len(response.data)
-        assert [0, 5, 8, 9] == response.data.get('permissions_set')
-
-
+    # POST
     def test_project_create(self):
         """ Create project by API """
         self.client.force_authenticate(user=self.user1)
