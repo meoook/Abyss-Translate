@@ -61,9 +61,9 @@ class ProjectPermissions(models.Model):
     """ Permissions for project """
     PROJECT_PERMISSION_CHOICES = [
         (0, 'tranlate'),            # Can translate files in project
-        (5, 'invite translator'),   # Default admin role
+        (5, 'invite translator'),   # Default admin role (can change permission 0 to other users)
         (8, 'manage'),              # Can create\delete\update - folders\files
-        (9, 'admin'),               # Can change permissions to other users
+        (9, 'admin'),               # Can change permissions to other admins (change permission 5, 8)
     ]
     user = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE)
     project = models.ForeignKey(Projects, on_delete=models.CASCADE)

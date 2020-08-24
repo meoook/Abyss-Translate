@@ -15,6 +15,8 @@ logger = logging.getLogger("django")
 
 def translate_create(file_id, mark_id, lang_id, translator_id, text, md5sum=None):
     """ Create or update translates. Update translate progress. If finished - create translate file. """
+    # assert(file_id and mark_id and lang_id)
+    # assert(file_id >= 0 and mark_id >= 0 and lang_id >= 0)
     if not file_id or not mark_id or not lang_id:
         return Response({"err": "request params error"}, status=status.HTTP_400_BAD_REQUEST)
     try:

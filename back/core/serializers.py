@@ -116,7 +116,9 @@ class PermissionsSerializer(serializers.ModelSerializer):
 
 class ProjectSerializer(serializers.ModelSerializer):
     """ Project manager serializer (project id must be hidden) """
-    folders_set = FoldersSerializer(many=True, read_only=True)
+    folders_set = FoldersSerializer(many=True, read_only=True)  # DELETE
+    permissions_set = serializers.SerializerMethodField()
+    # permission_set = serializers.ListField(child=serializers.CharField(), source='get_permission', read_only=True)
 
     class Meta:
         model = Projects
@@ -126,3 +128,7 @@ class ProjectSerializer(serializers.ModelSerializer):
             'translate_to': {'required': True},
             'save_id': {'read_only': True},
         }
+    
+    def get_permission(self, instance):
+        request = self.context.get('request')
+        return instance.projectpermissions_set.filter(user=request.user).values('permission')

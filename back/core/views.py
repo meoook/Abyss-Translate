@@ -52,7 +52,7 @@ class ProjectViewSet(viewsets.ModelViewSet):
 
     def get_queryset(self):
         """ Get projects that user have permissions """
-        if self.request.user.has_perm('localize.creator'):
+        if self.request.user.has_perm('core.creator'):
             return self.request.user.projects_set.all()
         return self.queryset.filter(projectpermissions__user=self.request.user)  # Distinct ?
 
@@ -159,7 +159,7 @@ class FileViewSet(viewsets.ModelViewSet):
 
 
     def get_serializer_class(self):
-        if self.request.user.has_perm('localize.translator'):
+        if self.request.user.has_perm('core.translator'):
             return FilesDisplaySerializer
         return FilesSerializer
 
@@ -176,7 +176,7 @@ class FileViewSet(viewsets.ModelViewSet):
 
     def list(self, request, *args, **kwargs):
         """ Filter files with pagination """
-        if request.user.has_perm('localize.translator'):
+        if request.user.has_perm('core.translator'):
             qs = self.get_queryset().filter(folder__project_save_id=request.query_params.get('save_id'))
         else:
             qs = self.get_queryset().filter(folder_id=request.query_params.get('folder'))
