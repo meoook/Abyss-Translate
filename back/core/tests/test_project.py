@@ -42,6 +42,8 @@ class ProjectsApiTestCase(APITestCase):
         self.assertEqual(2, Languages.objects.count())
         self.assertEqual(2, self.user1.projects_set.count())
         self.assertEqual(0, self.user2.projects_set.count())
+        self.assertEqual(1, User.objects.with_perm('core.creator'))
+        self.assertEqual(1, User.objects.with_perm('core.translator'))
 
     def test_project_serializer(self):
         """ Ensure project serializer work properly """
@@ -80,8 +82,6 @@ class ProjectsApiTestCase(APITestCase):
         """ Create project by API """
         url = reverse('project-list')
         self.assertEqual('/api/prj/', url)
-        project_creators = User.objects.with_perm('core.creator')
-        self.assertEqual(1, project_creators.count())
         self.client.force_authenticate(user=self.user1)
         response = self.client.post(url, json.dumps(self.mock_prj), content_type='application/json')
         self.assertEqual(status.HTTP_201_CREATED, response.status_code)
