@@ -4,7 +4,7 @@ from django.core.management.base import BaseCommand
 
 from core.models import Files, FileMarks, Translates, Translated, Projects, Folders
 from django.conf import settings
-from django.contrib.auth.models import User
+from django.contrib.auth.models import User, Permission
 
 
 class Command(BaseCommand):
@@ -33,6 +33,8 @@ class Command(BaseCommand):
         password = '1'
         user = User.objects.create_user(username=name, email=f'{name}@gmail.com', password=password)
         self.stdout.write(f'User {name} created with password: {password}')
+        creator = Permission.objects.get(codename='creator')
+        user.user_permissions.add(creator)
         # user.user_permissions.add('localize.creator')
 
         project_props = {
