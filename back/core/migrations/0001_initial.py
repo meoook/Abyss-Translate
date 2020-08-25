@@ -197,4 +197,5 @@ class Migration(migrations.Migration):
             name='filemarks',
             unique_together={('file', 'mark_number', 'col_number')},
         ),
+        migrations.RunPython(get_languages),
     ]
