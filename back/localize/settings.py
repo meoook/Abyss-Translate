@@ -115,6 +115,10 @@ REST_FRAMEWORK = {
     'DEFAULT_AUTHENTICATION_CLASSES': ('knox.auth.TokenAuthentication',),
     'DEFAULT_PERMISSION_CLASSES': ('rest_framework.permissions.IsAuthenticated',),
     'DEFAULT_PARSER_CLASSES': ['rest_framework.parsers.JSONParser', ],
+    # 'DEFAULT_RENDERER_CLASSES': [
+    #     'rest_framework.renderers.JSONRenderer',
+    #     'rest_framework.renderers.BrowsableAPIRenderer',
+    # ],
 }
 
 # If this is used then `CORS_ORIGIN_WHITELIST` will not have any effect

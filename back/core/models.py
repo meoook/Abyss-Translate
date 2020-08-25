@@ -131,7 +131,7 @@ class Files(models.Model):
     error = models.CharField(max_length=255, blank=True)
 
     class Meta:
-        unique_together = [('folder', 'name')]
+        unique_together = ['folder', 'name']
 
 
 class Translated(models.Model):
@@ -144,7 +144,7 @@ class Translated(models.Model):
     translate_copy = models.FileField(max_length=255, blank=True, storage=settings.STORAGE_ROOT)
 
     class Meta:
-        unique_together = [('file', 'language')]
+        unique_together = ['file', 'language']
 
 
 class ErrorFiles(models.Model):
@@ -166,7 +166,7 @@ class FileMarks(models.Model):
     # deleted = models.BooleanField(default=False)       # If this mark not found in new version of file
 
     class Meta:
-        unique_together = [('file', 'mark_number', 'col_number')]
+        unique_together = ['file', 'mark_number', 'col_number']
 
 
 class Translates(models.Model):
@@ -181,7 +181,7 @@ class Translates(models.Model):
     checker = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.SET_NULL, null=True, related_name='checker')
 
     class Meta:
-        unique_together = [('mark', 'language')]
+        unique_together = ['mark', 'language']
 
 
 class TranslatesChangeLog(models.Model):
