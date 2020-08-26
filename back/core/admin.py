@@ -1,7 +1,52 @@
 # from django import forms
 from django.contrib import admin
+from django.utils.safestring import mark_save
 
-from .models import Languages
+from .models import Languages, Files, Folders
+
+class FolderInline(admin.TabularInline):
+    model = Folders
+    extra = 0
+
+    fields = 'id', 'project', 'name', 'position', 'repo_url', 'repo_status'
+    read_only_fields = 'project', 'repo_status'
+    # template = 'admin/sortable_tabular_inline.html'
+
+    # def preview(self, obj):
+    #     return get_tabular_photo_preview(obj.image)
+    
+
+@admin.register(Files)
+class FilesAdmin(admin.ModelAdmin):
+    prepopulated_fields = {'folder': ('name',)}
+    list_display = ['id', 'name', 'state', 'method', 'items', 'words', 'lang_orig', 'translated_set', 'created', 'updated', 'repo_status', 'repo_hash', 'get_thumb']
+    list_display_links = ['name']
+    list_filter = ['state', 'repo_status', 'method']
+    read_only_fields = ['state', 'method', 'items', 'words', 'created', 'updated', 'repo_status', 'repo_hash']
+    list_editable = ['name']
+    search_fields = ['name']
+
+    fieldsets = (
+        (None, {'fields': ('id', 'name', 'state', 'method', 'items', 'words')}),
+        (None, {'fields': ('lang_orig', 'translated_set')}),
+        (None, {
+            'classes': ('collapse',),
+            'fields': ('repo_status', 'repo_hash'),
+            }),
+    )
+
+    save_on_top = True      # Menu for save on top
+
+    inlines = (FolderInline, )
+
+    def get_thumb(self, obj):
+        return mark_save(f'<small>{obj.get_method_display}</small>')
+    get_thumb.short_description = u'Тут что то будет'
+
+@admin.register(Languages)
+class LanguagesAdmin(admin.ModelAdmin):
+    pass
+
 
 
 # class LanguageCreationForm(forms.ModelForm):
@@ -44,9 +89,6 @@ from .models import Languages
 #         # field does not have access to the initial value
 #         return self.initial["password"]
 
-class LanguagesAdmin(admin.ModelAdmin):
-    pass
-
 
 # @admin.register(Languages)
 # class LanguagesAdmin(admin.ModelAdmin):
@@ -75,4 +117,3 @@ class LanguagesAdmin(admin.ModelAdmin):
 #     filter_horizontal = ()
 
 
-admin.site.register(Languages)
