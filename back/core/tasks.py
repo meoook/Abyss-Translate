@@ -28,7 +28,7 @@ def file_parse_uploaded(file_id, new=True):
     try:
         if file_manager.error or not file_manager.parse():
             logger.warning(f'File parse error id:{file_id} err: {file_manager.error}')
-            file_parse.retry()
+            file_parse_uploaded.retry()
     except MaxRetriesExceededError:
         err_file_id, err_msg = file_manager.save_error()
         logger.error(f'File id:{file_id} parse retries limit. Created error file (id:{err_file_id}) saved: {err_msg}')
@@ -49,7 +49,7 @@ def file_create_translated(file_id, lang_id):
     file_manager = LocalizeFileManager(file_id)
     try:
         if file_manager.error or not file_manager.create_translated_copy():
-            file_parse.retry()
+            file_create_translated.retry()
     except MaxRetriesExceededError:
         logger.critical(f'File create translated copy retries limit')
 

@@ -79,7 +79,7 @@ class Folders(models.Model):
     position = models.PositiveIntegerField()
     name = models.CharField(max_length=50)
     repo_url = models.URLField(blank=True)
-    repo_status = models.BooleanField(default=False)
+    repo_status = models.BooleanField(null=True)    # Null when connecting\checking
 
     class Meta:
         unique_together = [('position', 'project'), ('name', 'project')]

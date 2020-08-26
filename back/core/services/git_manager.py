@@ -24,20 +24,15 @@ REPO_CHECK_KEYS = ('provider', 'owner', 'name', 'path', 'branch', 'hash', 'acces
 class GitManage:
     def __init__(self, *args, **kwargs):
         self.__repo_obj = None  # { provider owner name path branch hash update access }
-        self.__new_hash = None  # if yes - need to update
-        self.__error = None
+        self.new_hash = None  # if yes - need to update
+        self.error = None
 
     @property
-    def error(self):
-        return self.__error
-
-    @property
-    def new_hash(self):
-        return self.__new_hash
-
-    @new_hash.setter
-    def new_hash(self, value):
-        self.__new_hash = value if value != self.__repo_obj['hash'] and len(value) == 40 else self.__repo_obj['hash']
+    def need_update(self):
+        # len(<hash>) == 40
+        if self.__repo_obj:
+            return self.new_hash == self.__repo_obj['hash']
+        return False
 
     @property
     def repo(self):
@@ -50,7 +45,7 @@ class GitManage:
         if isinstance(value, dict) and all(k in REPO_CHECK_KEYS for k in value):
             self.__repo_obj = value
         else:
-            self.__error = 'Not a valid repo object'
+            self.error = 'Not a valid repo object'
             self.__repo_obj = None
 
     def check_url(self, link):
@@ -66,7 +61,7 @@ class GitManage:
             }
             return self.__repo_obj_check()
         else:
-            self.__error = f'Repo URL parse error: {link}'
+            self.error = f'Repo URL parse error: {link}'
             return False
 
     def __api_url_create(self, in_path=None, as_branch=False):
@@ -82,10 +77,10 @@ class GitManage:
     def __repo_obj_check(self):
         """ Check access and exist status. """
         provider = self.__repo_obj['provider']
-        if self.__error or not self.__repo_obj:
+        if self.error or not self.__repo_obj:
             return False
         if self.__repo_obj['provider'] not in KNOWN_PROVIDERS:
-            self.__error = f'Git provider {provider} not configured'
+            self.error = f'Git provider {provider} not configured'
             return False
         link = self.__api_url_create(self.__repo_obj['path'])
         # Check connect
@@ -97,21 +92,21 @@ class GitManage:
         elif provider == 'bitbucket.org':
             return self.__check_bitbucket(resp)
         else:
-            self.__error = f'Method repo_obj_check not set for provider: {provider}'
+            self.error = f'Method repo_obj_check not set for provider: {provider}'
             return False
 
     def __check_bitbucket(self, resp):
         """ Check response and get hash """
         if 'commit' in resp and 'type' in resp and resp['type'] == 'commit_directory':
-            self.__new_hash = resp['commit']['hash']
+            self.new_hash = resp['commit']['hash']
             return True
-        self.__error = 'Bitbucket api error. Wrong response.'
+        self.error = 'Bitbucket api error. Wrong response.'
         return False
 
     def __check_github(self, resp):     # TODO: can get data as symlink with no context
         """ Check response and get hash """
         if not isinstance(resp, list):
-            self.__error = 'Github api error. Wrong response.'
+            self.error = 'Github api error. Wrong response.'
             return False
         # Get hash from content of head folder. If head folder is root folder -> find hash in branch.
         if self.__repo_obj['path']:
@@ -122,7 +117,7 @@ class GitManage:
                 return False
             obj = self.__find_by_name(search_item, resp)
             if obj and 'path' in obj and 'sha' in obj and 'size' in obj:
-                self.__new_hash = obj['sha']
+                self.new_hash = obj['sha']
                 return True
         else:
             link = self.__api_url_create(as_branch=True)
@@ -130,9 +125,9 @@ class GitManage:
             if not resp:
                 return False
             if 'commit' in resp and 'name' in resp and resp['name'] == self.__repo_obj['branch']:
-                self.__new_hash = resp['commit']['sha']
+                self.new_hash = resp['commit']['sha']
                 return True
-        self.__error = f'Wrong response for URL: {link}'
+        self.error = f'Wrong response for URL: {link}'
         return False
 
     def __request_url(self, link):
@@ -141,15 +136,21 @@ class GitManage:
         resp = requests.get(link, headers=headers) if self.__repo_obj['access'] else requests.get(link, headers=headers)
         if resp.status_code == requests.codes.ok:
             return resp.json()
-        self.__error = f'Connect error: {link}'
+        self.error = f'Connect error: {link}'
         return None
 
     def update_files(self, file_list):
         """ Return list of success downloaded files """
-        if not isinstance(file_list, list) or self.__error or not self.__repo_obj:
-            return False
-        checked_files = self.__check_files(file_list)
-        uploaded_files = self.__download_file_list(checked_files)
+        uploaded_files = []
+        if self.error:
+            pass
+        elif not self.__repo_obj:
+            self.error = 'Repo object not set'
+        elif not isinstance(file_list, list):
+            self.error = 'Params error - need list of file obj'
+        else:
+            checked_files = self.__check_files(file_list)
+            uploaded_files = self.__download_file_list(checked_files)
         return uploaded_files
 
     def __check_files(self, file_list):
@@ -162,7 +163,7 @@ class GitManage:
             if not resp:
                 continue
             if self.__repo_obj['provider'] == 'github.com':
-                if 'sha' in resp and 'download_url' in resp and 'name' in resp and resp['name'] == file_item["name"]:
+                if 'sha' in resp and 'download_url' in resp and 'name' in resp and resp['name'] == file_item['name']:
                     item_to_add['success'] = True
                     if resp['sha'] != file_item['hash']:
                         item_to_add['hash'] = resp['sha']
