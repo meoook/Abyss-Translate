@@ -15,14 +15,14 @@ logger = logging.getLogger('logfile')
 
 # retries=3, default_retry_delay=1
 @shared_task(
-    name="T1: Update file in git then parse it",
+    name="T1: Update file from repo then parse it",
     max_retries=2,
     # soft_time_limit=5,
     # time_limit=20,
     # rate_limit='2/h',
     ignore_result=True
 )
-def file_parse(file_id, new=True):
+def file_parse_uploaded(file_id, new=True):
     """ After file uploaded -> If possible update it from repo then get info and parse data into text to translate """
     file_manager = LocalizeFileManager(file_id)
     try:
@@ -48,23 +48,22 @@ def file_create_translated(file_id, lang_id):
     """ After file translated to language -> Create translated copy of this file then create or update in repo """
     file_manager = LocalizeFileManager(file_id)
     try:
-        if file_manager.error or not file_manager.parse():
+        if file_manager.error or not file_manager.create_translated_copy():
             file_parse.retry()
     except MaxRetriesExceededError:
-        err_file_id, err_msg = file_manager.save_error()
-        logger.error(f'File create translated copy retries limit. Error file (id:{err_file_id}) saved: {err_msg}')
+        logger.critical(f'File create translated copy retries limit')
 
 
 @shared_task(
-    name="T3: Update files in git repository folder",
+    name="T3: Update folder files from git repository folder",
     max_retries=1,
     soft_time_limit=1,
     time_limit=5,
     rate_limit='12/h',
     ignore_result=True
 )
-def folder_update_by_repo(filo):
-    """ After changing git url -> Update folder files in git repository folder """
+def folder_update_repo_url(filo):
+    """ After changing git url -> Update folder files from git repository folder """
     return True
 
 

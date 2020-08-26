@@ -1,6 +1,6 @@
 import os
 import logging
-from rest_framework import viewsets, status, permissions, filters
+from rest_framework import viewsets, mixins, status, permissions, filters
 from rest_framework.parsers import MultiPartParser
 from rest_framework.pagination import PageNumberPagination
 from rest_framework.permissions import IsAuthenticated
@@ -12,10 +12,10 @@ from django.core import management
 from django.http import FileResponse
 
 from .serializers import ProjectSerializer, FoldersSerializer, LanguagesSerializer, FilesSerializer, \
-    TransferFileSerializer, FileMarksSerializer, PermissionsSerializer, TranslatesSerializer
+    TransferFileSerializer, FileMarksSerializer, PermissionsSerializer, TranslatesSerializer, FolderRepoSerializer
 from .models import Languages, Projects, Folders, FolderRepo, Files, Translated, FileMarks, ProjectPermissions
 from .services.file_manager import LocalizeFileManager
-from .tasks import file_parse, file_create_translated
+from .tasks import file_parse_uploaded, file_create_translated, folder_update_repo_url
 from .permisions import IsProjectOwnerOrReadOnly, IsProjectOwnerOrAdmin, IsProjectOwnerOrManage, \
     IsFileOwnerOrHaveAccess, IsFileOwnerOrTranslator, IsFileOwnerOrManager
 
@@ -105,6 +105,7 @@ class FolderViewSet(viewsets.ModelViewSet):
         serializer.is_valid(raise_exception=True)
 
         if repo_url != folder_instance.repo_url:   # Repository URL have been changed
+            folder_update_repo_url.delay(folder_instance.id, repo_url)
             folder_files = Files.objects.filter(folder=folder_instance)
             if repo_url:    # Input URL not empty
                 git_manager = GitManage()
@@ -117,7 +118,7 @@ class FolderViewSet(viewsets.ModelViewSet):
                     pass
 
                 if git_manager.new_hash:  # Folder exist
-                    folder_files.update(repo_status=False, repo_hash=False)    # SET founded - false for all files
+                    folder_files.update(repo_status=False, repo_hash='')    # SET founded - false for all files
 
                     file_list = []
                     for filo in folder_files:
@@ -130,10 +131,10 @@ class FolderViewSet(viewsets.ModelViewSet):
                             logger.info(f"File object created ID: {filo['id']}. Sending parse task to celery.")
                             file_parse.delay(filo['id'])
                 else:
-                    folder_files.update(repo_founded=None, repo_hash=False)
+                    folder_files.update(repo_founded=None, repo_hash='')
             else:
                 FolderRepo.objects.filter(folder=folder_instance).delete()
-                folder_files.update(repo_founded=None, repo_hash=False)
+                folder_files.update(repo_founded=None, repo_hash='')
 
         self.perform_update(serializer)
         return Response(serializer.data)
@@ -141,6 +142,16 @@ class FolderViewSet(viewsets.ModelViewSet):
     def destroy(self, request, *args, **kwargs):
         self.get_object().delete()
         return Response(status=status.HTTP_204_NO_CONTENT)
+
+
+class FolderRepoViewSet(mixins.CreateModelMixin,
+                        mixins.RetrieveModelMixin,
+                        mixins.UpdateModelMixin,
+                        viewsets.GenericViewSet):
+    serializer_class = FolderRepoSerializer
+    # http_method_names = ['get', 'post', 'put']
+    permission_classes = [IsAuthenticated, ]
+    queryset = FolderRepo.objects.all()
 
 
 class FileViewSet(viewsets.ModelViewSet):
@@ -187,6 +198,7 @@ class FileMarksView(viewsets.ModelViewSet):
         distinct = request.query_params.get('distinct')
         no_trans = request.query_params.get('no_trans')     # exclude marks that have translates to no_trans lang
         # FIXME: mb other issue to save order
+        # Entry.objects.order_by(Coalesce('summary', 'headline').desc())
         if distinct == 'true':
             qs_to_list = list(self.get_queryset().filter(file_id=file_id).values('md5sum', 'id').distinct('md5sum'))
             unique_md5_id_arr = [x['id'] for x in qs_to_list]
@@ -259,7 +271,7 @@ class TransferFileView(viewsets.ViewSet):
             file_id = serializer.data.get('id')  # TODO: check this method
             # Run celery parse delay task
             logger.info(f'File object created ID: {file_id}. Sending parse task to celery.')
-            file_parse.delay(file_id)
+            file_parse_uploaded.delay(file_id)
             return Response(serializer.data, status=status.HTTP_201_CREATED)
         logger.warning(f'Error creating file object: {serializer.errors}')
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)

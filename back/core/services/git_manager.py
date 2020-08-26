@@ -49,9 +49,9 @@ class GitManage:
         # check_keys = ('provider', 'owner', 'name', 'path', 'branch', 'hash', 'access')
         if isinstance(value, dict) and all(k in REPO_CHECK_KEYS for k in value):
             self.__repo_obj = value
-            # self.__repo_obj_check()     # TODO: Move it
         else:
             self.__error = 'Not a valid repo object'
+            self.__repo_obj = None
 
     def check_url(self, link):
         """ Create repo_obj from URL """
@@ -64,8 +64,10 @@ class GitManage:
                 'path': self.__path_fix(url_items.group(5)) if url_items.group(5) else '',
                 'hash': None, 'access': ('meoook', 'j3262new')
             }
+            return self.__repo_obj_check()
         else:
             self.__error = f'Repo URL parse error: {link}'
+            return False
 
     def __api_url_create(self, in_path=None, as_branch=False):
         """ Builder for API URLs by provider """
@@ -143,6 +145,7 @@ class GitManage:
         return None
 
     def update_files(self, file_list):
+        """ Return list of success downloaded files """
         if not isinstance(file_list, list) or self.__error or not self.__repo_obj:
             return False
         checked_files = self.__check_files(file_list)
@@ -150,7 +153,7 @@ class GitManage:
         return uploaded_files
 
     def __check_files(self, file_list):
-        """ Check files_obj (name, hash) on exist or need to update. """
+        """ Check files_obj (name, hash) on exist and need to update. """
         return_arr = []
         for file_item in file_list:
             item_to_add = {**file_item, 'success': False, 'download_url': None}
@@ -174,13 +177,14 @@ class GitManage:
         return return_arr
 
     def __download_file_list(self, file_list):
-        """ Download file list """
+        """ Download file list and return seccuss file list () """
         success_upload_list = []
         for file_item in file_list:
             if file_item['success'] and file_item['download_url']:
                 try:
                     self.__download_file(file_item['download_url'], file_item['path'])
                 except requests.exceptions.ConnectionError:
+                    # LOGGER
                     continue
                 else:
                     success_upload_list.append(file_item)

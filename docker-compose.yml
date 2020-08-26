@@ -23,6 +23,7 @@ services:
     image: localize-django-dev
     command: sh -c "python manage.py migrate --no-input && gunicorn localize.wsgi -b 0:8000"
     volumes:
+      - ./back:/usr/src/back/
       - users_files:/usr/src/back/users/
     ports:
       - 8000:8000
@@ -42,7 +43,7 @@ services:
     build: ./front
     command: npm start
     volumes:
-      - node_modules:/usr/src/front/node_modules
+      - ./front:/usr/src/front/
     environment:
       - REACT_APP_API_URL=http://127.0.0.1:8000/api
     ports:
@@ -53,4 +54,3 @@ services:
 volumes:
   postgres_data:
   users_files:
-  node_modules:

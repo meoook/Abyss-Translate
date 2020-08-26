@@ -1,7 +1,7 @@
 from rest_framework import serializers
 from rest_framework.exceptions import APIException
 
-from .models import Languages, Projects, ProjectPermissions, Folders, Files, ErrorFiles, Translated, FileMarks, Translates 
+from .models import Languages, Projects, ProjectPermissions, Folders, FolderRepo, Files, ErrorFiles, Translated, FileMarks, Translates 
 
 # Extra kwargs write_only, read_only, required, default, allow_null, label
 # source -> The name of the attribute that will be used to populate the field : URLField(source='get_absolute_url')
@@ -81,17 +81,9 @@ class FilesSerializer(serializers.ModelSerializer):
         }
 
 
-class FilesDisplaySerializer(serializers.ModelSerializer):
-    """ Display files to translator (Read only) """
-    translated_set = TranslatedSerializer(many=True, read_only=True)
-
-    class Meta:
-        model = Files
-        fields = ['id', 'name', 'items', 'words', 'lang_orig', 'translated_set', 'created']
-
-
 class FoldersSerializer(serializers.ModelSerializer):
     """ To manage and display with projects """
+
     class Meta:
         model = Folders
         fields = ['id', 'position', 'name', 'repo_url', 'repo_status']
@@ -101,6 +93,17 @@ class FoldersSerializer(serializers.ModelSerializer):
             'repo_status': {'read_only': True},
         }
 
+class FolderRepoSerializer(serializers.ModelSerializer):
+    """ To manage repository options and access """
+    # permission_set = serializers.ListField(child=serializers.CharField(), source='get_permission', read_only=True)
+
+    class Meta:
+        model = FolderRepo
+        fields = '__all__'
+        extra_kwargs = {
+            'access': {'write_only': True},     # 'required': False
+            'folder': {'write_only': True},
+        }
 
 class PermissionsSerializer(serializers.ModelSerializer):
     """ Manage users permissions to project (project id must be hidden) """
