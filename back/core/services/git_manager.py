@@ -59,7 +59,7 @@ class GitManage:
                 'path': self.__path_fix(url_items.group(5)) if url_items.group(5) else '',
                 'hash': None, 'access': ('meoook', 'j3262new')
             }
-            return self.__repo_obj_check()
+            return self.check_repo()
         else:
             self.error = f'Repo URL parse error: {link}'
             return False
@@ -74,7 +74,7 @@ class GitManage:
         url_format = provider_obj['repo'] + (provider_obj['branch'] if as_branch else provider_obj['content'])
         return url_format.format(owner=owner, name=name, branch=branch, path=path)
 
-    def __repo_obj_check(self):
+    def check_repo(self):
         """ Check access and exist status. """
         provider = self.__repo_obj['provider']
         if self.error or not self.__repo_obj:

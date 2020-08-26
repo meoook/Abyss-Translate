@@ -120,8 +120,9 @@ class LocalizeFileManager:
         how_much_translated = self.__work_file.filemarks_set.filter(Q(translates__language=lang_id), ~Q(translates__text__exact="")).count()
         progress.items = how_much_translated
         finished = False
-        if self.__work_file.items != how_much_translated and self.__work_file.items < how_much_translated:
-            logger.critical(f"For file {self.__log_name} translates items more then file have")
+        if self.__work_file.items != how_much_translated:
+            if self.__work_file.items < how_much_translated:
+                logger.critical(f"For file {self.__log_name} translates items more then file have")
         else:
             finished = True
         progress.finished = finished
@@ -137,12 +138,15 @@ class LocalizeFileManager:
         objs = [Translated(file_id=self.__work_file.id, language_id=lang_id) for lang_id in translate_to_ids]
         Translated.objects.bulk_create(objs)
 
-    def create_translated_copy(self, language):
+    def create_translated_copy(self, lang_id):
         """ Create translation copy of the file """
         if not self.__work_file:
             logger.error(f"File object check progress error: {self.error if self.error else 'unknown'}")
             return False
-        pass
+        if self.check_progress(lang_id):   # Progress exist and finished
+            progress = self.__work_file.translated_set.get(language_id=lang_id)
+            logger.info(f'Try create file from {self.__log_name} to language id:{lang_id}')
+
 
     def __null_file_fields(self):
         """ Refresh database object file """

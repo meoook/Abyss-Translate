@@ -51,8 +51,23 @@ class LocalizeFolderManager:
         defaults = {**git_manager.repo, 'hash': git_manager.new_hash}
         repo_obj, created = FolderRepo.objects.update_or_create(folder_id=self.__id, defaults=defaults)
 
+        self.__update_files_from_repo(git_manager)
+
+    def update_files(self):
+        """ To run by celery scheduler to update files from repo folder """
+        if not self.__folder:
+            logger.warning('Folder object not set')
+            return False
+        if self.__folder.repo_status:
+            git_manager = GitManage()
+            git_manager.repo = self.__folder.folderrepo
+            if git_manager.check_repo:
+                self.__update_files_from_repo(git_manager)
+
+    def __update_files_from_repo(self, git_manager):
         if git_manager.need_update:  # Folder exist and new hash
             logger.info(f'Changing repo status to: 404(False) for files in folder id:{self.__id}')
+            folder_files = self.__folder.files_set.all()
             folder_files.update(repo_status=False)
             # Creating list of files obj for git_manager checker
             file_list = []
@@ -69,14 +84,3 @@ class LocalizeFolderManager:
                     logger.warning(f"File parse error id:{filo['id']} err: {file_manager.error}")
                     err_file_id, err_msg = file_manager.save_error()
                     logger.error(f'Created error file (id:{err_file_id}) saved: {err_msg}')
-
-    def update_files(self):
-        """ To run by celery scheduler to update files from repo folder """
-        if not self.__folder:
-            logger.warning('Folder object not set')
-            return False
-        if self.__folder.repo_status:
-
-
-    def __update_files_from_repo(self):
-        pass

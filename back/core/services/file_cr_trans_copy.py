@@ -1,6 +1,7 @@
 import os
 import re
 import logging
+from django.core.exceptions import ObjectDoesNotExist
 
 from core.models import Translates, Translated
 from core.services.utils import csv_validate_text
@@ -11,22 +12,9 @@ logger = logging.getLogger('django')
 class CreateTranslatedCopy:
     """ Create translated copy of file for selected language """
 
+    # TODO: SAVE ALL WORDS
     def __init__(self, id, language):
         self.__translate_file = None
-
-    # TODO: SAVE ALL WORDS
-
-    def add_arguments(self, parser):
-        parser.add_argument('id', type=int, default=None)
-        parser.add_argument('language', type=int, default=None)
-
-    def handle(self, *args, **options):
-        if options['id'] is None:
-            self.stderr.write('File ID not set')
-            return False
-        if options['language'] is None:
-            self.stderr.write('Language ID not set')
-            return False
         try:
             progress = Translated.objects.select_related('file', 'file__lang_orig', 'language').get(file__id=options['id'], language=options['language'])
             work_file = progress.file
@@ -39,8 +27,8 @@ class CreateTranslatedCopy:
             self.stderr.write(f"File not found: {options['id']}")
             return False
 
+    def any_def(self):
         self.stdout.write(f'Try create file from {work_file.name}(id:{work_file.id}) to language {create_lang.name}')
-
         dir_name = os.path.dirname(work_file.data.path)
         file_name, file_ext = os.path.splitext(work_file.data.path)
         self.__translate_file = open(os.path.join(dir_name, f'{file_name}-{create_lang.short_name}{file_ext}'), 'wb')
