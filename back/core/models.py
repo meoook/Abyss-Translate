@@ -99,10 +99,9 @@ class FolderRepo(models.Model):
 
 
 def user_directory_path(instance, filename):
-    # file will be uploaded to users/username/prj_id/folder_id/<filename>
-    project = Folders.objects.get(id=instance.folder.id).project
-    new_path = '{}/{}/{}/{}'.format(instance.owner, project.id, instance.folder.id, filename)
-    return new_path
+    """ File will be uploaded to users/<username>/<prj_id>/<folder_id>/<filename> """
+    folder = instance.folder
+    return '{}/{}/{}/{}'.format(folder.project.owner, folder.project.id, folder.id, filename)
 
 
 class Files(models.Model):

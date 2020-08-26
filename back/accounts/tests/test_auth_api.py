@@ -14,10 +14,10 @@ class AuthSystemTestCase(APITestCase):
         data = {'username': 'DabApps', 'password': 'QwZ!3klPz', 'email': 'aa@zaz.ru'}
         response = self.client.post(url, data, format='json')
         self.assertEqual(response.status_code, status.HTTP_200_OK)
-        self.assertEqual(User.objects.count(), 1)
-        self.assertEqual(User.objects.get().username, data['username'])
+        self.assertEqual(1, User.objects.count())
+        self.assertEqual(data['username'], User.objects.get().username)
         login_status = self.client.login(username=data['username'], password=data['password'])
-        self.assertEqual(login_status, True)
+        self.assertTrue(login_status)
 
     def test_account_login_session(self):
         """ Ensure we can login by created user """

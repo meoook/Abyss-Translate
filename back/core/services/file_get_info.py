@@ -26,6 +26,8 @@ UNREAL_ENGINE_STRINGS = [
 
 
 class DataGetInfo:
+    """ file_manager sub class """
+
     def __init__(self, data, lang_orig, *args, **kwargs):
         self.__data = data
         self.__lang_orig = lang_orig

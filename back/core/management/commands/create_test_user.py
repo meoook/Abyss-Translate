@@ -1,14 +1,12 @@
-import re
 import random
 from django.core.management.base import BaseCommand
 
-from core.models import Files, FileMarks, Translates, Translated, Projects, Folders
-from django.conf import settings
+from core.models import Projects, Folders
 from django.contrib.auth.models import User, Permission
 
 
 class Command(BaseCommand):
-    help = 'Manager to create test data'
+    help = 'Manager to create user with test project'
 
     def add_arguments(self, parser):
         parser.add_argument('name', type=str, nargs='?', default=None)
@@ -35,7 +33,6 @@ class Command(BaseCommand):
         self.stdout.write(f'User {name} created with password: {password}')
         creator = Permission.objects.get(codename='creator')
         user.user_permissions.add(creator)
-        # user.user_permissions.add('localize.creator')
 
         project_props = {
             'owner': user,
@@ -48,8 +45,7 @@ class Command(BaseCommand):
         folder1 = Folders.objects.create(project=project, name='Folder1', position=1)
         folder2 = Folders.objects.create(project=project, name='Folder2', position=2)
 
-    @staticmethod
-    def _try_create(model_name, fields):
+    def _try_create(self, model_name, fields):
         """ To catch errors """
         try:
             obj = model_name.objects.create(**fields)

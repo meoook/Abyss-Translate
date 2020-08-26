@@ -11,15 +11,15 @@ from django.core.exceptions import ObjectDoesNotExist
 from django.core import management
 from django.http import FileResponse
 
-from .serializers import ProjectSerializer, FoldersSerializer, LanguagesSerializer, FilesSerializer,\
-    TransferFileSerializer, FileMarksSerializer, PermissionsSerializer
+from .serializers import ProjectSerializer, FoldersSerializer, LanguagesSerializer, FilesSerializer, \
+    TransferFileSerializer, FileMarksSerializer, PermissionsSerializer, TranslatesSerializer
 from .models import Languages, Projects, Folders, FolderRepo, Files, Translated, FileMarks, ProjectPermissions
-from .tasks import file_parse, upload_translated
+from .services.file_manager import LocalizeFileManager
+from .tasks import file_parse, file_create_translated
 from .permisions import IsProjectOwnerOrReadOnly, IsProjectOwnerOrAdmin, IsProjectOwnerOrManage, \
     IsFileOwnerOrHaveAccess, IsFileOwnerOrTranslator, IsFileOwnerOrManager
 
 from core.utils.git_manager import GitManage
-from core.services.translate_manage import translate_create
 
 logger = logging.getLogger('django')
 
@@ -117,17 +117,18 @@ class FolderViewSet(viewsets.ModelViewSet):
                     pass
 
                 if git_manager.new_hash:  # Folder exist
-                    folder_files.update(repo_founded=False, repo_hash=False)    # SET founded - false for all files
+                    folder_files.update(repo_status=False, repo_hash=False)    # SET founded - false for all files
 
                     file_list = []
                     for filo in folder_files:
                         file_list.append({'id': filo.id, 'name': filo.name, 'hash': filo.repo_hash, 'path': filo.data.path})
                     updated_files = git_manager.update_files(file_list)
-                    if updated_files:
+                    if updated_files:   # if success - return list of updated files from git
                         for filo in updated_files:
-                            Files.objects.filter(id=filo['id']).update(repo_founded=True, repo_hash=filo['hash'])
-                            # FIXME: Get file info
-                            management.call_command('file_rebuild', filo['id'])
+                            Files.objects.filter(id=filo['id']).update(repo_status=filo['succeess'], repo_hash=filo['hash'])
+                            # Run celery parse delay task
+                            logger.info(f"File object created ID: {filo['id']}. Sending parse task to celery.")
+                            file_parse.delay(filo['id'])
                 else:
                     folder_files.update(repo_founded=None, repo_hash=False)
             else:
@@ -142,7 +143,6 @@ class FolderViewSet(viewsets.ModelViewSet):
         return Response(status=status.HTTP_204_NO_CONTENT)
 
 
-# Folder ViewSet
 class FileViewSet(viewsets.ModelViewSet):
     serializer_class = FilesSerializer
     http_method_names = ['get', 'put', 'delete']
@@ -188,8 +188,8 @@ class FileMarksView(viewsets.ModelViewSet):
         no_trans = request.query_params.get('no_trans')     # exclude marks that have translates to no_trans lang
         # FIXME: mb other issue to save order
         if distinct == 'true':
-            unique_md5_id_arr = [x['id'] for x in list(
-                self.get_queryset().filter(file_id=file_id).values('md5sum', 'id').distinct('md5sum'))]
+            qs_to_list = list(self.get_queryset().filter(file_id=file_id).values('md5sum', 'id').distinct('md5sum'))
+            unique_md5_id_arr = [x['id'] for x in qs_to_list]
             queryset = self.get_queryset().filter(pk__in=unique_md5_id_arr).order_by('mark_number', 'col_number')
         else:
             queryset = self.get_queryset().filter(file_id=file_id).order_by('mark_number', 'col_number')
@@ -204,10 +204,19 @@ class FileMarksView(viewsets.ModelViewSet):
         """ Create or update translates. Update translate progress. If finished - create translate file. """
         file_id = request.data.get('file_id')
         mark_id = request.data.get('mark_id')
+        lang_id = request.data.get('lang_id')
         md5sum = request.data.get('md5sum')
-        lang_trans = request.data.get('lang_id')
         text = request.data.get('text')     # TODO: Check mb can get in binary??
-        return translate_create(file_id, mark_id, lang_trans, request.user.id, text, md5sum)
+        file_manager = LocalizeFileManager(file_id)
+        if file_manager.error:
+            return Response(file_manager.error, status=status.HTTP_404_NOT_FOUND)
+        # resp, sts = file_manager.create_mark_translate(request.user.id, mark_id, lang_id, text, md5sum)
+        resp, sts = file_manager.create_mark_translate(request.user.id, **request.data)
+        if file_manager.check_progress(lang_id):
+            # Run celery task - create_translated_copy
+            file_create_translated.delay(file_id, lang_id)
+        serializer = TranslatesSerializer(resp, many=False)
+        return Response(serializer.data, status=sts)
 
 
 class TransferFileView(viewsets.ViewSet):
@@ -216,15 +225,10 @@ class TransferFileView(viewsets.ViewSet):
     permission_classes = [IsAuthenticated, IsFileOwnerOrManager]
 
     def retrieve(self, request, pk=None):
-        """ Return file to download by Translated.id (Can be changed to retrieve by fileID and langID) """
+        """ Return file to download by Translated.id (Can be changed to retrieve by File.id and Lang.id) """
         try:
             # progress = Translated.objects.get(file_id=pk, language_id=lang_id)   <-- retrieve by fileID and langID
-            if request.user.has_perm('core.creator'):
-                progress = Translated.objects.select_related('language', 'file').get(id=pk, file__folder__project_owner=request.user)
-            elif request.user.projectpermissions_set.filter(project__folder__file_id=pk, permission=8):
-                progress = Translated.objects.select_related('language', 'file').get(id=pk)
-            else:
-                return Response({'err': 'No access'}, status=status.HTTP_403_FORBIDDEN)
+            progress = Translated.objects.select_related('language', 'file').get(id=pk)
         except ObjectDoesNotExist:
             return Response({'err': 'File not found'}, status=status.HTTP_404_NOT_FOUND)
         if progress.finished:
@@ -240,7 +244,7 @@ class TransferFileView(viewsets.ViewSet):
     def create(self, request):
         """ Create file obj and related translated progress after file download (uploaded by user) """
         folder_id = request.data.get('folder_id')
-        folder = Folders.objects.select_related('project__lang_orig').get(id=request.data.get('folder_id'))
+        folder = Folders.objects.select_related('project__lang_orig').get(id=folder_id)
         # Create file obejct
         lang_orig_id = folder.project.lang_orig.id
         serializer = TransferFileSerializer(data={

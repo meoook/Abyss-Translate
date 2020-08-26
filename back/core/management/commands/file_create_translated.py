@@ -3,7 +3,7 @@ import re
 from django.core.management.base import BaseCommand
 
 from core.models import Translates, Translated
-from core.utils.utils import csv_validate_text
+from core.services.utils import csv_validate_text
 
 
 class Command(BaseCommand):

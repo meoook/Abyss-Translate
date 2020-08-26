@@ -2,15 +2,13 @@ import os
 import re
 import logging
 
-
 from core.models import Translates, Translated
-from core.utils.utils import csv_validate_text
+from core.services.utils import csv_validate_text
+
+logger = logging.getLogger('django')
 
 
-logger = logging.getLogger('logfile')
-
-
-class CreateTranslated:
+class CreateTranslatedCopy:
     """ Create translated copy of file for selected language """
 
     def __init__(self, id, language):
@@ -47,11 +45,11 @@ class CreateTranslated:
         file_name, file_ext = os.path.splitext(work_file.data.path)
         self.__translate_file = open(os.path.join(dir_name, f'{file_name}-{create_lang.short_name}{file_ext}'), 'wb')
         if work_file.method == 'ue':
-            self.parse_as_ue(work_file, create_lang, translates)
+            self.__parse_as_ue(work_file, create_lang, translates)
         elif work_file.method == 'csv':
-            self.parse_as_csv(work_file, create_lang, translates)
+            self.__parse_as_csv(work_file, create_lang, translates)
         elif work_file.method == 'html':
-            self.parse_as_html(work_file, create_lang, translates)
+            self.__parse_as_html(work_file, create_lang, translates)
         else:
             self.stderr.write(f"For file {work_file.id} wrong method : {work_file.method}")
             return False
@@ -62,7 +60,7 @@ class CreateTranslated:
         progress.save()
         self.stdout.write(f"File {self.__translate_file.name} successfully created")
 
-    def parse_as_ue(self, file_obj, create_lang, translates_objs):
+    def __parse_as_ue(self, file_obj, create_lang, translates_objs):
         with open(file_obj.data.path, 'rb') as filo:
             if file_obj.number_top_rows:
                 for i, x in enumerate(filo):
@@ -91,7 +89,7 @@ class CreateTranslated:
                     trans_object[5] = trans_object[5].replace(trans.mark.text_binary, trans.text.encode(file_obj.codec))
                 [self.__translate_file.write(x) for x in trans_object]
 
-    def parse_as_csv(self, file_obj, create_lang, translates_objs):
+    def __parse_as_csv(self, file_obj, create_lang, translates_objs):
         with open(file_obj.data.path, 'rb') as filo:
             quotes_l = int(file_obj.options['quotes'][0]) if 'quotes' in file_obj.options else 0
             quotes_r = int(file_obj.options['quotes'][1]) if 'quotes' in file_obj.options else 0
@@ -131,7 +129,7 @@ class CreateTranslated:
                     row_items.append(text_binary)
                 self.__translate_file.write(delimiter_binary.join(row_items))
 
-    def parse_as_html(self, file_obj, create_lang, translates_objs):
+    def __parse_as_html(self, file_obj, create_lang, translates_objs):
         with open(file_obj.data.path, 'rb') as filo:
             data = filo.read().decode(file_obj.codec)
             texts_objs = []

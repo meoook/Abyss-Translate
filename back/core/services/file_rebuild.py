@@ -7,7 +7,7 @@ from core.services.utils import get_md5, count_words, csv_validate_text
 
 
 class FileRebuild:
-    """ Rebuild translates after file update """
+    """ Rebuild translates after file update (file_manager subclass) """
     def __init__(self, f_path, codec, _, file_id, f_lang_id, f_method, f_options):
         self.__marks_to_check = {}
         self.__marks_to_update = []

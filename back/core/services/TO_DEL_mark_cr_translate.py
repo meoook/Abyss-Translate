@@ -6,14 +6,15 @@ from django.core.exceptions import ObjectDoesNotExist
 
 from django.core import management
 
-from core.tasks import upload_translated
+# TODO: Check file_manager and delete this func
+
 from core.serializers import TranslatesSerializer
 from core.models import Files, Translated, FileMarks, Translates
 
 logger = logging.getLogger("django")
 
 
-def translate_create(file_id, mark_id, lang_id, translator_id, text, md5sum=None):
+def mark_create_translate(file_id, mark_id, lang_id, translator_id, text, md5sum=None):
     """ Create or update translates. Update translate progress. If finished - create translate file. """
     # assert(file_id and mark_id and lang_id)
     # assert(file_id >= 0 and mark_id >= 0 and lang_id >= 0)
@@ -28,7 +29,7 @@ def translate_create(file_id, mark_id, lang_id, translator_id, text, md5sum=None
         return Response({"err": "no need translate to this language"}, status=status.HTTP_400_BAD_REQUEST)
     # Can't change original text
     if lang_id == file_obj.lang_orig.id:
-        # TODO: permissions check - mb owner can change
+        # TODO: permissions check - mb owner can change ?
         return Response({"err": "can't change original text"}, status=status.HTTP_400_BAD_REQUEST)
 
     # Get or create translate(s)
@@ -62,6 +63,7 @@ def translate_create(file_id, mark_id, lang_id, translator_id, text, md5sum=None
         if file_obj.items < how_much_translated:
             logger.error(f"For file {file_obj.id} translates items more then file have")
     else:
-        upload_translated.delay(file_obj.id, lang_id)
+        # upload_all_translated.delay(file_obj.id, lang_id)
+        pass
     progress.save()
     return Response(serializer.data, status=status.HTTP_200_OK)

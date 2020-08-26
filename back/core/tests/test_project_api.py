@@ -9,7 +9,6 @@ from core.serializers import ProjectSerializer
 
 
 class ProjectsApiTestCase(APITestCase):
-# First create user -> login -> then test
 
     def setUp(self):
         self.url = reverse('project-list')
@@ -17,8 +16,8 @@ class ProjectsApiTestCase(APITestCase):
         self.user1 = User.objects.create_user(username='a', email='a@a.ru', password='123')
         self.user1.user_permissions.add(creator)
         self.user2 = User.objects.create_user(username='b', email='b@b.ru', password='123')
-        self.lang1 = Languages.objects.create(name='Russian', short_name='ru', active=True)
-        self.lang2 = Languages.objects.create(name='English', short_name='en', active=True)
+        self.lang1 = Languages.objects.get(name='Russian')
+        self.lang2 = Languages.objects.get(name='English')
         self.prj1 = Projects.objects.create(name='Project1', icon_chars='P1', owner=self.user1, lang_orig=self.lang1)
         self.prj1.translate_to.set([self.lang2])
         self.prj2 = Projects.objects.create(name='Project2', icon_chars='P2', owner=self.user1, lang_orig=self.lang1)
@@ -37,11 +36,10 @@ class ProjectsApiTestCase(APITestCase):
         self.assertEqual('/api/prj/', self.url)
         self.assertEqual(2, User.objects.count())
         self.assertEqual(2, Projects.objects.count())
-        self.assertEqual(2, Languages.objects.count())
+        self.assertEqual(96, Languages.objects.count())
         self.assertEqual(2, self.user1.projects_set.count())
         self.assertEqual(0, self.user2.projects_set.count())
         self.assertEqual(1, User.objects.with_perm('core.creator').count())
-        # self.assertEqual(1, User.objects.with_perm('core.translator'))
 
     def test_project_serializer(self):
         """ Ensure project serializer work properly """
