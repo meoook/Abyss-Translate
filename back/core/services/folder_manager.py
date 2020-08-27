@@ -1,9 +1,8 @@
 import logging
-from rest_framework import viewsets, mixins, status, permissions, filters
-from django.db.models import Max, Subquery, Q
+
 from django.core.exceptions import ObjectDoesNotExist
 
-from core.models import Languages, Projects, Folders, FolderRepo, Files, Translated, FileMarks, ProjectPermissions
+from core.models import Folders, FolderRepo, Files
 from core.services.file_manager import LocalizeFileManager
 
 from core.services.git_manager import GitManage
@@ -13,7 +12,7 @@ logger = logging.getLogger('django')
 
 class LocalizeFolderManager:
 
-    def __init__(self, folder_id, *args, **kwargs):
+    def __init__(self, folder_id):
         self.__id = folder_id
         self.__folder = None
         try:
@@ -80,7 +79,9 @@ class LocalizeFolderManager:
                 logger.info(f"For file id:{filo['id']} changing status to downloaded and start parse process")
                 Files.objects.filter(id=filo['id']).update(repo_status=filo['success'], repo_hash=filo['hash'], state=1)
                 file_manager = LocalizeFileManager(filo['id'])
-                if file_manager.error or not file_manager.parse():   # FIXME: Try one more
-                    logger.warning(f"File parse error id:{filo['id']} err: {file_manager.error}")
-                    err_file_id, err_msg = file_manager.save_error()
-                    logger.error(f'Created error file (id:{err_file_id}) saved: {err_msg}')
+                if file_manager.error or not file_manager.parse():
+                    logger.warning(f"File parse error id:{filo['id']} err: {file_manager.error} - retry")
+                    if not file_manager.parse():   # FIXME: create task to retry (task in task) ?
+                        logger.warning(f"File parse error id:{filo['id']} err: {file_manager.error}")
+                        err_file_id, err_msg = file_manager.save_error()
+                        logger.error(f'Created error file (id:{err_file_id}) saved: {err_msg}')

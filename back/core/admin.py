@@ -1,15 +1,16 @@
 # from django import forms
 from django.contrib import admin
-from django.utils.safestring import mark_save
+from django.utils.safestring import mark_safe
 
-from .models import Languages, Files, Folders
+from .models import Languages, Files, Folders, FileMarks
 
-class FolderInline(admin.TabularInline):
-    model = Folders
+
+class MarkInline(admin.TabularInline):
+    model = FileMarks
     extra = 0
 
-    fields = 'id', 'project', 'name', 'position', 'repo_url', 'repo_status'
-    read_only_fields = 'project', 'repo_status'
+    fields = 'id', 'mark_number', 'col_number', 'md5sum', 'md5sum_clear', 'words'
+    read_only_fields = 'mark_number', 'col_number', 'md5sum', 'md5sum_clear', 'words'
     # template = 'admin/sortable_tabular_inline.html'
 
     # def preview(self, obj):
@@ -18,12 +19,12 @@ class FolderInline(admin.TabularInline):
 
 @admin.register(Files)
 class FilesAdmin(admin.ModelAdmin):
-    prepopulated_fields = {'folder': ('name',)}
+    prepopulated_fields = {'method': ('name',)}
     list_display = ['id', 'name', 'state', 'method', 'items', 'words', 'lang_orig', 'translated_set', 'created', 'updated', 'repo_status', 'repo_hash', 'get_thumb']
     list_display_links = ['name']
     list_filter = ['state', 'repo_status', 'method']
     read_only_fields = ['state', 'method', 'items', 'words', 'created', 'updated', 'repo_status', 'repo_hash']
-    list_editable = ['name']
+    list_editable = ['lang_orig']
     search_fields = ['name']
 
     fieldsets = (
@@ -37,16 +38,16 @@ class FilesAdmin(admin.ModelAdmin):
 
     save_on_top = True      # Menu for save on top
 
-    inlines = (FolderInline, )
+    inlines = (MarkInline, )
 
     def get_thumb(self, obj):
-        return mark_save(f'<small>{obj.get_method_display}</small>')
+        return mark_safe(f'<small>{obj.get_method_display}</small>')
     get_thumb.short_description = u'Тут что то будет'
+
 
 @admin.register(Languages)
 class LanguagesAdmin(admin.ModelAdmin):
     pass
-
 
 
 # class LanguageCreationForm(forms.ModelForm):

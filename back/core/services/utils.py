@@ -25,9 +25,9 @@ def get_md5(binary_data, codec=None):
 
 def count_words(text):
     """ App function to find number of words(payment) in text """
-    word_min_len_to_count = 2
+    word_len_not_to_count = 2
     clean = re.sub(r'[\d\-\/\[\]\"\'\\`~.,><:;!?@#$%^&*()+=|_{}]', '', text)
-    return len([x for x in clean.split(' ') if len(x) > word_min_len_to_count])
+    return len([x for x in clean.split(' ') if len(x) > word_len_not_to_count])
 
 
 def csv_validate_text(text):

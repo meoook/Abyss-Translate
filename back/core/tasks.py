@@ -6,9 +6,10 @@ from celery.task import periodic_task
 from celery.schedules import crontab
 from celery.exceptions import SoftTimeLimitExceeded, MaxRetriesExceededError
 
+from core.models import Folders
 from core.services.file_manager import LocalizeFileManager
 
-from datetime import timedelta
+from core.services.folder_manager import LocalizeFolderManager
 
 logger = logging.getLogger('logfile')
 
@@ -24,10 +25,12 @@ logger = logging.getLogger('logfile')
 )
 def file_parse_uploaded(file_id, new=True):
     """ After file uploaded -> If possible update it from repo then get info and parse data into text to translate """
+    # Git update first
     file_manager = LocalizeFileManager(file_id)
+    file_manager.update_from_repo()     # TODO: Limit to 1 try (amount retry)
     try:
         if file_manager.error or not file_manager.parse():
-            logger.warning(f'File parse error id:{file_id} err: {file_manager.error}')
+            logger.warning(f'File id:{file_id} parse error: {file_manager.error}')
             file_parse_uploaded.retry()
     except MaxRetriesExceededError:
         err_file_id, err_msg = file_manager.save_error()
@@ -48,42 +51,54 @@ def file_create_translated(file_id, lang_id):
     """ After file translated to language -> Create translated copy of this file then create or update in repo """
     file_manager = LocalizeFileManager(file_id)
     try:
-        if file_manager.error or not file_manager.create_translated_copy():
+        if file_manager.error or not file_manager.create_translated_copy(lang_id):
+            logger.warning(f'File id:{file_id} create translated copy error err: {file_manager.error}')
             file_create_translated.retry()
+        else:
+            # Git update
+            pass
     except MaxRetriesExceededError:
         logger.critical(f'File create translated copy retries limit')
 
 
 @shared_task(
     name="T3: Update folder files from git repository folder",
-    max_retries=1,
-    soft_time_limit=1,
-    time_limit=5,
-    rate_limit='12/h',
+    max_retries=0,
+    soft_time_limit=5,
+    time_limit=15,
+    # rate_limit='12/h',
     ignore_result=True
 )
-def folder_update_repo_url(filo):
+def folder_update_repo_url(folder_id, repo_url):
     """ After changing git url -> Update folder files from git repository folder """
-    return True
+    try:
+        folder_manager = LocalizeFolderManager(folder_id)
+        folder_manager.change_repo_url(repo_url)
+    except SoftTimeLimitExceeded:
+        logger.warning(f'Checking folder id:{folder_id} too slow')
 
 
 @periodic_task(
     name="P1: (3h) Update users files from git repositories",
     run_every=crontab(minute=0, hour='*/3'),
     max_retries=0,
-    soft_time_limit=30,
-    time_limit=60,
+    soft_time_limit=160,
+    time_limit=180,
     # rate_limit='1/h',
     ignore_result=True,
     store_errors_even_if_ignored=True
 )
 def check_all_file_repos():
     """ It's a global app task -> Get all users files check git status and update if needed """
+    # GET ALL FOLDERS
+    logger.info('Update all files in folders where repo status is ok')
     try:
-        logger.info('Checking files too slow')
+        folders_with_repo = Folders.objects.filter(repo_status=True)
+        for folder in folders_with_repo:
+            folder_manager = LocalizeFolderManager(folder.id)
+            folder_manager.update_files()
     except SoftTimeLimitExceeded:
         logger.warning('Checking files too slow')
-    return True
 
 
 # @periodic_task(

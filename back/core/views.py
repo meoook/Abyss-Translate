@@ -1,6 +1,6 @@
 import os
 import logging
-from rest_framework import viewsets, mixins, status, permissions, filters
+from rest_framework import viewsets, mixins, status, filters
 from rest_framework.parsers import MultiPartParser
 from rest_framework.pagination import PageNumberPagination
 from rest_framework.permissions import IsAuthenticated
@@ -8,7 +8,6 @@ from rest_framework.response import Response
 from django.db.models import Max, Subquery, Q
 from django.core.exceptions import ObjectDoesNotExist
 
-from django.core import management
 from django.http import FileResponse
 
 from .serializers import ProjectSerializer, FoldersSerializer, LanguagesSerializer, FilesSerializer, \
@@ -18,8 +17,6 @@ from .services.file_manager import LocalizeFileManager
 from .tasks import file_parse_uploaded, file_create_translated, folder_update_repo_url
 from .permisions import IsProjectOwnerOrReadOnly, IsProjectOwnerOrAdmin, IsProjectOwnerOrManage, \
     IsFileOwnerOrHaveAccess, IsFileOwnerOrTranslator, IsFileOwnerOrManager
-
-from core.utils.git_manager import GitManage
 
 logger = logging.getLogger('django')
 
@@ -100,44 +97,13 @@ class FolderViewSet(viewsets.ModelViewSet):
         """ Check changing repository on update. If updated - update """
         folder_instance = self.get_object()
         repo_url = request.data.get('repo_url')
-
+        if repo_url != folder_instance.repo_url:   # Repository URL have been changed
+            # Run celery task to check folder in repository and update files if needed
+            folder_update_repo_url.delay(folder_instance.id, repo_url)
         serializer = self.get_serializer(folder_instance, data=request.data)
         serializer.is_valid(raise_exception=True)
-
-        if repo_url != folder_instance.repo_url:   # Repository URL have been changed
-            folder_update_repo_url.delay(folder_instance.id, repo_url)
-            folder_files = Files.objects.filter(folder=folder_instance)
-            if repo_url:    # Input URL not empty
-                git_manager = GitManage()
-                git_manager.check_url(repo_url)
-                if git_manager.repo:   # URL parsed success
-                    defaults = {**git_manager.repo, 'hash': git_manager.new_hash}
-                    repo_obj, created = FolderRepo.objects.update_or_create(folder=folder_instance, defaults=defaults)
-                    # repo_obj.error = git_manager.error
-                else:
-                    pass
-
-                if git_manager.new_hash:  # Folder exist
-                    folder_files.update(repo_status=False, repo_hash='')    # SET founded - false for all files
-
-                    file_list = []
-                    for filo in folder_files:
-                        file_list.append({'id': filo.id, 'name': filo.name, 'hash': filo.repo_hash, 'path': filo.data.path})
-                    updated_files = git_manager.update_files(file_list)
-                    if updated_files:   # if success - return list of updated files from git
-                        for filo in updated_files:
-                            Files.objects.filter(id=filo['id']).update(repo_status=filo['succeess'], repo_hash=filo['hash'])
-                            # Run celery parse delay task
-                            logger.info(f"File object created ID: {filo['id']}. Sending parse task to celery.")
-                            file_parse.delay(filo['id'])
-                else:
-                    folder_files.update(repo_founded=None, repo_hash='')
-            else:
-                FolderRepo.objects.filter(folder=folder_instance).delete()
-                folder_files.update(repo_founded=None, repo_hash='')
-
         self.perform_update(serializer)
-        return Response(serializer.data)
+        return Response(serializer.data, status=status.HTTP_200_OK)
 
     def destroy(self, request, *args, **kwargs):
         self.get_object().delete()
@@ -257,7 +223,7 @@ class TransferFileView(viewsets.ViewSet):
         """ Create file obj and related translated progress after file download (uploaded by user) """
         folder_id = request.data.get('folder_id')
         folder = Folders.objects.select_related('project__lang_orig').get(id=folder_id)
-        # Create file obejct
+        # Create file object
         lang_orig_id = folder.project.lang_orig.id
         serializer = TransferFileSerializer(data={
             'owner': request.user.id,
