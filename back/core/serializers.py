@@ -93,6 +93,7 @@ class FoldersSerializer(serializers.ModelSerializer):
             'repo_status': {'read_only': True},
         }
 
+
 class FolderRepoSerializer(serializers.ModelSerializer):
     """ To manage repository options and access """
     # permission_set = serializers.ListField(child=serializers.CharField(), source='get_permission', read_only=True)
@@ -104,6 +105,7 @@ class FolderRepoSerializer(serializers.ModelSerializer):
             'access': {'write_only': True},     # 'required': False
             'folder': {'write_only': True},
         }
+
 
 class PermissionsSerializer(serializers.ModelSerializer):
     """ Manage users permissions to project (project id must be hidden) """
@@ -119,20 +121,20 @@ class PermissionsSerializer(serializers.ModelSerializer):
 
 class ProjectSerializer(serializers.ModelSerializer):
     """ Project manager serializer (project id must be hidden) """
-    # folders_set = FoldersSerializer(many=True, read_only=True)  # DELETE
     permissions_set = serializers.SerializerMethodField()
-    # permission_set = serializers.ListField(child=serializers.CharField(), source='get_permission', read_only=True)
+    author = serializers.SerializerMethodField()
 
     class Meta:
         model = Projects
-        exclude = ['id']
+        exclude = ['id', 'owner']
         extra_kwargs = {
-            # 'translate_to': {'required': False, 'allow_empty': True},
             'translate_to': {'required': True},
             'save_id': {'read_only': True},
-            'owner': {'write_only': True},
         }
-    
+
     def get_permissions_set(self, instance):
         request = self.context.get('request')
-        return list(instance.projectpermissions_set.filter(user=request.user).values_list("permission", flat=True)) if request else []
+        return instance.projectpermissions_set.filter(user=request.user).values_list("permission", flat=True) if request else []
+
+    def get_author(self, instance):
+        return instance.owner.username

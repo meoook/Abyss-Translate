@@ -51,7 +51,7 @@ class ProjectViewSet(viewsets.ModelViewSet):
             return self.request.user.projects_set.all()
         return self.queryset.filter(projectpermissions__user=self.request.user).distinct()
 
-    def perform_update(self, serializer):
+    def perform_create(self, serializer):
         serializer.save(owner=self.request.user)
 
 
