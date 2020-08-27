@@ -43,6 +43,7 @@ services:
     build: ./front
     command: npm start
     volumes:
+      - node_modules:/usr/src/front/node_modules/
       - ./front:/usr/src/front/
     environment:
       - REACT_APP_API_URL=http://127.0.0.1:8000/api
@@ -54,3 +55,4 @@ services:
 volumes:
   postgres_data:
   users_files:
+  node_modules:
