@@ -10,10 +10,6 @@ from .models import Languages, Projects, ProjectPermissions, Folders, FolderRepo
 # initial -> day = serializers.DateField(initial=datetime.date.today)
 # ------------------------
 # depth = 1
-"""
-https://www.django-rest-framework.org/api-guide/fields/
-!!! SerializerMethodField
-"""
 
 
 class LanguagesSerializer(serializers.ModelSerializer):
@@ -50,10 +46,10 @@ class TransferFileSerializer(serializers.ModelSerializer):
         model = Files
         fields = ['id', 'owner', 'name', 'folder', 'lang_orig', 'data']
         extra_kwargs = {
-            'owner': {'write_only': True},
+            'owner': {'write_only': True},  # TODO: remove and add on .save()
             'folder': {'write_only': True},
             'data': {'write_only': True},
-        }        
+        }
 
 
 class TranslatedSerializer(serializers.ModelSerializer):
@@ -69,7 +65,7 @@ class FilesSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = Files
-        exclude = ['data', 'owner', 'folder', 'codec', 'options', 'repo_hash']
+        exclude = ['data', 'folder', 'codec', 'options', 'repo_hash']
         extra_kwargs = {
             'state': {'read_only': True, 'source': 'get_state_display'},
             'method': {'read_only': True},
@@ -89,7 +85,7 @@ class FoldersSerializer(serializers.ModelSerializer):
         fields = ['id', 'position', 'name', 'repo_url', 'repo_status']
         extra_kwargs = {
             'position': {'required': False},
-            'repo_url': {'required': False},
+            # 'repo_url': {'required': False},
             'repo_status': {'read_only': True},
         }
 
@@ -115,7 +111,7 @@ class PermissionsSerializer(serializers.ModelSerializer):
         fields = ["id", "user", "project", "permission"]
         extra_kwargs = {
             'user': {'source': 'user.username'},
-            'project': {'source': 'project.save_id', 'write_only': True},
+            'project': {'source': 'project.save_id'},  # , 'write_only': True},
         }
 
 
@@ -138,6 +134,3 @@ class ProjectSerializer(serializers.ModelSerializer):
 
     def get_author(self, instance):
         return instance.owner.username
-
-
-

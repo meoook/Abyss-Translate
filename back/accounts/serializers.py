@@ -6,9 +6,14 @@ from django.contrib.auth import authenticate
 
 # User serializer
 class UserSerializer(serializers.ModelSerializer):
+    role = serializers.SerializerMethodField()
+
     class Meta:
         model = User  # settings.AUTH_USER_MODEL
-        fields = ('id', 'username', 'email')
+        fields = ('id', 'username', 'email', 'role')
+
+    def get_role(self, instance):
+        return 'creator' if instance.has_perm('core.creator') else 'user'
 
 
 # Register serializer
