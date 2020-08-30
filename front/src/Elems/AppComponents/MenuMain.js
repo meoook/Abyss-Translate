@@ -7,7 +7,7 @@ import { textCutByLen } from "../componentUtils"
 // THIS MODULE HAVE INCODE SVG
 
 export const MenuMain = ({ closed, changeOpen }) => {
-  const { languages, fetchLang, user, prjList } = useContext(AppContext)
+  const { languages, fetchLang, state, projects, prjList } = useContext(AppContext)
 
   useEffect(() => {
     if (!languages.length) fetchLang()
@@ -44,10 +44,10 @@ export const MenuMain = ({ closed, changeOpen }) => {
           {closed ? <hr /> : <div className='menu-title'>Ваши игры</div>}
         </div>
         <div className='menu-list mb-1'>
-          {user.loading ? (
+          {state.loading ? (
             <Loader />
           ) : (
-            user.projects.map((prj) => (
+            projects.map((prj) => (
               <NavLink to={`/prj/${prj.save_id}`} className='menu-item' key={prj.save_id}>
                 <i>{prj.icon_chars}</i>
                 <span>{textCutByLen(prj.name, 20)}</span>

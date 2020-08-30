@@ -19,6 +19,7 @@ from .permisions import IsProjectOwnerOrReadOnly, IsProjectOwnerOrAdmin, IsProje
     IsFileOwnerOrHaveAccess, IsFileOwnerOrTranslator, IsFileOwnerOrManager
 
 logger = logging.getLogger('django')
+# TODO: ORDERING !!!
 
 
 class DefaultSetPagination(PageNumberPagination):
@@ -77,20 +78,19 @@ class FolderViewSet(viewsets.ModelViewSet):
     permission_classes = [IsAuthenticated, IsProjectOwnerOrManage]
     queryset = Folders.objects.all()
 
-    def get_queryset(self):
-        if self.request.method == 'GET':
-            save_id = self.request.query_params.get('save_id')
-        else:
-            save_id = self.request.data.get('save_id')
-        return self.queryset.filter(project__save_id=save_id)
+    def list(self, request, *args, **kwargs):
+        save_id = request.query_params.get('save_id')
+        qs = self.get_queryset().filter(project__save_id=save_id)
+        serializer = self.get_serializer(qs, many=True)
+        return Response(serializer.data, status=status.HTTP_200_OK)
 
     def create(self, request, *args, **kwargs):
         """ Increment position. ID is hidden from users - using save_id """
         project = Projects.objects.get(save_id=request.data.get('save_id'))   # Project exist check in perms
         position = self.get_queryset().aggregate(m=Max('position')).get('m') or 0
-        serializer = self.get_serializer(data=request.data)
+        serializer = self.get_serializer(data={**request.data, 'project': project.id})
         serializer.is_valid(raise_exception=True)
-        serializer.save(position=position + 1, project=project)  # Save by save_id
+        serializer.save(position=position + 1)
         return Response(serializer.data, status=status.HTTP_201_CREATED)
 
     def update(self, request, *args, **kwargs):
@@ -104,10 +104,6 @@ class FolderViewSet(viewsets.ModelViewSet):
         serializer.is_valid(raise_exception=True)
         self.perform_update(serializer)
         return Response(serializer.data, status=status.HTTP_200_OK)
-
-    def destroy(self, request, *args, **kwargs):
-        self.get_object().delete()
-        return Response(status=status.HTTP_204_NO_CONTENT)
 
 
 class FolderRepoViewSet(mixins.CreateModelMixin,
@@ -226,7 +222,6 @@ class TransferFileView(viewsets.ViewSet):
         # Create file object
         lang_orig_id = folder.project.lang_orig.id
         serializer = TransferFileSerializer(data={
-            'owner': request.user.id,
             'name': request.data.get('name'),
             'folder': folder_id,
             'lang_orig': lang_orig_id,

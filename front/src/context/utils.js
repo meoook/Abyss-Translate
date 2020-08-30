@@ -1,11 +1,7 @@
 // CONSTANTS
 export const nullState = {
   loading: false,
-  id: null,
-  token: null,
-  role: null,
-  username: null,
-  email: null,
+  user: { id: null, token: localStorage.getItem("token") || null, role: null, username: null, email: null },
   msgs: [],
   languages: [],
   projects: [],

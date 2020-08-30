@@ -9,7 +9,7 @@ import PrjSummary from "./PrjSummary"
 import { IcoGet } from "../icons"
 
 export const PageAddPrj = (props) => {
-  const { prjAdd, user, addMsg, languages } = useContext(AppContext)
+  const { prjAdd, projects, addMsg, languages } = useContext(AppContext)
   const [phase, setPhase] = useState(1)
   const titles = [
     "Шаг первый: укажите название игры",
@@ -52,7 +52,7 @@ export const PageAddPrj = (props) => {
         translate_to: shadow.translate_to,
       }
       if (checked.name && checked.icon_chars.length === 2) {
-        if (user.projects.find((prj) => prj.name === checked.name)) {
+        if (projects.find((prj) => prj.name === checked.name)) {
           addMsg({ text: "Проект с таким именем уже существует", type: "warning" })
         } else {
           setProject(checked)

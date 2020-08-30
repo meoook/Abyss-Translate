@@ -7,8 +7,11 @@
 /htmlcov
 # Front
 front/node_modules
+front/.env.local
 # Back
-/back/celerybeat-schedule
-/back/users
-/back/logs
+back/celerybeat-schedule
+back/users
+back/logs
+back/*/__pycache__/
+back/*/*/__pycache__/
 

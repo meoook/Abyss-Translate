@@ -7,7 +7,7 @@ WORKDIR /usr/src/front
 # install dependencies
 COPY ./package.json .
 COPY ./package-lock.json .
-RUN npm update && npm install
+RUN npm install
 
 # copy project
 COPY . .

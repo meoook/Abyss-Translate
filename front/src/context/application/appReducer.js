@@ -21,7 +21,7 @@ import { getNextId, nullState } from "../utils"
 const handlers = {
   [INIT_LOADER]: (state, { payload = true }) => ({ ...state, loading: payload }),
   [LANGUAGES_REFRESH]: (state, { payload }) => ({ ...state, languages: payload, loading: false }),
-  [USER_ACC_VALID]: (state, { payload }) => ({ ...state, ...payload, loading: false }),
+  [USER_ACC_VALID]: (state, { payload }) => ({ ...state, user: payload, loading: false }),
   [USER_ACC_LOGOUT]: (state) => ({ ...nullState }),
   [USER_PROJECT_REFRESH]: (state, { payload }) => ({ ...state, projects: payload, loading: false }),
   [USER_PROJECT_ADD]: (state, { payload }) => ({ ...state, projects: [...state.projects, payload], loading: false }),

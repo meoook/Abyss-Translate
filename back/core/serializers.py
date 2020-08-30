@@ -44,9 +44,8 @@ class TransferFileSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = Files
-        fields = ['id', 'owner', 'name', 'folder', 'lang_orig', 'data']
+        fields = ['id', 'name', 'folder', 'lang_orig', 'data']
         extra_kwargs = {
-            'owner': {'write_only': True},  # TODO: remove and add on .save()
             'folder': {'write_only': True},
             'data': {'write_only': True},
         }
@@ -82,9 +81,10 @@ class FoldersSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = Folders
-        fields = ['id', 'position', 'name', 'repo_url', 'repo_status']
+        fields = ['id', 'project', 'position', 'name', 'repo_url', 'repo_status']
         extra_kwargs = {
-            'position': {'required': False},
+            'position': {'read_only': True},
+            'project': {'write_only': True, 'required': False},
             # 'repo_url': {'required': False},
             'repo_status': {'read_only': True},
         }

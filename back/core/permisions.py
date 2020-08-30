@@ -30,13 +30,17 @@ class IsProjectOwnerOrAdmin(permissions.BasePermission):
 class IsProjectOwnerOrManage(permissions.BasePermission):
     """ Project manage rights to create folders - owner and manager """
     def has_permission(self, request, view):
-        if request.method in permissions.SAFE_METHODS:
-            save_id = request.query_params.get('save_id')
-        else:
-            save_id = request.data.get('save_id')
+        if request.method in (*permissions.SAFE_METHODS, 'POST'):
+            save_id = request.query_params.get('save_id') or request.data.get('save_id')
+            if request.user.has_perm('core.creator'):
+                return request.user.projects_set.filter(save_id=save_id).exists()
+            return request.user.projectpermissions_set.filter(project__save_id=save_id, permission=8).exists()
+        return True
+
+    def has_object_permission(self, request, view, obj):
         if request.user.has_perm('core.creator'):
-            return request.user.projects_set.filter(save_id=save_id).exists()
-        return request.user.projectpermissions_set.filter(project__save_id=save_id, permission=8).exists()
+            return request.user.projects_set.filter(folders__id=obj.id).exists()
+        return request.user.projectpermissions_set.filter(project__folders__id=obj.id, permission=8).exists()
 
 
 class IsFileOwnerOrHaveAccess(permissions.BasePermission):
@@ -77,7 +81,7 @@ class IsFileOwnerOrManager(permissions.BasePermission):
             return True
         folder_id = request.data.get('folder_id')
         if request.user.has_perm('core.creator'):
-            return request.user.projects_set.filter(folder_id=folder_id).exists()
+            return request.user.projects_set.filter(folders__id=folder_id).exists()
         return request.user.projectpermissions_set.filter(project__folder_id=folder_id, permission=8).exists()
 
     def has_object_permission(self, request, view, obj):

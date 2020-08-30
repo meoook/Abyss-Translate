@@ -25,7 +25,7 @@ import { nullState, connectErrMsg, findPrjByFolderID } from "../utils"
 const URL = process.env.REACT_APP_API_URL
 
 const AppState = ({ children }) => {
-  const initialState = { ...nullState, token: localStorage.getItem("token") || null }
+  const initialState = { ...nullState }
   const [state, dispatch] = useReducer(appReducer, initialState)
 
   const token = localStorage.getItem("token")
@@ -302,7 +302,9 @@ const AppState = ({ children }) => {
   return (
     <AppContext.Provider
       value={{
-        user: state,
+        state,
+        user: state.user,
+        projects: state.projects,
         msgs: state.msgs,
         languages: state.languages,
         explorer: state.explorer,

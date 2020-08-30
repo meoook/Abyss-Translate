@@ -122,34 +122,28 @@ REST_FRAMEWORK = {
 }
 
 # If this is used then `CORS_ORIGIN_WHITELIST` will not have any effect
-# CORS_ORIGIN_ALLOW_ALL = True
-CORS_ALLOW_CREDENTIALS = True
+# CORS_ALLOW_CREDENTIALS = True
 # If this is used, then not need to use `CORS_ORIGIN_ALLOW_ALL = True`
 CORS_ORIGIN_WHITELIST = [
-    'http://localhost',
     'http://localhost:3000',
-    'http://127.0.0.1',
     'http://127.0.0.1:3000',
+    'http://192.168.1.20:3000',
     'http://91.225.238.193:3000',
 ]
-CORS_ORIGIN_REGEX_WHITELIST = [
-    'http://localhost',
-    r"^http://.+\:3000.*$"
-    'http://127.0.0.1:3000',
-    'http://91.225.238.193:3000',
-]
-CORS_ALLOW_METHODS = [
-    'DELETE',
-    'GET',
-    'OPTIONS',
-    'PATCH',
-    'POST',
-    'PUT',
-]
-CSRF_TRUSTED_ORIGINS = [
-    '127.0.0.1',
-    'localhost'
-]
+# CORS_ORIGIN_REGEX_WHITELIST = [
+#     'http://localhost',
+#     'http://127.0.0.1',
+#     r'http://.+:3000',
+#     'http://91.225.238.193:3000',
+# ]
+# CORS_ALLOW_METHODS = [
+#     'DELETE',
+#     'GET',
+#     'OPTIONS',
+#     'PATCH',
+#     'POST',
+#     'PUT',
+# ]
 
 # Celery
 CELERY_BROKER_URL = os.environ.get("CELERY_BROKER_URL", "redis://redis:6379")
