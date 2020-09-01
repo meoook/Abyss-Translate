@@ -49,17 +49,17 @@ class IsFileOwnerOrHaveAccess(permissions.BasePermission):
         if view.action == 'list':
             folder_id = request.query_params.get('folder_id')
             if request.user.has_perm('core.creator'):
-                return request.user.projects_set.filter(folder_id=folder_id).exists()
+                return request.user.projects_set.filter(folders__id=folder_id).exists()
             if folder_id:
-                return request.user.projectpermissions_set.filter(project__folder_id=folder_id, permission=8).exists()
+                return request.user.projectpermissions_set.filter(project__folders__id=folder_id, permission=8).exists()
             save_id = request.query_params.get('save_id')
-            return request.user.projectpermissions_set.filter(project_save_id=save_id, permission=0).exists()
+            return request.user.projectpermissions_set.filter(project__save_id=save_id, permission=0).exists()
         return True
 
     def has_object_permission(self, request, view, obj):
         if request.user.has_perm('core.creator'):
-            return request.user.projects_set.filter(folder__file_id=obj.id).exists()
-        return request.user.projectpermissions_set.filter(project__folder__file_id=obj.id, permission=8).exists()
+            return request.user.projects_set.filter(folders__files__id=obj.id).exists()
+        return request.user.projectpermissions_set.filter(project__folders__files__id=obj.id, permission=8).exists()
 
 
 class IsFileOwnerOrTranslator(permissions.BasePermission):
@@ -70,8 +70,8 @@ class IsFileOwnerOrTranslator(permissions.BasePermission):
         else:
             file_id = request.data.get('file_id')
         if request.user.has_perm('core.creator'):
-            return request.user.projects_set.filter(folder__file_id=file_id).exists()
-        return request.user.projectpermissions_set.filter(project__folder__file_id=file_id, permission=0).exists()
+            return request.user.projects_set.filter(folders__file__id=file_id).exists()
+        return request.user.projectpermissions_set.filter(project__folders__file__id=file_id, permission=0).exists()
 
 
 class IsFileOwnerOrManager(permissions.BasePermission):

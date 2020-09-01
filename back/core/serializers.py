@@ -78,16 +78,20 @@ class FilesSerializer(serializers.ModelSerializer):
 
 class FoldersSerializer(serializers.ModelSerializer):
     """ To manage and display with projects """
+    files_amount = serializers.SerializerMethodField()
 
     class Meta:
         model = Folders
-        fields = ['id', 'project', 'position', 'name', 'repo_url', 'repo_status']
+        fields = ['id', 'project', 'position', 'name', 'repo_url', 'repo_status', 'files_amount']
         extra_kwargs = {
             'position': {'read_only': True},
             'project': {'write_only': True, 'required': False},
             # 'repo_url': {'required': False},
             'repo_status': {'read_only': True},
         }
+
+    def get_files_amount(self, instance):
+        return instance.files_set.count()
 
 
 class FolderRepoSerializer(serializers.ModelSerializer):
@@ -124,7 +128,8 @@ class ProjectSerializer(serializers.ModelSerializer):
         model = Projects
         exclude = ['id', 'owner']
         extra_kwargs = {
-            'translate_to': {'required': True},
+            'translate_to': {'required': False},
+            'lang_orig': {'required': False},
             'save_id': {'read_only': True},
         }
 

@@ -141,8 +141,8 @@ class FileViewSet(viewsets.ModelViewSet):
             qs = self.get_queryset().filter(folder_id=folder_id)
         else:
             save_id = request.query_params.get('save_id')
-            qs = self.get_queryset().filter(folder__project_save_id=save_id, state=2)
-        page = self.paginate_queryset(qs)
+            qs = self.get_queryset().filter(folder__project__save_id=save_id, state=2)
+        page = self.paginate_queryset(qs.order_by('state', '-created'))    # TODO: Ordering filter
         serializer = self.get_serializer(page, many=True)
         return self.get_paginated_response(data=serializer.data)
 
