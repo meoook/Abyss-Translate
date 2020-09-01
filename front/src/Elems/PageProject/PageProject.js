@@ -1,149 +1,115 @@
 import React, { useContext, useState, useEffect } from "react"
 import { useParams } from "react-router-dom"
-
 import AppContext from "../../context/application/appContext"
-import { IcoGet } from "../icons"
-
-import ModalFolderCreate from "./ModalFolderCreate"
-import ContentAriaProject from "./ContentAriaProject"
-import ContentAriaFolder from "./ContentAriaFolder"
-import OptionsFile from "./OptionsFile"
-import OptionsFolder from "./OptionsFolder"
+import { IcoLang, IcoLangMap } from "../icons"
+import { DisplayImage } from "../images"
+import ProjectExplorer from "./ProjectExplorer"
+import Loader from "../AppComponents/Loader"
 import OptionsProject from "./OptionsProject"
+import ProjectPermissions from "./ProjectPermissions"
 
-const ProjectError = ({ id, title, text }) => {
+const ProjectError = ({ id }) => {
   return (
     <div className='container-fluid'>
-      <h1>{title}</h1>
+      <h1>"Project not found"</h1>
       <hr />
-      <h3>
-        {text}: {id}
-      </h3>
+      <h3>wrong project ID: {id}</h3>
     </div>
   )
 }
-// UTILS
-// const rootFolder = (folderID, proj) => {
-//   if (!proj || !proj.folders_set.length) return null
-//   const searchFolders = proj.folders_set.filter((item) => item.id !== folderID)
-//   const prj = searchFolders.find((folder) => folder.position === 1)
-//   if (prj) return prj.id
-//   return searchFolders.find((folder) => folder.position > 1).id
-// }
 
-//
 export const PageProject = (props) => {
   // UTILS
   const getProj = (searchID, projs) => projs.find((prj) => prj.save_id === searchID)
+  const getPerms = (prj, usr) => (prj.author === usr.username ? [0, 5, 8, 9, 99] : prj.permissions_set) // 99 - owner permission
+  const hasPerm = (lookupPerms, userPerms) => Number.isInteger(lookupPerms.find((item) => userPerms.includes(item)))
+  const translateOnly = (userPerms) => userPerms.length === 1 && userPerms[0] === 0
   // STATE
-  const { user, explorer, languages, folderAdd, folderUpdate, folderRemove } = useContext(AppContext)
+  const { user, projects, loading, languages } = useContext(AppContext)
   const { id } = useParams()
-  const [showModal, setShowModal] = useState(false)
-  const [toggle, setToggle] = useState(false)
-  const [selectedFile, setSelectedFile] = useState(null)
-  const [project, setProject] = useState(getProj(id, user.projects))
-  const [selectedFolder, setSelectedFolder] = useState(0)
+  const [project, setProject] = useState(null)
+  const [permissions, setPermissions] = useState([])
+  const [menuSelected, setMenuSelected] = useState("blank")
+  const [trOnly, setTrOnly] = useState(false)
+
   useEffect(() => {
-    setSelectedFile(0)
-    setSelectedFolder(0)
-  }, [id])
-  useEffect(() => {
-    setProject(getProj(id, user.projects))
-  }, [id, user])
-  // Handlers
-  const folderAddByName = (name) => {
-    folderAdd({ project: id, name }).then((folderID) => {
-      setShowModal(false)
-      setSelectedFolder(folderID)
-    })
-  }
-  const folderRemoveUI = (folderID) => {
-    setSelectedFolder(0)
-    folderRemove(folderID, id)
-  }
-  const selectFolder = (folderID) => {
-    setSelectedFolder(folderID)
-    setSelectedFile(null)
-  }
-  // ERROR BLOCK
-  // if (!project) return <ProjectError id={id} title={"Project not found"} text={"wrong project ID"} />
-  // NORMAL BLOCK
+    const prj = getProj(id, projects)
+    if (prj) {
+      setProject(prj)
+      const perms = getPerms(prj, user)
+      setPermissions(perms)
+      setTrOnly(translateOnly(perms))
+      // TODO: menu selected
+      if (menuSelected === "blank") {
+        if (hasPerm([0, 8], perms)) {
+          setMenuSelected("files")
+        } else if (hasPerm([5, 9], perms)) {
+          setMenuSelected("access")
+        } else {
+          setMenuSelected("warning")
+        }
+      }
+    }
+  }, [id, projects, user]) // TODO: removed projects from here (have a bug but...)
+
   return (
     <>
-      {!project || !project.name ? (
-        <ProjectError id={id} title={"Project not found"} text={"wrong project ID"} />
+      {loading || !languages.length ? (
+        <Loader />
+      ) : !project || !project.name || menuSelected === "warning" ? (
+        <ProjectError id={id} />
       ) : (
-        <div className={`explorer row${toggle && (explorer.count !== 0 || selectedFolder === 0) ? " wide" : ""}`}>
-          <button className='slider-toggler' onClick={setToggle.bind(this, !toggle)}>
-            <IcoGet name='arrows' />
-          </button>
-          {showModal && <ModalFolderCreate closeModal={setShowModal.bind(this, false)} folderAdd={folderAddByName} />}
-          <div className='col col-2 column'>
-            <div className='m-2'>
-              <div className='mh-2 column'>
-                <button className='btn green' onClick={setShowModal.bind(this, true)}>
-                  Создать папку
-                </button>
+        <div className='container-fluid'>
+          <div className='row justify center'>
+            <div className='row center'>
+              <div className='card card-image-small mb-1'>
+                <DisplayImage name={project.name.toLowerCase()} />
               </div>
-              <hr />
-              <div className='explorer-scroll column'>
-                <button
-                  className={`btn-f folder${!selectedFolder ? " selected" : ""}`}
-                  onClick={selectFolder.bind(this, 0)}>
-                  <i>
-                    <IcoGet name='work' />
-                  </i>
-                  <span className='t-big'>. . .</span>
-                </button>
-                {project.folders_set
-                  .sort((a, b) => a.position - b.position)
-                  .map((folder) => (
-                    <button
-                      key={folder.id}
-                      className={`btn-f folder${
-                        selectedFolder === folder.id ? (selectedFile ? " active" : " selected") : ""
-                      }`}
-                      onClick={selectFolder.bind(this, folder.id)}
-                      draggable={folder.position > 0}>
-                      <i>
-                        <IcoGet name='folder' />
-                      </i>
-                      <span>{folder.name}</span>
-                    </button>
-                  ))}
+              <h1 className='t-big ph-2'>{project.name}</h1>
+            </div>
+            <div className='card p-1 mb-1'>
+              <div className='row center'>
+                <div className='mh-2'>Язык оригиналов</div>
+                <IcoLang language={project.lang_orig} displayShort={true} />
               </div>
-              <div className='fix-bot column'>
-                <hr />
-                <div className='mh-2 column mb-0'>
-                  <button className='btn blue'>Рандом кнопка</button>
-                </div>
+              <div className='row center mt-2'>
+                <div className='mh-2'>Языки для перевода</div>
+                <IcoLangMap mapLanguages={project.translate_to} />
               </div>
             </div>
           </div>
-          {!selectedFolder ? (
-            <ContentAriaProject project={project} languages={languages} />
-          ) : (
-            <ContentAriaFolder
-              selectFile={setSelectedFile}
-              selectedFile={selectedFile}
-              selectedFolder={selectedFolder}
-            />
+          <hr />
+          {!trOnly && (
+            <div className='box box-inline'>
+              <div className='menu-inline'>
+                {hasPerm([0, 8], permissions) && (
+                  <button
+                    className={`underline${menuSelected === "files" ? " active" : ""}`}
+                    onClick={setMenuSelected.bind(this, "files")}>
+                    Управление файлами
+                  </button>
+                )}
+                {hasPerm([5, 9], permissions) && (
+                  <button
+                    className={`underline ${menuSelected === "access" ? " active" : ""}`}
+                    onClick={setMenuSelected.bind(this, "access")}>
+                    Управление доступом
+                  </button>
+                )}
+                {hasPerm([99], permissions) && (
+                  <button
+                    className={`underline${menuSelected === "owner" ? " active" : ""}`}
+                    onClick={setMenuSelected.bind(this, "owner")}>
+                    Настройки игры
+                  </button>
+                )}
+              </div>
+            </div>
           )}
-          <div className='explorer-slider'>
-            {selectedFile ? (
-              <OptionsFile id={selectedFile} fileList={explorer.results} />
-            ) : selectedFolder ? (
-              <OptionsFolder
-                id={selectedFolder}
-                project={project}
-                fRemove={folderRemoveUI}
-                fUpdate={folderUpdate}
-                amount={explorer.count}
-              />
-            ) : (
-              <OptionsProject project={project} />
-            )}
-          </div>
+          {menuSelected === "blank" && <Loader />}
+          {menuSelected === "files" && <ProjectExplorer projectID={id} trOnly={trOnly} />}
+          {menuSelected === "access" && <ProjectPermissions prjID={id} />}
+          {menuSelected === "owner" && <OptionsProject prjObj={project} />}
         </div>
       )}
     </>

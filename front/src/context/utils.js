@@ -1,13 +1,12 @@
 // CONSTANTS
 export const nullState = {
   loading: false,
-  user: { id: null, token: localStorage.getItem("token") || null, role: null, username: null, email: null },
+  user: { id: null, token: null, role: null, username: null, email: null },
   msgs: [],
   languages: [],
   projects: [],
-  explorerLoading: false,
-  explorer: { count: 0 },
-  translatesLoading: false,
+  folders: [],
+  explorer: {},
   translates: {},
 }
 
@@ -23,6 +22,3 @@ export const connectErrMsg = (err, msg, title = "") => {
   console.warn("Err from UserState:", err.response.statusText) // TODO: Обработка ошибок - вывод err.response.data
   return { text: msg, type: "warning", title }
 }
-// Find project by folder_id
-export const findPrjByFolderID = (folderID, projects) =>
-  projects.find((proj) => proj.folders_set.find((fold) => fold.id === folderID))

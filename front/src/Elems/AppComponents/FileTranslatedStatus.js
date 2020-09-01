@@ -37,15 +37,12 @@ const FileTranslatedStatus = ({ fileObj }) => {
                 createFilename(fileObj.name, findLang(item.language, languages).short_name)
               )}
               className='pr-1'>
-              <i className='bd'>
-                <IcoLang language={findLang(item.language, languages).name} />
-              </i>
-              {findLang(item.language, languages).short_name} {getProgress(item.items, total)}
+              <IcoLang language={item.language} displayShort={true} className='bd' />
             </div>
           ) : (
             <div className='pr-1'>
               <i className='bd'>
-                <IcoLang language={findLang(item.language, languages).name} />
+                <IcoLang language={item.language} />
               </i>
               {findLang(item.language, languages).short_name} {getProgress(item.items, total)}
             </div>

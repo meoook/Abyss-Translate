@@ -40,15 +40,13 @@ const Dropzone = ({ addFiles, disabled }) => {
 
   return (
     <div
-      style={{ cursor: disabled ? "default" : "pointer" }}
+      // disabled={disabled}
       className={`dropzone${disabled ? " disable" : ""}`}
       onClick={openFileDialog}
       onDragOver={onDragOver}
       onDragLeave={onDragLeave}
       onDrop={onFileDropped}>
-      Click here to select files
-      <br />
-      Or drop files in this area
+      Нажми или перетащи файлы в область для добавления
     </div>
   )
 }

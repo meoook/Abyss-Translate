@@ -1,6 +1,6 @@
 hr {
   padding-top: 1px;
-  margin: $indent * 2.5 0;
+  margin: $indent 0;
   background-color: $border;
   border: none;
 }
@@ -10,7 +10,7 @@ h3,
 h4 {
   font-family: montserrat, sans-serif;
   color: $texth;
-  letter-spacing: 1px;
+  letter-spacing: 1.5px;
   font-weight: 700;
 }
 h1 {
@@ -45,6 +45,16 @@ input[type="checkbox"] {
   width: $indent * 3;
   height: $indent * 3;
   cursor: pointer;
+  position: relative;
+  &:checked::before {
+    content: "";
+    position: absolute;
+    top: 0;
+    bottom: 0;
+    left: 0;
+    right: 0;
+    background: rgba($red, 0.35);
+  }
 }
 svg {
   fill: $text;
@@ -85,23 +95,42 @@ button {
   color: $texth;
   background: transparent;
   position: relative;
-  letter-spacing: 1px;
+  letter-spacing: 1.5px;
   transition: all 0.3s;
   white-space: nowrap;
   &.underline {
+    text-transform: uppercase;
+    font-weight: 500;
+    color: $text;
     &:after {
       content: "";
-      width: 100%;
       position: absolute;
       left: 0;
-      bottom: $indent * -0.5;
-      height: 2px;
-      background-color: $text;
+      right: 0;
+      bottom: 0;
+      height: 1px;
+      transition: all 0.3s;
+      background-color: rgba($shadow, 0.01);
       border-radius: 1px;
     }
-    &:hover::after {
-      background-color: $main;
-      box-shadow: 0 0 $indent $main !important;
+    &:hover {
+      color: $texth;
+      &::after {
+        background-color: $texth;
+        box-shadow: 0 0 $indent $main !important;
+      }
+    }
+    &.active {
+      color: $main;
+      &:after {
+        background-color: $main;
+      }
+      &:hover {
+        color: $main;
+        &::after {
+          background-color: $main;
+        }
+      }
     }
   }
   &.active {
@@ -110,20 +139,27 @@ button {
     &:after {
       background-color: $main;
     }
+    &:hover {
+      color: $texth;
+      &::after {
+        background-color: $main;
+      }
+    }
   }
 }
 .btn {
   min-width: 120px;
-  padding: $indent * 1.2 $indent * 1.5;
-  font-size: $indent * 2.5;
-  font-weight: 600;
+  padding: $indent * 0.6 $indent * 1.5;
+  font-size: $indent * 3.2;
+  font-weight: 700;
   color: $texth;
   text-align: center;
   text-transform: capitalize;
-  text-shadow: 4px 0px 4px black, -4px 0px 4px black, 0px 4px 4px black, 0px -4px 4px black, 4px 4px 4px black,
-    -4px -4px 4px black, 4px -4px 4px black, -4px 4px 4px black;
+  cursor: pointer;
+  // text-shadow: 0px 0px 1px black;
   border: 1px solid $border;
   border-radius: 5px;
+  transition: all 0.3s;
   @include shadow();
   &-close {
     cursor: pointer;
@@ -172,8 +208,8 @@ button {
   &.gray:hover {
     background: rgba($shadow, 0.2);
   }
-  &:hover {
-    transform: scale(1.04);
+  &:active {
+    transform: translate(1px, 2px);
   }
   &:disabled {
     background-color: darken($text, 25%);
@@ -262,6 +298,9 @@ table {
   &.justify {
     justify-content: space-between;
   }
+  &.bottom {
+    align-items: flex-end;
+  }
   &.middle {
     justify-content: center;
   }
@@ -273,6 +312,7 @@ table {
 // CREATE MIXIN and SO ON
 .col {
   width: 100%;
+  position: relative;
   &-1 {
     flex: 0 0 8.33333%;
     max-width: 8.33333%;
@@ -379,6 +419,34 @@ table {
       margin-top: $indent * 3;
     }
   }
+  &r {
+    &-0 {
+      margin-right: $indent/2;
+    }
+    &-1 {
+      margin-right: $indent;
+    }
+    &-2 {
+      margin-right: $indent * 2;
+    }
+    &-3 {
+      margin-right: $indent * 3;
+    }
+  }
+  &l {
+    &-0 {
+      margin-left: $indent/2;
+    }
+    &-1 {
+      margin-left: $indent;
+    }
+    &-2 {
+      margin-left: $indent * 2;
+    }
+    &-3 {
+      margin-left: $indent * 3;
+    }
+  }
 }
 .p {
   &-0 {
@@ -427,6 +495,9 @@ table {
     &-2 {
       padding-right: $indent * 2;
     }
+    &-3 {
+      padding-right: $indent * 3;
+    }
   }
 }
 .container {
@@ -435,7 +506,7 @@ table {
   background-image: linear-gradient(to top, #292931 92%, rgba(41, 41, 49, 0.9));
   margin-left: $menu-close;
   &-fluid {
-    padding: 20px 0;
+    padding-top: $indent * 3;
     margin-top: $indent * 12;
   }
   &.small {

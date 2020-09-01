@@ -7,6 +7,7 @@ const PageLogin = (props) => {
   const [auth, setAuth] = useState({ username: "", password: "" })
 
   const onChange = (event) => setAuth({ ...auth, [event.target.name]: event.target.value })
+  const handleKeyBoard = (event) => event.key === "Enter" && accLogin(auth)
 
   if (user.token) return <Redirect to={"/"} />
 
@@ -15,9 +16,9 @@ const PageLogin = (props) => {
       <div className='shadow-box col col-3'>
         <h1>Авторизация</h1>
         <label>Ваш логин</label>
-        <input className='m-1' name='username' type='text' onChange={onChange} />
+        <input className='m-1' name='username' type='text' onChange={onChange} onKeyPress={handleKeyBoard} />
         <label>Ваш пароль</label>
-        <input className='m-1' name='password' type='password' onChange={onChange} />
+        <input className='m-1' name='password' type='password' onChange={onChange} onKeyPress={handleKeyBoard} />
         <div className='row center justify'>
           <NavLink to={"/reg"} className='underline'>
             Регистрация

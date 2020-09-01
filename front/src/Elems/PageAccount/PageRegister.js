@@ -11,9 +11,6 @@ const PageRegister = (props) => {
   const onChange = (event) => setCredentials({ ...credentials, [event.target.name]: event.target.value })
   const onRegister = (event) => {
     accRegister(credentials)
-    // console.log("Register", credentials)
-    // console.log("Register", credentials)
-    // console.log("Register", credentials)
   }
   if (user.id) return <Redirect to={"/"} />
 

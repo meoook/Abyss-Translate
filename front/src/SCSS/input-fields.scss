@@ -125,6 +125,7 @@
     align-items: stretch;
     width: 100%;
     @include shadow();
+
     & > *:not(:first-child):not(:last-child) {
       border-radius: 0;
     }
@@ -146,7 +147,7 @@
   }
   &-like {
     @extend %field-input;
-    // width: 100%;
+    width: 100%;
     background-color: rgba($shadow, 0.25);
   }
   &-short {

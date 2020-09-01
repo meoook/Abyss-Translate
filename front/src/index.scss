@@ -5,26 +5,14 @@
 @import "./SCSS/menu.scss";
 @import "./SCSS/loader-car.scss";
 @import "./SCSS/custom-select.scss";
+@import "./SCSS/elems.scss";
 
-// .gamePage .gamePage-profile:after {
-//     background-image: linear-gradient(to top,#292931 92%,rgba(41,41,49,0.9));
-// }
-
-// transition-property: transform,min-width,max-width,-webkit-transform,margin;
-// transition-duration: 350ms;
-// transition-timing-function: cubic-bezier(.39,.575,.565,1);
-// transition-delay: 0s;
-
-.user-stats {
-  td {
-    width: 24%;
-    padding: 10px 0;
-    &:first-child {
-      width: 28%;
-    }
-  }
+.fix-bot {
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  right: 0;
 }
-
 .stats {
   border-spacing: $indent * 2 0;
   border-collapse: separate;
@@ -41,47 +29,6 @@
   }
 }
 
-.table {
-  tbody {
-    // td {
-    //   overflow: hidden;
-    //   white-space: nowrap;
-    // }
-    tr {
-      cursor: pointer;
-      &.translated {
-        background-color: rgba($green, 0.05);
-        &:hover {
-          background-color: rgba($green, 0.1);
-        }
-      }
-      &.active {
-        background-color: rgba($red, 0.1);
-        &:hover {
-          background-color: rgba($red, 0.2);
-        }
-      }
-      &.parsed {
-        background-color: rgba($blue, 0.1);
-        &:hover {
-          background-color: rgba($blue, 0.2);
-        }
-      }
-      &.new {
-        background-color: rgba($blue, 0.1);
-      }
-      &:hover {
-        background-color: lighten($disable, 4%);
-      }
-      &:last-child {
-        td {
-          border-bottom-width: 0;
-        }
-      }
-    }
-  }
-}
-// can be added to bootstrap
 .form {
   margin-top: $indent;
   padding: $indent * 4;
@@ -150,6 +97,10 @@
   }
   &-small {
     font-size: $indent * 2;
+    // line-height: 0;
+  }
+  &-vsmall {
+    font-size: $indent * 1.5;
     // line-height: 0;
   }
   &-right {

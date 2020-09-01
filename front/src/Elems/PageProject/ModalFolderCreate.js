@@ -10,6 +10,9 @@ const ModalFolderCreate = ({ closeModal, folderAdd }) => {
     // event.preventDefault()
     event.stopPropagation()
   }
+  const handlKeybord = (event) => {
+    event.key === "Enter" && folderAdd(folderTitle)
+  }
 
   return (
     <div className='modal' onClick={closeModal}>
@@ -19,7 +22,7 @@ const ModalFolderCreate = ({ closeModal, folderAdd }) => {
           &times;
         </div>
         <div>Введи название папки</div>
-        <input type='text' className='m-2' onChange={onChange} autoFocus={true} />
+        <input type='text' className='m-2' onChange={onChange} autoFocus={true} onKeyPress={handlKeybord} />
         <div className='row justify'>
           <div></div>
           <div>

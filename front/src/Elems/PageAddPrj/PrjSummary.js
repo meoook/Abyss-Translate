@@ -20,10 +20,7 @@ export const PrjSummary = ({ project, languages }) => {
             <tr>
               <td>Language original</td>
               <td>
-                <i>
-                  <IcoLang language={orig.name} />
-                </i>
-                {orig.short_name}
+                <IcoLang language={orig.id} />
               </td>
             </tr>
           ) : (

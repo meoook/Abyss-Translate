@@ -5,7 +5,7 @@
 **_полезный текст_**, отсекая _технические данные_.
 
     site: (localize.ru)[localize.eee.ru]
-    version: 0.2.2
+    version: 0.4.2
     author: meok
     build: react, django, postgres, celery, redis, nginx
 
@@ -81,6 +81,9 @@ $ sh ./runner.sh 5
 
 | version | changes                                                          |
 | ------- | ---------------------------------------------------------------- |
+|   | задача - выгрузка в гит                       |
+|   | гит - гитлаб                        |
+| 0.04.2  | переделанный UI и добавлена система прав                          |
 | 0.04.1  | Вся бизнес логика раскидана по сервисам                          |
 | 0.04.0  | Система прав пользователей                                       |
 | 0.03.9  | Утилиты для тестирования (django commands)                       |
@@ -155,3 +158,5 @@ mixins.DestroyModelMixin,
 mixins.ListModelMixin,
 GenericViewSet
 ```
+
+pg_...очереди

@@ -17,16 +17,16 @@ export const PageAddPrj = (props) => {
     "Шаг третий: подтверждаем создание",
   ]
   const [project, setProject] = useState({
-    name: "",
-    icon_chars: "",
-    lang_orig: [],
+    name: null,
+    icon_chars: null,
+    lang_orig: null,
     translate_to: [],
   })
   const [shadow, setShadow] = useState({
     name: "",
     icon_chars: "",
-    lang_orig: [],
-    translate_to: [],
+    lang_orig: [75],
+    translate_to: [18],
   })
 
   const projectFinish = () => {

@@ -5,7 +5,7 @@ import AppContext from "../../context/application/appContext"
 import Dropzone from "./Dropzone"
 
 export default function DropzoneFileList({ folderID }) {
-  const { addMsg, uploadFile, explorerList } = useContext(AppContext)
+  const { addMsg, uploadFile } = useContext(AppContext)
   const [uploadFilesArr, setUploadFilesArr] = useState([])
   const [uploading, setUploading] = useState(false)
   const [upProgress, setUpProgress] = useState({}) // Can only catch for one file
@@ -57,27 +57,25 @@ export default function DropzoneFileList({ folderID }) {
       if (count === check_count) {
         setSuccess(true)
         setUploading(false)
-        explorerList()
+        // explList()
       }
     })
   }
 
   return (
     <>
-      <div className='sticky ph-2'>
-        <hr />
-        <h2 className='m-1 ph-2'>Загрузить файл</h2>
+      <div className='sticky mt-2 ml-3'>
         <Dropzone addFiles={addUploadFiles} disabled={uploading || success} />
         {uploadFilesArr.length ? (
-          <div className='row center justify p-1'>
-            <div>&nbsp;</div>
+          <div className='row center justify m-2'>
+            <div>&nbsp;{folderID}</div>
             {success ? (
               <button className='btn green' onClick={clearUploadedFiles}>
-                Clear
+                Очистить
               </button>
             ) : (
               <button className='btn blue' onClick={uploadUploadFIles} disabled={uploading}>
-                Upload files
+                Загрузить файлы
               </button>
             )}
           </div>
@@ -85,7 +83,7 @@ export default function DropzoneFileList({ folderID }) {
           <></>
         )}
       </div>
-      <div className='mh-2'>
+      <div className='scroll-y column ml-3'>
         <FileList
           files={uploadFilesArr}
           removeFile={removeUploadFile}
@@ -108,9 +106,8 @@ const FileList = ({ files, removeFile, uploading, success, upProgress }) => {
 
   const renderProgress = (file) => {
     const uploadProgress = allFilesProgress[file.name]
-    if (uploading || success) {
-      return <Progress progress={uploadProgress ? uploadProgress : 0} />
-    } else return <></>
+    if (uploading || success) return <Progress progress={uploadProgress ? uploadProgress : 0} />
+    return <></>
   }
 
   return files.map((file) => (
@@ -120,7 +117,7 @@ const FileList = ({ files, removeFile, uploading, success, upProgress }) => {
         {renderProgress(file)}
       </div>
       {uploading ? (
-        <div className='btn blue'>></div>
+        <div className='btn blue'>&gt;</div>
       ) : success ? (
         <div className='btn green'>v</div>
       ) : (

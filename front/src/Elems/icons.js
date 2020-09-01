@@ -1,6 +1,9 @@
 import React, { useContext } from "react"
 import AppContext from "../context/application/appContext"
 // App icons
+import { ReactComponent as SvgLogoFull } from "../IMG/logofull.svg"
+import { ReactComponent as SvgAttantion } from "../IMG/attantion.svg"
+import { ReactComponent as SvgApartment } from "../IMG/apartment.svg"
 import { ReactComponent as SvgSearch } from "../IMG/search.svg"
 import { ReactComponent as SvgLanguage } from "../IMG/language.svg"
 import { ReactComponent as SvgFolder } from "../IMG/folder.svg"
@@ -11,6 +14,7 @@ import { ReactComponent as SvgSummary } from "../IMG/storage.svg"
 import { ReactComponent as SvgWork } from "../IMG/work.svg"
 import { ReactComponent as SvgWorkOut } from "../IMG/work_out.svg"
 import { ReactComponent as SvgArrows } from "../IMG/arrows.svg"
+import { ReactComponent as SvgSettings } from "../IMG/settings.svg"
 // Lang icons
 import { ReactComponent as SvgWorld } from "../IMG/lang/world.svg"
 import { ReactComponent as SvgRussian } from "../IMG/lang/russian.svg"
@@ -38,8 +42,16 @@ export const IcoMsg = ({ type }) => {
 }
 export const IcoGet = ({ name }) => {
   switch (name.toLowerCase()) {
+    case "logofull":
+      return <SvgLogoFull />
     case "arrows":
       return <SvgArrows />
+    case "attantion":
+      return <SvgAttantion />
+    case "settings":
+      return <SvgSettings />
+    case "apartment":
+      return <SvgApartment />
     case "cloudin":
       return <SvgCloudIn />
     case "descr":
@@ -62,34 +74,44 @@ export const IcoGet = ({ name }) => {
       return <></>
   }
 }
-export const IcoLang = ({ language = "" }) => {
-  switch (language.toLowerCase()) {
-    case "german":
-      return <SvgGerman />
-    case "english":
-      return <SvgEnglish />
-    case "spanish":
-      return <SvgSpanish />
-    case "russian":
-      return <SvgRussian />
-    case "chinese":
-      return <SvgChinese />
-    default:
-      return <SvgWorld />
-  }
-}
-export const IcoLangMap = ({ mapLanguages = [] }) => {
+export const IcoLang = ({ language, displayShort = false, displayFull = false }) => {
   const { languages } = useContext(AppContext)
-  const searchItem = (item) => languages.find((lang) => lang.id === item)
+  if (!languages) return <></>
+  // console.log(language, languages)
+  const lang = languages.find((lang) => lang.id === language)
+  const name = lang ? lang.name.toLowerCase() : ""
+  const LangIcon = () => {
+    switch (name) {
+      case "german":
+        return <SvgGerman />
+      case "english":
+        return <SvgEnglish />
+      case "spanish":
+        return <SvgSpanish />
+      case "russian":
+        return <SvgRussian />
+      case "chinese":
+        return <SvgChinese />
+      default:
+        return <SvgWorld />
+    }
+  }
+
+  return (
+    <div className='pr-2'>
+      <i className='bd'>
+        <LangIcon />
+      </i>
+      {displayFull ? (lang ? lang.name : "not set") : displayShort && lang ? lang.short_name : "no"}
+    </div>
+  )
+}
+
+export const IcoLangMap = ({ mapLanguages = [] }) => {
   return (
     <div className='row'>
       {mapLanguages.map((item) => (
-        <div key={item} className='pr-1'>
-          <i className='bd'>
-            <IcoLang language={searchItem(item).name} />
-          </i>
-          {searchItem(item).short_name}
-        </div>
+        <IcoLang key={item} language={item} displayShort={true} />
       ))}
     </div>
   )

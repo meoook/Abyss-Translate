@@ -9,11 +9,12 @@ import PageProfile from "./Elems/PageProfile/PageProfile"
 import PageTranslateFile from "./Elems/PageTranslate/PageTranslateFile"
 import PageTranslateRoot from "./Elems/PageTranslate/PageTranslateRoot"
 import PageAddPrj from "./Elems/PageAddPrj/PageAddPrj"
-import PageProject from "./Elems/PageProject/PageProject"
+import PageExplorer from "./Elems/PageExplorer/PageExplorer"
 import PageLogin from "./Elems/PageAccount/PageLogin"
 import PageRegister from "./Elems/PageAccount/PageRegister"
 import LoaderCar from "./Elems/AppComponents/LoaderCar"
 import PageProjects from "./Elems/PageProjects/PageProjects"
+import PageProject from "./Elems/PageProject/PageProject"
 
 // CARE - THIS CLASS HAVE 3 COMPONENTS INSIDE
 
@@ -39,7 +40,7 @@ export default NavRouter
 const PrivateRoute = ({ component: Component, ...rest }) => {
   const { state, user, accCheck } = useContext(AppContext)
   const [menuOpened, setMenuOpened] = useState(true)
-  console.log("state:", state)
+  // console.log("state:", state)
 
   useEffect(() => {
     accCheck()

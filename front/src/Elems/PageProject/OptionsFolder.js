@@ -1,82 +1,72 @@
-import React, { useState, useEffect } from "react"
+import React, { useState, useEffect, useContext } from "react"
 
 import DropzoneFileList from "./DropzoneFileList"
 import InputCkeckField from "../AppComponents/InputCheckField"
+import AppContext from "../../context/application/appContext"
 
-const OptionsFolder = ({ id, project, amount, fUpdate, fRemove }) => {
+const OptionsFolder = ({ fID, prjID }) => {
+  const { folders, fldrUpdate, fldrRemove } = useContext(AppContext)
   // UTILS
-  const findFolder = (fID, folders) => folders.find((item) => item.id === fID)
+  const findFolder = (folderID, foldersArr) => foldersArr.find((item) => item.id === folderID)
 
   // STATE
-  const [folder, setFolder] = useState(findFolder(id, project.folders_set))
-  const [repository, setRepository] = useState("")
-  const [search, setSearch] = useState([]) // User folders name list to filter when input
+  const [folder, setFolder] = useState(findFolder(fID, folders))
+  const [repo, setRepo] = useState("")
+  const [search, setSearch] = useState([]) // User folders name list to filter\error when input
 
   useEffect(() => {
-    const fld = findFolder(id, project.folders_set)
-    setFolder(fld)
-    fld.repository ? setRepository(fld.repository) : setRepository("")
-    setSearch(
-      project.folders_set.reduce((res, item) => {
-        if (item.id === fld.id) return res
-        else return [...res, { name: item.name }] // Need only name here
-      }, [])
-    )
-  }, [id, project])
+    const fld = findFolder(fID, folders)
+    if (fld) {
+      setFolder(fld)
+      fld.repo_url ? setRepo(fld.repo_url) : setRepo("")
+      setSearch(
+        folders.reduce((res, item) => {
+          if (item.id === fld.id) return res
+          else return [...res, { name: item.name }] // Need only name here
+        }, [])
+      )
+    }
+  }, [fID, folders, prjID])
 
   // Handlers
   const changeGit = (event) => {
-    setRepository(event.target.value.trim())
+    setRepo(event.target.value.trim())
   }
   const saveName = (name) => {
-    fUpdate({
-      project: project.save_id,
-      id: id,
-      name,
-      repository,
-    })
+    if (name !== folder.name) fldrUpdate({ save_id: prjID, id: fID, name, repo_url: repo })
   }
   const saveGit = () => {
-    fUpdate({
-      project: project.save_id,
-      id: id,
-      name: folder.name,
-      repository,
-    })
+    if (repo !== folder.repo_url) fldrUpdate({ save_id: prjID, id: fID, name: folder.name, repo_url: repo })
   }
   return (
     <>
-      <div className='m-3'>
-        <div className='mh-2 m-3'>
+      <div className='col col-4 column'>
+        <div className='table-head ml-3'>Загрузка файлов в папку</div>
+        <DropzoneFileList folderID={fID} />
+      </div>
+
+      <div className='col col-5 column'>
+        <div className='table-head ml-3'>
+          <div>Настройки для папки</div>
+        </div>
+
+        <div className='m-3 ml-3'>
           <InputCkeckField value={folder.name} setValue={saveName} ico='foldero' big={true} search={search} />
         </div>
-        <div className='explorer-scroll'>
-          <div className='mh-2'>
-            <label>Сылка на папку в GIT репозитории (? что как)</label>
-            <div>
-              <input type='text' value={repository} onChange={changeGit} placeholder='не указано' onBlur={saveGit} />
-            </div>
+
+        <div className='scroll-y paginate column ml-3'>
+          <label>Сылка на папку в GIT репозитории (?)</label>
+          <div>
+            <input type='text' value={repo} onChange={changeGit} placeholder='не указано' onBlur={saveGit} />
           </div>
-          <table className='stats'>
-            <tbody>
-              <tr>
-                <td>Всего файлов</td>
-                <td>{amount}</td>
-              </tr>
-              <tr>
-                <td>Файлы без переводов</td>
-                <td>2 (f)</td>
-              </tr>
-            </tbody>
-          </table>
-          <DropzoneFileList folderID={id} />
         </div>
-        <div className='fix-bot column'>
+
+        <div className='fix-bot column ml-3'>
           <hr />
-          <div className='row center justify mh-2 mb-0'>
+          <div className='row center justify'>
             <div>&nbsp;</div>
             <div>
-              <button className='btn red' onClick={fRemove.bind(this, id)}>
+              <button className='btn red' onClick={fldrRemove.bind(this, fID)}>
                 Удалить папку
               </button>
             </div>

@@ -29,26 +29,17 @@ const LanguageSelector = ({ selected, setSelected, langArr = [] }) => {
   return (
     <div className={`custom-select${open ? " open" : ""}`}>
       <div className='custom-select-trigger' onClick={handleTrigger}>
-        {current ? (
-          <span>
-            <i className='bd'>
-              <IcoLang language={current.name} />
-            </i>
-            {current.name}
-          </span>
-        ) : (
-          <></>
-        )}
+        <span>
+          <IcoLang language={selected} displayFull={true} className='bd' />
+        </span>
+
         {choices.length > 0 && <div className='custom-select-arrow'></div>}
       </div>
       <div className='custom-options'>
         {choices.map((lang) => (
           <div key={lang.id} className='custom-option' onClick={setSelected.bind(this, lang.id)}>
             <span>
-              <i className='bd'>
-                <IcoLang language={lang.name} />
-              </i>
-              {lang.name}
+              <IcoLang language={lang.id} displayShort={true} />
             </span>
             <span>&nbsp;</span>
           </div>

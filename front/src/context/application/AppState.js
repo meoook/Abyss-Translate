@@ -12,12 +12,14 @@ import {
   USER_PROJECT_REFRESH,
   USER_PROJECT_REMOVE,
   USER_PROJECT_ADD,
-  EXPLORER_LOADING,
   EXPLORER_REFRESH,
   TRANSLATE_PAGE_REFRESH,
   TRANSLATE_PAGE_LOADING,
   TRANSLATE_FILE_INFO,
   TRANSLATE_CHANGE,
+  PRJ_FOLDER_REFRESH,
+  PRJ_FOLDER_ADD,
+  PRJ_FOLDER_REMOVE,
 } from "../actionTypes"
 
 import { nullState, connectErrMsg, findPrjByFolderID } from "../utils"
@@ -25,14 +27,14 @@ import { nullState, connectErrMsg, findPrjByFolderID } from "../utils"
 const URL = process.env.REACT_APP_API_URL
 
 const AppState = ({ children }) => {
-  const initialState = { ...nullState }
+  const initialState = { ...nullState, user: { token: localStorage.getItem("token") || null } }
   const [state, dispatch] = useReducer(appReducer, initialState)
 
-  const token = localStorage.getItem("token")
+  const token = localStorage.getItem("token") // TODO: походу лишнее
   const config = {
     headers: {
       "Content-Type": "application/json",
-      Authorization: `Token ${state.token || token}`,
+      Authorization: `Token ${state.user.token || token}`,
     },
   }
 
@@ -99,13 +101,12 @@ const AppState = ({ children }) => {
   const accRegister = async ({ username, email, password }) => {
     try {
       const res = await axios.post(`${URL}/auth/register`, { username, email, password })
-      console.log("REG DATA", res.data)
       accLogin({ username: username, password: password })
     } catch (err) {
       addMsg(connectErrMsg(err, "Ошибка регистрации"))
     }
   }
-  // PROJECTS: Projects and folders lists
+  // PROJECTS
   const prjList = async () => {
     loading()
     try {
@@ -136,74 +137,57 @@ const AppState = ({ children }) => {
       addMsg(connectErrMsg(err, "Ошибка при изменении проекта"))
     }
   }
-  const prjRemove = async (id) => {
+  const prjRemove = async (save_id) => {
     try {
-      await axios.delete(`${URL}/prj/${id}/`, config)
-      dispatch({ type: USER_PROJECT_REMOVE, payload: id })
+      await axios.delete(`${URL}/prj/${save_id}/`, config)
+      dispatch({ type: USER_PROJECT_REMOVE, payload: save_id })
     } catch (err) {
       addMsg(connectErrMsg(err, "Ошибка при удалении проекта"))
     }
   }
-  const folderAdd = async (folder) => {
+  // FOLDERS
+  const fldrList = async (save_id) => {
+    try {
+      const res = await axios.get(`${URL}/prj/folder/`, { ...config, params: { save_id } })
+      dispatch({ type: PRJ_FOLDER_REFRESH, payload: res.data })
+    } catch (err) {
+      addMsg(connectErrMsg(err, "Ошибка получения списка папок"))
+    }
+  }
+  const fldrAdd = async (folder) => {
     try {
       const res = await axios.post(`${URL}/prj/folder/`, folder, config)
-      const payload = state.projects.map((prj) => {
-        if (prj.save_id !== folder.project) return prj
-        return { ...prj, folders_set: [...prj.folders_set, res.data] }
-      })
-      dispatch({ type: USER_PROJECT_REFRESH, payload })
+      dispatch({ type: PRJ_FOLDER_ADD, payload: res.data })
       return res.data.id
     } catch (err) {
       addMsg(connectErrMsg(err, "Не могу создать папку"))
     }
   }
-  const folderUpdate = async (folder) => {
+  const fldrUpdate = async (folder) => {
     try {
       const res = await axios.put(`${URL}/prj/folder/${folder.id}/`, folder, config)
-      const payload = state.projects.map((prj) => {
-        if (prj.save_id !== folder.project) return prj
-        return {
-          ...prj,
-          folders_set: prj.folders_set.map((fld) => {
-            if (fld.id !== folder.id) return fld
-            return res.data
-          }),
-        }
+      const payload = state.folders.map((fldr) => {
+        return fldr.id !== res.data.id ? fldr : res.data
       })
-      dispatch({ type: USER_PROJECT_REFRESH, payload })
+      dispatch({ type: PRJ_FOLDER_REFRESH, payload })
     } catch (err) {
       addMsg(connectErrMsg(err, "Не могу изменить папку"))
     }
   }
-  const folderRemove = async (id, prjIn) => {
+  const fldrRemove = async (folder_id) => {
     try {
-      await axios.delete(`${URL}/prj/folder/${id}/`, {
-        ...config,
-        data: { project: prjIn },
-      })
-      const payload = state.projects.map((prj) => {
-        if (prj.save_id !== prjIn) return prj
-        return {
-          ...prj,
-          folders_set: prj.folders_set.filter((fldr) => fldr.id !== id),
-        }
-      })
-      dispatch({ type: USER_PROJECT_REFRESH, payload })
+      await axios.delete(`${URL}/prj/folder/${folder_id}/`, config)
+      dispatch({ type: PRJ_FOLDER_REMOVE, payload: folder_id })
     } catch (err) {
       addMsg(connectErrMsg(err, "Не могу удалить папку"))
     }
   }
-  // UPLOAD FILE
+  // UPLOAD & DOWNLOAD FILE
   const uploadFile = async (folderID, file, setProgress) => {
-    const fPrj = findPrjByFolderID(folderID, state.projects)
-    // const fPrj = state.projects.find((proj) => proj.folders_set.find((fold) => fold.id === folderID))
-    if (!fPrj) throw new Error(`Project not found for this folder ${folderID}`)
-
     let formData = new FormData()
-    if (fPrj.lang_orig) formData.append("lang_orig", fPrj.lang_orig)
     formData.append("data", file)
     formData.append("name", file.name)
-    formData.append("folder", folderID)
+    formData.append("folder_id", folderID)
     try {
       await axios.post(`${URL}/transfer/`, formData, {
         headers: { ...config.headers },
@@ -234,24 +218,22 @@ const AppState = ({ children }) => {
       addMsg(connectErrMsg(err, "Не могу скачать файл"))
     }
   }
-
-  // FIXME: atributes as f, p, s - need to be removed from state.explorer
   // PROJECTS: File explorer
-  const explorerLoading = (loadState) => dispatch({ type: EXPLORER_LOADING, payload: loadState })
-  const explorerList = async (f = state.explorer.f, p = state.explorer.p, s = state.explorer.s) => {
-    if (!f)
-      return addMsg({
-        title: "Ошибка обращения",
-        text: "папка не указана в запросе",
-      })
-    explorerLoading()
-    try {
-      const res = await axios.get(`${URL}/file?f=${f}&p=${p}&s=${s}`, config)
-      dispatch({ type: EXPLORER_REFRESH, payload: { ...res.data, f, p, s } })
-    } catch (err) {
-      addMsg(connectErrMsg(err, "Не могу получить список файлов"))
+  const explList = async (save_id, folder_id, p, s) => {
+    if (!save_id && !folder_id) {
+      dispatch({ type: EXPLORER_REFRESH, payload: {} })
+    } else {
+      try {
+        const res = await axios.get(`${URL}/file`, {
+          ...config,
+          params: { save_id, folder_id, p, s },
+        })
+        dispatch({ type: EXPLORER_REFRESH, payload: res.data })
+        addMsg({ text: "Получен список файлов", type: "success" })
+      } catch (err) {
+        addMsg(connectErrMsg(err, "Не могу получить список файлов"))
+      }
     }
-    // explorerLoading(false)
   }
   // TRANSLATES
   const transLoading = (loadState) => dispatch({ type: TRANSLATE_PAGE_LOADING, payload: loadState })
@@ -260,12 +242,12 @@ const AppState = ({ children }) => {
     try {
       const res = await axios.get(`${URL}/file/${fID}`, config)
       dispatch({ type: TRANSLATE_FILE_INFO, payload: { ...res.data } })
-      await transMarkList(fID, page, size, same, noTrans)
+      await transList(fID, page, size, same, noTrans)
     } catch (err) {
       addMsg(connectErrMsg(err, "Не могу получить файл"))
     }
   }
-  const transMarkList = async (f, p, s, d, nt) => {
+  const transList = async (f, p, s, d, nt) => {
     if (!f) return
     transLoading()
     try {
@@ -302,15 +284,18 @@ const AppState = ({ children }) => {
   return (
     <AppContext.Provider
       value={{
-        state,
-        user: state.user,
-        projects: state.projects,
+        // state,
+        loading: state.loading,
         msgs: state.msgs,
+        user: state.user,
         languages: state.languages,
+        projects: state.projects,
+        folders: state.folders,
         explorer: state.explorer,
-        explorerLoading: state.explorerLoading,
         translates: state.translates,
-        translatesLoading: state.translatesLoading,
+        addMsg,
+        delMsg,
+        fetchLang,
         accLogin,
         accCheck,
         accLogout,
@@ -319,17 +304,15 @@ const AppState = ({ children }) => {
         prjAdd,
         prjUpdate,
         prjRemove,
-        folderAdd,
-        folderRemove,
-        folderUpdate,
-        explorerList,
+        fldrList,
+        fldrAdd,
+        fldrRemove,
+        fldrUpdate,
+        explList,
         uploadFile,
         downloadFile,
-        addMsg,
-        delMsg,
-        fetchLang,
         transFileInfo,
-        transMarkList,
+        transMarkList: transList,
         transChange,
       }}>
       {children}
