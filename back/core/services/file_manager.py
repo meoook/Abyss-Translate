@@ -75,6 +75,12 @@ class LocalizeFileManager:
 
     def create_mark_translate(self, translator_id, mark_id, lang_id, text, md5sum=None, **kwargs):
         """ Create or update translates. Update translate progress. If finished - create translate file. """
+        print('===================================')
+        print('translator_id', translator_id)
+        print('mark_id', mark_id)
+        print('lang_id', lang_id)
+        print('text', text)
+        print('md5sum', md5sum)
         # TODO: Log translates
         if not self.__file:
             self.error = self.error if self.error else 'unknown'    # Error must be already set
@@ -85,7 +91,8 @@ class LocalizeFileManager:
             # TODO: permissions check - mb owner can change ?
             self.error = "Can't change original text"
         # Check lang_translate in list of need translate languages
-        elif lang_id not in self.__file.translated_set.values_list("id", flat=True):
+        elif lang_id not in self.__file.translated_set.values_list("language", flat=True):
+            print('XXXXXXXXXXXXXXXX', lang_id, self.__file.translated_set.values_list("language", flat=True))
             self.error = "No need translate to this language"
         if self.error:
             logger.warning(f"For file {self.__log_name} create translate error: {self.error}")

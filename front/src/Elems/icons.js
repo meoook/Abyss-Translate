@@ -80,6 +80,7 @@ export const IcoLang = ({ language, displayShort = false, displayFull = false })
   // console.log(language, languages)
   const lang = languages.find((lang) => lang.id === language)
   const name = lang ? lang.name.toLowerCase() : ""
+  
   const LangIcon = () => {
     switch (name) {
       case "german":
@@ -98,11 +99,11 @@ export const IcoLang = ({ language, displayShort = false, displayFull = false })
   }
 
   return (
-    <div className='pr-2'>
+    <div className='pr-0'>
       <i className='bd'>
         <LangIcon />
       </i>
-      {displayFull ? (lang ? lang.name : "not set") : displayShort && lang ? lang.short_name : "no"}
+      {displayFull ? (lang ? lang.name : "not set") : !displayShort ? "" : lang ? lang.short_name : "no"}
     </div>
   )
 }

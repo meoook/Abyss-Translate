@@ -81,9 +81,9 @@ $ sh ./runner.sh 5
 
 | version | changes                                                          |
 | ------- | ---------------------------------------------------------------- |
-|   | задача - выгрузка в гит                       |
-|   | гит - гитлаб                        |
-| 0.04.2  | переделанный UI и добавлена система прав                          |
+|         | задача - выгрузка в гит                                          |
+|         | гит - гитлаб                                                     |
+| 0.04.2  | переделанный UI и добавлена система прав                         |
 | 0.04.1  | Вся бизнес логика раскидана по сервисам                          |
 | 0.04.0  | Система прав пользователей                                       |
 | 0.03.9  | Утилиты для тестирования (django commands)                       |
@@ -129,9 +129,7 @@ def get_languages(apps, schema_editor):
         language_to_add = languages(name=language[1], short_name=language[0])
         if language[0] in ('en', 'ru', 'de', 'es'):
             language_to_add.active = True
-            language_to_add.save()
-        else:
-            language_to_add.save()
+        language_to_add.save()
 ```
 
 ...

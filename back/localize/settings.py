@@ -198,7 +198,7 @@ LOGGING = {
     },
     'handlers': {
         'sql': {
-            'level': 'WARNING',
+            'level': 'DEBUG',
             'filters': ['require_debug_true'],
             'class': 'logging.StreamHandler',
             'formatter': 'sql',
@@ -238,7 +238,7 @@ LOGGING = {
         },
         'django.request': {
             'handlers': ['console', 'file', 'debug'],
-            'level': 'ERROR',
+            'level': 'INFO',
             'propagate': False,
         },
         'django.server': {
@@ -248,7 +248,7 @@ LOGGING = {
         },
         'django.db.backends': {
             'handlers': ['sql'],
-            'level': 'DEBUG',   # set DEBUG for debug sql queries :)
+            'level': 'WARNING',   # set DEBUG for debug sql queries :)
             'propagate': False,
         },
         'logfile': {

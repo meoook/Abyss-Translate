@@ -26,26 +26,21 @@ const FileTranslatedStatus = ({ fileObj }) => {
   }, [fileObj])
 
   return (
-    <div className='row'>
+    <div className='row center'>
       {translates.map((item) => (
         <React.Fragment key={item.id}>
           {item.finished ? (
-            <div
-              onClick={downloadFile.bind(
-                this,
-                item.id,
+            <div className='link pr-1' onClick={downloadFile.bind(this, item.id,
                 createFilename(fileObj.name, findLang(item.language, languages).short_name)
               )}
-              className='pr-1'>
-              <IcoLang language={item.language} displayShort={true} className='bd' />
+              >
+              <IcoLang language={item.language} displayShort={true} />
             </div>
           ) : (
-            <div className='pr-1'>
-              <i className='bd'>
-                <IcoLang language={item.language} />
-              </i>
-              {findLang(item.language, languages).short_name} {getProgress(item.items, total)}
-            </div>
+            <>
+                <IcoLang language={item.language} displayShort={true} />
+              <div className='pr-1'>{getProgress(item.items, total)}</div>
+            </>
           )}
         </React.Fragment>
       ))}

@@ -204,6 +204,7 @@ const AppState = ({ children }) => {
   }
   const downloadFile = async (translatedID, filename) => {
     // if (!filename) filename = state.explorer.find()
+    console.log('XXXXXXXX', translatedID, filename)
     try {
       // FIXME: Axios can't get Content-Disposition - filename
       const res = await axios.get(`${URL}/transfer/${translatedID}`, config)
@@ -219,14 +220,14 @@ const AppState = ({ children }) => {
     }
   }
   // PROJECTS: File explorer
-  const explList = async (save_id, folder_id, p, s) => {
+  const explList = async (save_id, folder_id, page, size) => {
     if (!save_id && !folder_id) {
       dispatch({ type: EXPLORER_REFRESH, payload: {} })
     } else {
       try {
         const res = await axios.get(`${URL}/file`, {
           ...config,
-          params: { save_id, folder_id, p, s },
+          params: { save_id, folder_id, page, size },
         })
         dispatch({ type: EXPLORER_REFRESH, payload: res.data })
         addMsg({ text: "Получен список файлов", type: "success" })
@@ -236,9 +237,7 @@ const AppState = ({ children }) => {
     }
   }
   // TRANSLATES
-  const transLoading = (loadState) => dispatch({ type: TRANSLATE_PAGE_LOADING, payload: loadState })
   const transFileInfo = async (fID, page, size, same, noTrans) => {
-    transLoading()
     try {
       const res = await axios.get(`${URL}/file/${fID}`, config)
       dispatch({ type: TRANSLATE_FILE_INFO, payload: { ...res.data } })
@@ -247,30 +246,31 @@ const AppState = ({ children }) => {
       addMsg(connectErrMsg(err, "Не могу получить файл"))
     }
   }
-  const transList = async (f, p, s, d, nt) => {
-    if (!f) return
-    transLoading()
+  const transList = async (file_id, page, size, distinct, no_trans) => {
     try {
-      const res = await axios.get(`${URL}/marks?f=${f}&p=${p}&s=${s}&d=${d}&nt=${nt}`, config)
-      dispatch({ type: TRANSLATE_PAGE_REFRESH, payload: { ...res.data } })
+      const res = await axios.get(`${URL}/marks`, {
+        ...config,
+        params: { file_id, page, size, distinct, no_trans },
+      })
+      dispatch({ type: TRANSLATE_PAGE_REFRESH, payload: res.data })
     } catch (err) {
       addMsg(connectErrMsg(err, "Не могу получить текст файла"))
     }
   }
-  const transChange = async (markID, langID, text, md5 = "") => {
-    const fileID = state.translates.id
+  const transChange = async (mark_id, lang_id, text, md5 = "") => {
+    const file_id = state.translates.id
     try {
-      const res = await axios.post(`${URL}/marks/`, { fileID, markID, langID, text, md5 }, config)
+      const res = await axios.post(`${URL}/marks/`, { file_id, mark_id, lang_id, text, md5 }, config)
       const payload = state.translates.results.map((transItem) => {
         if (transItem.md5sum !== md5) return transItem
-        const haveTransBefore = transItem.translates_set.find((item) => item.language === langID)
+        const haveTransBefore = transItem.translates_set.find((item) => item.language === lang_id)
         if (!haveTransBefore)
           return {
             ...transItem,
             translates_set: [...transItem.translates_set, res.data],
           }
         const newTransSet = transItem.translates_set.map((item) => {
-          if (item.language !== langID) return item
+          if (item.language !== lang_id) return item
           return res.data
         })
         return { ...transItem, translates_set: newTransSet }

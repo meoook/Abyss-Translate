@@ -28,6 +28,7 @@ const PageTranslateFile = (props) => {
     // eslint-disable-next-line
   }, [id])
 
+
   useEffect(() => {
     if (!translates.lang_orig) return
     if (!langOrig) setLangOrig(translates.lang_orig)
@@ -46,10 +47,11 @@ const PageTranslateFile = (props) => {
       setLoading(false)
     })
   }
-  // const changeSame = () => {
-  //   transMarkList(id, page, size, !same, noTrans)
-  //   setSame(!same)
-  // }
+  const changeSame = () => {
+    console.log('SAME IS ', same)
+    transMarkList(id, page, size, !noSame, noTrans)
+    setNoSame(!noSame)
+  }
   const changeNoTrans = () => {
     let val = noTrans ? 0 : langTrans
     transMarkList(id, page, size, same, val)
@@ -89,7 +91,7 @@ const PageTranslateFile = (props) => {
             same={same}
             setSame={setSame}
             noSame={noSame}
-            setNoSame={setNoSame}
+            setNoSame={changeSame}
             like={like}
             setLike={setLike}
             noTrans={noTrans}

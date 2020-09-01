@@ -49,11 +49,11 @@ const TranslateMenu = ({
       </div>
       <div className='col col-4'>
         <div className='row center mb-2'>
-          <Toggler val={noSame} setVal={setNoSame.bind(this, !noSame)} />
+          <Toggler val={noSame} setVal={setNoSame} />
           <label className={`mh-1${noSame ? " active" : ""}`}>не показывать одинаковые</label>
         </div>
         <div className='row center'>
-          <Toggler val={noTrans} setVal={setNoTrans.bind(this, !noTrans)} />
+          <Toggler val={noTrans} setVal={setNoTrans} />
           <label className={`mh-1${like ? " active" : ""}`}>не показывать переведенные</label>
         </div>
       </div>

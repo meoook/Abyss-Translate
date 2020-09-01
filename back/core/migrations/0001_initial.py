@@ -15,9 +15,7 @@ def get_languages(apps, schema_editor):
         language_to_add = languages(name=language[1], short_name=language[0])
         if language[0] in ('en', 'ru', 'de', 'es'):
             language_to_add.active = True
-            language_to_add.save()
-        else:
-            language_to_add.save()
+        language_to_add.save()
 
 
 class Migration(migrations.Migration):

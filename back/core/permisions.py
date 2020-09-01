@@ -70,6 +70,7 @@ class IsFileOwnerOrTranslator(permissions.BasePermission):
         else:
             file_id = request.data.get('file_id')
         if request.user.has_perm('core.creator'):
+            # print('TTTTTTTTTTTTTTTTTTTTTTTTTTTTTTT', file_id)
             return request.user.projects_set.filter(folders__files__id=file_id).exists()
         return request.user.projectpermissions_set.filter(project__folders__files__id=file_id, permission=0).exists()
 

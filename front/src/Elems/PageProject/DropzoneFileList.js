@@ -68,7 +68,7 @@ export default function DropzoneFileList({ folderID }) {
         <Dropzone addFiles={addUploadFiles} disabled={uploading || success} />
         {uploadFilesArr.length ? (
           <div className='row center justify m-2'>
-            <div>&nbsp;{folderID}</div>
+            <div>&nbsp;</div>
             {success ? (
               <button className='btn green' onClick={clearUploadedFiles}>
                 Очистить
