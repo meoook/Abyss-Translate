@@ -46,7 +46,7 @@
   &-translate {
     border: 1px solid rgba($texth, 0.2);
     border-radius: $indent;
-    background: rgba($shadow, 0.3);
+    background: $head;
     & > * {
       border-bottom: 1px solid rgba($texth, 0.2);
     }
@@ -60,6 +60,7 @@
       border-bottom: 0;
     }
     &-head {
+      background: rgba($shadow, 0.3);
       display: flex;
       flex-direction: row;
       justify-content: space-between;
@@ -69,7 +70,6 @@
       padding: $indent/8 $indent * 2;
     }
     &-content {
-      background: $head;
       padding: $indent/2 $indent * 2;
     }
     &-input {
@@ -296,6 +296,9 @@ img {
 .color {
   &-error {
     color: lighten($red, 15);
+  }
+  &-white {
+    color: $texth;
   }
 }
 

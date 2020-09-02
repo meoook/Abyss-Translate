@@ -90,7 +90,7 @@ export const PageAddPrj = (props) => {
       <div className='row'>
         <div className='col col-8 offset-2'>
           <div className='form'>
-            <h1>облачное пространство проекта</h1>
+            <h1>облачное пространство buhs</h1>
             <div className='title'>{titles[phase - 1]}</div>
             <div className='steps row'>
               <div className='steps-line'>

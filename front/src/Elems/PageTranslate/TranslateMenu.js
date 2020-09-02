@@ -26,10 +26,8 @@ const TranslateMenu = ({
   useEffect(() => {
     if (!translates.translated_set) return
     const filtredLangs = translates.translated_set.filter((item) => item.finished).map((item) => item.language)
-    if (filtredLangs.length) {
-      setOriginal([...filtredLangs, translates.lang_orig])
-      setTransate(translates.translated_set.filter((item) => item.language !== langOrig).map(itm => itm.language))
-    }
+    if (filtredLangs.length) setOriginal([...filtredLangs, translates.lang_orig])
+    setTransate(translates.translated_set.filter((item) => item.language !== langOrig).map(itm => itm.language))
   }, [translates, langOrig])
 
   return (

@@ -25,21 +25,19 @@ const TranslateMark = ({ mark, langOrig, langTrans, same, setActive }) => {
   }
 
   return (
-    <div className='input-group m-1'>
-      {!originalDisplay ? (
-        <div className='input-like'>System error {mark.id}</div>
-      ) : (
-        <>
-          <div className='col col-6 input-like'>{originalDisplay.text}</div>
-          <input
-            className='col col-6'
-            type='textaria'
-            value={inputVal}
-            onChange={handleChange}
-            onBlur={changeTranslate}
-          />
-        </>
-      )}
+    <div className='card-translate m-1' onClick={setActive.bind(this, mark.id)}>
+      <div className='card-translate-head'>
+        <div>ID&nbsp;{mark.id}</div>
+        <div>слов&nbsp;{mark.words}</div>
+      </div>
+      <>
+        <div className='card-translate-content'>
+          {originalDisplay ? originalDisplay.text : `System error ${mark.id}`}
+        </div>
+        <div className='card-translate-input'>
+          <input type='textaria' value={inputVal} onChange={handleChange} onBlur={changeTranslate} />
+        </div>
+      </>
     </div>
   )
 }

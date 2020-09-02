@@ -1,6 +1,8 @@
 import React, { useState, useEffect } from "react"
 import Loader from "../AppComponents/Loader"
 
+const MOCK_DATA_GOOGLE = { text: "Some text from google translate" }
+
 const VariantGoogle = ({ markID }) => {
   const [loading, setLoading] = useState(false)
   const [text, setText] = useState(null)
@@ -13,20 +15,20 @@ const VariantGoogle = ({ markID }) => {
         setText(MOCK_DATA_GOOGLE.text + markID)
         // setText("")
         setLoading(false)
-      }, 3000)
+      }, 1200)
     }
   }, [markID])
 
   return (
     <>
       {loading ? (
-        <Loader />
+        <div className='m-2'><Loader /></div>
       ) : !text ? (
         <></>
       ) : (
         <div className='card-translate m-1'>
           <div className='card-translate-head'>Google translate</div>
-          <div className='card-translate-content'>{text}</div>
+          <div className='card-translate-content m-1 mb-3'>{text}</div>
         </div>
       )}
     </>
@@ -35,8 +37,3 @@ const VariantGoogle = ({ markID }) => {
 
 export default VariantGoogle
 
-const MOCK_DATA_GOOGLE = { text: "some text from google translate" }
-const MOCK_DATA_SERVER = [
-  { id: 1, mark_id: 12, text: "some text from google translate" },
-  { id: 2, mark_id: 44, text: "some text from google translate" },
-]

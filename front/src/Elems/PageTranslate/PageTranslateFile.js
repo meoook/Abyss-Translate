@@ -2,7 +2,7 @@ import React, { useEffect, useContext, useState } from "react"
 import { useParams } from "react-router-dom"
 import AppContext from "../../context/application/appContext"
 import TranslateMenu from "./TranslateMenu"
-import TranslateMark from "./TranslateMark2"
+import TranslateMark from "./TranslateMark"
 import Paginator from "../AppComponents/Paginator"
 import Loader from "../AppComponents/Loader"
 import { DisplayImage } from "../images"
@@ -101,40 +101,6 @@ const PageTranslateFile = (props) => {
             <div className='col col-7 column'>
               <div className='table-head'>Текст для перевода</div>
               <div className={`scroll-y${translates.count / size > 1 ? " paginate" : ""}`}>
-                <TranslateMark
-                  key={1}
-                  mark={{
-                    translates_set: [
-                      { id: 1, text: "text", language: 15 },
-                      { id: 2, text: "text2", language: 18 },
-                      { id: 3, text: "text3", language: 22 },
-                      { id: 4, text: "text4", language: 75 },
-                    ],
-                    words: 16,
-                    id: 2,
-                  }}
-                  langOrig={22}
-                  langTrans={18}
-                  same={same}
-                  setActive={setActiveMark}
-                />
-                <TranslateMark
-                  key={2}
-                  mark={{
-                    translates_set: [
-                      { id: 5, text: "text5", language: 15 },
-                      { id: 6, text: "text6", language: 18 },
-                      { id: 7, text: "text7", language: 22 },
-                      { id: 8, text: "text8", language: 75 },
-                    ],
-                    words: 5,
-                    id: 1,
-                  }}
-                  langOrig={15}
-                  langTrans={18}
-                  same={same}
-                  setActive={setActiveMark}
-                />
                 {!translates.results ? (
                   <div>NO ITEMS</div>
                 ) : (
@@ -156,12 +122,23 @@ const PageTranslateFile = (props) => {
             </div>
             <div className='col col-5 column'>
               <div className='table-head ml-3'>
-                <div>Варианты перевода</div>
-                <div className='color-error ml-2'>(в стадии разработки)</div>
+                <span>Варианты перевода</span>
+                <span className='color-error t-vsmall ml-1'>&nbsp;(в стадии разработки)</span>
               </div>
               <div className='scroll-y ml-3'>
                 <VariantGoogle markID={activeMark} />
                 <VariantServer markID={activeMark} />
+                {activeMark ? (    <>         
+                  <h3 className='mt-3'>
+                    <span>Последние изменения</span>
+                    <span className='color-error t-vsmall'>&nbsp;(в стадии разработки)</span>
+                  </h3>
+                  <hr/>
+                  <div>
+                    <span className='color-white mr-0'>10.01.20 meok</span>
+                    <span>On what i changed text</span>
+                  </div>
+                  </>): <></>}
               </div>
             </div>
           </div>

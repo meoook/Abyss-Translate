@@ -45,12 +45,8 @@ const handlers = {
     folders: state.folders.filter((fldr) => fldr.id !== payload),
   }),
   [EXPLORER_REFRESH]: (state, { payload }) => ({ ...state, explorer: payload }),
-  [TRANSLATE_PAGE_REFRESH]: (state, { payload }) => ({
-    ...state,
-    translates: { ...state.translates, ...payload },
-    translatesLoading: false,
-  }),
   [TRANSLATE_FILE_INFO]: (state, { payload }) => ({ ...state, translates: payload }),
+  [TRANSLATE_PAGE_REFRESH]: (state, { payload }) => ({...state, translates: { ...state.translates, ...payload } }),
   [TRANSLATE_CHANGE]: (state, { payload }) => ({ ...state, translates: { ...state.translates, results: payload } }),
   DEFAULT: (state) => state,
 }

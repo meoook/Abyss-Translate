@@ -237,8 +237,8 @@ const AppState = ({ children }) => {
   const transFileInfo = async (fID, page, size, same, noTrans) => {
     try {
       const res = await axios.get(`${URL}/file/${fID}`, config)
-      dispatch({ type: TRANSLATE_FILE_INFO, payload: { ...res.data } })
-      await transList(fID, page, size, same, noTrans)
+      dispatch({ type: TRANSLATE_FILE_INFO, payload: res.data })
+      await transList(fID, page, size, same, noTrans)  // FIXME: REMAKE
     } catch (err) {
       addMsg(connectErrMsg(err, "Не могу получить файл"))
     }
@@ -259,7 +259,7 @@ const AppState = ({ children }) => {
     try {
       const res = await axios.post(`${URL}/marks/`, { file_id, mark_id, lang_id, text, md5 }, config)
       const payload = state.translates.results.map((transItem) => {
-        if (transItem.md5sum !== md5) return transItem
+        if (transItem.id !== mark_id) return transItem
         const haveTransBefore = transItem.translates_set.find((item) => item.language === lang_id)
         if (!haveTransBefore)
           return {
