@@ -14,7 +14,6 @@ import {
   USER_PROJECT_ADD,
   EXPLORER_REFRESH,
   TRANSLATE_PAGE_REFRESH,
-  TRANSLATE_PAGE_LOADING,
   TRANSLATE_FILE_INFO,
   TRANSLATE_CHANGE,
   PRJ_FOLDER_REFRESH,
@@ -22,7 +21,7 @@ import {
   PRJ_FOLDER_REMOVE,
 } from "../actionTypes"
 
-import { nullState, connectErrMsg, findPrjByFolderID } from "../utils"
+import { nullState, connectErrMsg } from "../utils"
 
 const URL = process.env.REACT_APP_API_URL
 
@@ -100,7 +99,7 @@ const AppState = ({ children }) => {
   }
   const accRegister = async ({ username, email, password }) => {
     try {
-      const res = await axios.post(`${URL}/auth/register`, { username, email, password })
+      await axios.post(`${URL}/auth/register`, { username, email, password })
       accLogin({ username: username, password: password })
     } catch (err) {
       addMsg(connectErrMsg(err, "Ошибка регистрации"))
@@ -199,12 +198,10 @@ const AppState = ({ children }) => {
       })
     } catch (err) {
       addMsg(connectErrMsg(err, `Не удалось загрузить файл ${file.name}`))
-      throw new Error(`Не удалось загрузить файл ${file.name}`)
+      // throw new Error(`Не удалось загрузить файл ${file.name}`)
     }
   }
   const downloadFile = async (translatedID, filename) => {
-    // if (!filename) filename = state.explorer.find()
-    console.log('XXXXXXXX', translatedID, filename)
     try {
       // FIXME: Axios can't get Content-Disposition - filename
       const res = await axios.get(`${URL}/transfer/${translatedID}`, config)

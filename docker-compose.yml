@@ -25,7 +25,8 @@ services:
     container_name: localize-django-dev
     build: ./back
     image: localize-django-dev
-    command: sh -c "python manage.py migrate --no-input && gunicorn localize.wsgi -b 0:8000"
+    # command: sh -c "python manage.py migrate --no-input && gunicorn localize.wsgi -b 0:8000"
+    command: sh -c "python manage.py migrate --no-input && python manage.py runserver 0.0.0.0:8000"
     volumes:
       - ./back:/usr/src/back/
       - users_files:/usr/src/back/users/

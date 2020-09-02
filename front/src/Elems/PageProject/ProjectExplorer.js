@@ -1,5 +1,4 @@
-import React, { useContext, useState, useEffect } from "react"
-import AppContext from "../../context/application/appContext"
+import React, { useState, useEffect } from "react"
 import ExplorerFolders from "./ExplorerFolders"
 import OptionsFolder from "./OptionsFolder"
 import FileListByAccess from "./FileListByAccess"

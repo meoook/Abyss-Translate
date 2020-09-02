@@ -81,6 +81,7 @@ $ sh ./runner.sh 5
 
 | version | changes                                                          |
 | ------- | ---------------------------------------------------------------- |
+|         | pg_bouncer                                          |
 |         | задача - выгрузка в гит                                          |
 |         | гит - гитлаб                                                     |
 | 0.04.2  | переделанный UI и добавлена система прав                         |
@@ -130,11 +131,7 @@ def get_languages(apps, schema_editor):
         if language[0] in ('en', 'ru', 'de', 'es'):
             language_to_add.active = True
         language_to_add.save()
-```
-
-...
-
-```py
+    ...
         migrations.RunPython(get_languages),
 ```
 
@@ -156,5 +153,3 @@ mixins.DestroyModelMixin,
 mixins.ListModelMixin,
 GenericViewSet
 ```
-
-pg_...очереди

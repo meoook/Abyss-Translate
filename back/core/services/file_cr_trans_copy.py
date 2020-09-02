@@ -9,6 +9,8 @@ from core.services.utils import csv_validate_text
 logger = logging.getLogger('django')
 
 
+# TODO: Remove binary from data base
+
 class CreateTranslatedCopy:
     """ Create translated copy of file for selected language """
 
@@ -27,25 +29,32 @@ class CreateTranslatedCopy:
         dir_name = os.path.dirname(work_file.data.path)
         file_name, file_ext = os.path.splitext(work_file.data.path)
         trans_copy_name = f'{file_name}-{create_lang.short_name}{file_ext}'
-        logger.info(f'Creating translated copy {trans_copy_name} for file id: {work_file.id})')
+        logger.info(f'Creating translated copy {trans_copy_name} for file id {work_file.id}')
         self.__translated_copy = open(os.path.join(dir_name, trans_copy_name), 'wb')
+        result = False
         if work_file.method == 'ue':
-            self.__parse_as_ue(work_file, create_lang, translates)
+            logger.debug(f'File id {work_file.id} parsing as ue')
+            result = self.__parse_as_ue(work_file, create_lang, translates)
         elif work_file.method == 'csv':
-            self.__parse_as_csv(work_file, create_lang, translates)
+            logger.debug(f'File id {work_file.id} parsing as csv')
+            result = self.__parse_as_csv(work_file, create_lang, translates)
         elif work_file.method == 'html':
-            self.__parse_as_html(work_file, create_lang, translates)
+            logger.debug(f'File id {work_file.id} parsing as html')
+            result = self.__parse_as_html(work_file, create_lang, translates)
         else:
-            logger.critical(f"For file {work_file.id} wrong method : {work_file.method}")
+            logger.critical(f"For file {work_file.id} wrong method {work_file.method}")
         self.__translated_copy.close()
         self.copy_name = self.__translated_copy.name
-        logger.info(f'Translated copy {self.copy_name} created for file id: {work_file.id})')
+        if result:
+            logger.info(f'Translated copy {self.copy_name} created for file id {work_file.id}')
+        else:
+            logger.warning(f'Translated copy {self.copy_name} created with errors for file id {work_file.id}')
 
     def __parse_as_ue(self, file_obj, create_lang, translates_objs):
         with open(file_obj.data.path, 'rb') as filo:
-            if file_obj.number_top_rows:
+            if file_obj.options['top_rows']:
                 for i, x in enumerate(filo):
-                    if i == file_obj.options['top_rows'] - 1:
+                    if i == file_obj.options['top_rows']:
                         break
                     self.__translated_copy.write(x)
             object_number = 0
@@ -53,21 +62,28 @@ class CreateTranslatedCopy:
                 try:
                     object_number += 1
                     trans_object = [next(filo) for _ in range(7)]
-                    text = trans_object[5].decode(file_obj.codec)[8:-3]     # FIXME [8:-3]
-                    if len(text.strip()) == 0:
-                        continue
                 except StopIteration:
                     break
-                try:
-                    orig = translates_objs.get(mark__mark_number=object_number, language=file_obj.lang_orig)
-                    trans = translates_objs.get(mark__mark_number=object_number, language=create_lang)
-                except ObjectDoesNotExist:
-                    logger.error(f"Can't find translate for number {object_number}")
-                    return False
 
-                if text == orig.text:   # Mb other check - trans.mark.text_binary.decode()
-                    trans_object[5] = trans_object[5].replace(trans.mark.text_binary, trans.text.encode(file_obj.codec))
+                # regular = re.compile(rb'^msgstr "(.*)"\s*$')
+                look_up = re.match(rb'^msgstr "(.*)"\s*$', trans_object[5])
+                if not look_up and len(look_up.group(1).strip()) == 0:
+                    logger.error(f"File structure broken for file id {file_obj.id} method ue")
+                else:
+                    text = look_up.group(1).decode(file_obj.codec)
+                    try:
+                        orig = translates_objs.get(mark__mark_number=object_number, language=file_obj.lang_orig)
+                        trans = translates_objs.get(mark__mark_number=object_number, language=create_lang)
+                    except ObjectDoesNotExist:
+                        logger.error(f"Can't find translate for number {object_number} method ue")
+                        return False    # remake
+                    else:
+                        trans_object[5] = f'msgstr "{trans.text}"'.encode(file_obj.codec) + b'\n'
+
+                    if text != orig.text:   # Mb other check - trans.mark.text_binary.decode()
+                        logger.warning(f"File check text not passed for file id {file_obj.id} method ue")
                 [self.__translated_copy.write(x) for x in trans_object]
+        return True
 
     def __parse_as_csv(self, file_obj, create_lang, translates_objs):
         with open(file_obj.data.path, 'rb') as filo:
@@ -78,7 +94,7 @@ class CreateTranslatedCopy:
             fields = file_obj.options['fields']
             object_number = 0
             for i, row in enumerate(filo):
-                if file_obj.number_top_rows and i < file_obj.options['top_rows']:
+                if file_obj.options['top_rows'] and i < file_obj.options['top_rows']:
                     self.__translated_copy.write(row)
                     continue
                 object_number += 1
@@ -98,18 +114,20 @@ class CreateTranslatedCopy:
                         orig = translates_objs.get(mark__mark_number=object_number, mark__col_number=idx, language=file_obj.lang_orig)
                         trans = translates_objs.get(mark__mark_number=object_number, mark__col_number=idx, language=create_lang)
                     except ObjectDoesNotExist:
-                        logger.error(f"Can't find translate for number {object_number} column {idx}")
-                        return False
+                        logger.error(f"Can't find translate for number {object_number} column {idx} method csv")
+                        return False    # remake
 
                     if text != orig.text:
                         logger.error(f"Can't merge file {file_obj.name} seems changes in BD.")
-                        return False
+                        return False    # remake
 
                     text_binary = text_binary.replace(trans.mark.text_binary, trans.text.encode(file_obj.codec))
                     row_items.append(text_binary)
                 self.__translated_copy.write(delimiter_binary.join(row_items))
+        return True
 
     def __parse_as_html(self, file_obj, create_lang, translates_objs):
+        # TODO: Limit replace = 1
         with open(file_obj.data.path, 'rb') as filo:
             data = filo.read().decode(file_obj.codec)
             texts_objs = []
@@ -122,14 +140,15 @@ class CreateTranslatedCopy:
                     orig = translates_objs.get(mark__mark_number=text_obj['number'], language=file_obj.lang_orig)
                     trans = translates_objs.get(mark__mark_number=text_obj['number'], language=create_lang)
                 except ObjectDoesNotExist:
-                    logger.error(f"Can't find translate for number {text_obj['number']}")
-                    return False
+                    logger.error(f"Can't find translate for number {text_obj['number']} method html")
+                    return False    # remake
 
                 if text_obj['text'] != orig.text:
                     logger.error(f"Can't merge file {file_obj.name} seems changes in BD.")
-                    return False
+                    return False    # remake
 
                 data = data[:text_obj['coordinates'][0]] + trans.text + data[text_obj['coordinates'][1]:]
 
             data_binary = data.encode(file_obj.codec)
             self.__translated_copy.write(data_binary)
+        return True

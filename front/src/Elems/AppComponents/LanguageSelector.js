@@ -6,8 +6,7 @@ import { useEffect } from "react"
 const LanguageSelector = ({ selected, setSelected, langArr = [] }) => {
   const { languages } = useContext(AppContext)
   const [open, setOpen] = useState(false)
-  const choices = languages.filter((item) => langArr.includes(item.id) && item.id !== selected)
-  const current = languages.find((item) => item.id === selected)
+  const [choices, setChoices] = useState([])
 
   useEffect(() => {
     window.addEventListener("click", handleLooseFocus)
@@ -16,6 +15,11 @@ const LanguageSelector = ({ selected, setSelected, langArr = [] }) => {
     }
     // eslint-disable-next-line
   }, [])
+
+  useEffect(() => {
+    setChoices(languages.filter((item) => langArr.includes(item.id) && item.id !== selected))
+    // eslint-disable-next-line
+  }, [languages, langArr, selected])
 
   const handleLooseFocus = () => {
     setOpen(false)

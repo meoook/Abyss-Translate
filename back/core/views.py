@@ -177,21 +177,15 @@ class FileMarksView(viewsets.ModelViewSet):
     def create(self, request, *args, **kwargs):
         """ Create or update translates. Update translate progress. If finished - create translate file. """
         file_id = request.data.get('file_id')
-        mark_id = request.data.get('mark_id')
+        # mark_id = request.data.get('mark_id')
         lang_id = request.data.get('lang_id')
-        md5sum = request.data.get('md5sum')
-        text = request.data.get('text')     # TODO: Check mb can get in binary??
+        # md5sum = request.data.get('md5sum')
+        # text = request.data.get('text')     # TODO: Check mb can get in binary??
         file_manager = LocalizeFileManager(file_id)
-        print('translator_id', request.user.id)
-        print('mark_id', mark_id)
-        print('lang_id', lang_id)
-        print('text', text)
-        print('md5sum', md5sum)
         if file_manager.error:
             return Response(file_manager.error, status=status.HTTP_404_NOT_FOUND)
         # resp, sts = file_manager.create_mark_translate(request.user.id, mark_id, lang_id, text, md5sum)
         resp, sts = file_manager.create_mark_translate(request.user.id, **request.data)
-        print('DDDDDDDDDDDDDDDDDDDDDDDDDDDD', sts, resp)
         if sts > 399:   # 400+ error codes
             return Response(resp, status=sts)
         if file_manager.check_progress(lang_id):

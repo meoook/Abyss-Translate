@@ -48,7 +48,7 @@ def file_parse_uploaded(file_id, new=True):
     ignore_result=True
 )
 def file_create_translated(file_id, lang_id):
-    """ After file translated to language -> Create translated copy of this file then create or update in repo """
+    """ After file translated to language -> Create translated copy then create or update it in repo """
     file_manager = LocalizeFileManager(file_id)
     try:
         if file_manager.error or not file_manager.create_translated_copy(lang_id):
@@ -58,7 +58,7 @@ def file_create_translated(file_id, lang_id):
             # Git update
             pass
     except MaxRetriesExceededError:
-        logger.critical(f'File create translated copy retries limit')
+        logger.critical('File create translated copy retries limit')
 
 
 @shared_task(

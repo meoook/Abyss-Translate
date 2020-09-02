@@ -2,11 +2,9 @@ import React, { useEffect, useContext, useState } from "react"
 import { useParams } from "react-router-dom"
 import AppContext from "../../context/application/appContext"
 import TranslateMenu from "./TranslateMenu"
-import TranslateMenu2 from "./TranslateMenu2"
 import TranslateMark from "./TranslateMark"
 import Paginator from "../AppComponents/Paginator"
 import Loader from "../AppComponents/Loader"
-import { IcoLang, IcoLangMap } from "../icons"
 import { DisplayImage } from "../images"
 
 const PageTranslateFile = (props) => {
@@ -48,7 +46,6 @@ const PageTranslateFile = (props) => {
     })
   }
   const changeSame = () => {
-    console.log('SAME IS ', same)
     transMarkList(id, page, size, !noSame, noTrans)
     setNoSame(!noSame)
   }
@@ -83,7 +80,7 @@ const PageTranslateFile = (props) => {
             </div>
           </div>
           <hr />
-          <TranslateMenu2
+          <TranslateMenu
             langOrig={langOrig}
             setLangOrig={setLangOrig}
             langTrans={langTrans}

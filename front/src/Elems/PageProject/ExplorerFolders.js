@@ -17,6 +17,7 @@ const ExplorerFolders = ({ setOpt, fldrID, setFldrID, prjID }) => {
 
   useEffect(() => {
     setFldrID(getHeadFolder(folders))
+    // eslint-disable-next-line
   }, [folders])
 
   useEffect(() => {
@@ -60,7 +61,7 @@ const ExplorerFolders = ({ setOpt, fldrID, setFldrID, prjID }) => {
           folders
             .sort((a, b) => a.position - b.position)
             .map((folder) => (
-              <div key={folder.id} draggable={true} className='column' className='box-folder'>
+              <div key={folder.id} draggable={true} className='column box-folder'>
                 <button
                   onClick={selectFolder.bind(this, folder.id)}
                   className={`btn-f folder m-0${fldrID === folder.id ? " selected" : ""}`}>

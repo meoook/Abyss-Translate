@@ -95,8 +95,9 @@ img {
 }
 .link {
   cursor: pointer;
+  border-radius: $indent;
   &:hover {
-    background-color: rgba($shadow, 0.81);
+    background-color: rgba($texth, 0.1);
   }
 }
 .menu {

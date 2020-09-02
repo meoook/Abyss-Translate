@@ -2,7 +2,7 @@
 from django.contrib import admin
 from django.utils.safestring import mark_safe
 
-from .models import Languages, Files, Folders, FileMarks
+from .models import Languages, Files, Folders, FileMarks, Translates
 
 
 class MarkInline(admin.TabularInline):
@@ -30,10 +30,7 @@ class FilesAdmin(admin.ModelAdmin):
     fieldsets = (
         (None, {'fields': ('id', 'name', 'state', 'method', 'items', 'words')}),
         (None, {'fields': ('lang_orig', 'translated_set')}),
-        (None, {
-            'classes': ('collapse',),
-            'fields': ('repo_status', 'repo_hash'),
-            }),
+        (None, {'classes': ('collapse',), 'fields': ('repo_status', 'repo_hash'), }),
     )
 
     save_on_top = True      # Menu for save on top
@@ -45,10 +42,19 @@ class FilesAdmin(admin.ModelAdmin):
     get_thumb.short_description = u'Тут что то будет'
 
 
+@admin.register(FileMarks)
+class FileMarksAdmin(admin.ModelAdmin):
+    list_display = ['id', 'file', 'mark_number', 'col_number']
+
+
+@admin.register(Translates)
+class TranslatesAdmin(admin.ModelAdmin):
+    list_display = ['id', 'mark_id', 'text']
+
+
 @admin.register(Languages)
 class LanguagesAdmin(admin.ModelAdmin):
-    pass
-
+    list_display = ['id', 'name', 'short_name', 'active']
 
 # class LanguageCreationForm(forms.ModelForm):
 #     """A form for creating new users. Includes all the required

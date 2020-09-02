@@ -63,11 +63,13 @@ class FileRebuild:
                 trans_object = [next(filo) for _ in range(7)]
             except StopIteration:
                 break
-            text = trans_object[5].decode(codec)[8:-3]     # FIXME [8:-3] -> re ^msgstr\ \"(.*)\"$
-            if len(text.strip()) == 0:
+            # text = trans_object[5].decode(codec)[8:-3]
+            regular = re.compile(rb'^msgstr "(.*)"\s*$')
+            look_up = re.match(regular, trans_object[5])
+            if not look_up or len(look_up.group(1).strip()) == 0:
                 continue
             options = trans_object[3].decode(codec)[9:-3]
-            self.__check_or_create_mark(object_number, None, text, codec, options)
+            self.__check_or_create_mark(object_number, None, look_up.group(1).decode(codec), codec, options)
 
     def parse_as_csv(self, filo, codec, options):
         quotes_l = int(options['quotes'][0]) if 'quotes' in options else 0

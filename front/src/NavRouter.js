@@ -5,11 +5,9 @@ import AppContext from "./context/application/appContext"
 
 import MenuMain from "./Elems/AppComponents/MenuMain"
 import Header from "./Elems/AppComponents/Header"
-import PageProfile from "./Elems/PageProfile/PageProfile"
 import PageTranslateFile from "./Elems/PageTranslate/PageTranslateFile"
 import PageTranslateRoot from "./Elems/PageTranslate/PageTranslateRoot"
 import PageAddPrj from "./Elems/PageAddPrj/PageAddPrj"
-import PageExplorer from "./Elems/PageExplorer/PageExplorer"
 import PageLogin from "./Elems/PageAccount/PageLogin"
 import PageRegister from "./Elems/PageAccount/PageRegister"
 import LoaderCar from "./Elems/AppComponents/LoaderCar"
@@ -38,7 +36,7 @@ const NavRouter = (props) => {
 export default NavRouter
 
 const PrivateRoute = ({ component: Component, ...rest }) => {
-  const { state, user, accCheck } = useContext(AppContext)
+  const { user, accCheck } = useContext(AppContext)
   const [menuOpened, setMenuOpened] = useState(true)
   // console.log("state:", state)
 

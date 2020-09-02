@@ -50,6 +50,7 @@ export const PageProject = (props) => {
         }
       }
     }
+    // eslint-disable-next-line
   }, [id, projects, user]) // TODO: removed projects from here (have a bug but...)
 
   return (
@@ -67,12 +68,12 @@ export const PageProject = (props) => {
               </div>
               <h1 className='t-big ph-2'>{project.name}</h1>
             </div>
-            <div className='card p-1 mb-1'>
+            <div className='card p-1 mb-1 pr-1'>
               <div className='row center'>
                 <div className='mh-2'>Язык оригиналов</div>
                 <IcoLang language={project.lang_orig} displayShort={true} />
               </div>
-              <div className='row center mt-2'>
+              <div className='row center mt-1'>
                 <div className='mh-2'>Языки для перевода</div>
                 <IcoLangMap mapLanguages={project.translate_to} />
               </div>
