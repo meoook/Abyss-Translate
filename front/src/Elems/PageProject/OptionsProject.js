@@ -58,7 +58,7 @@ const OptionsProject = ({ prjObj }) => {
       <div className='col col-7 column'>
         <div className='table-head'>
           <div>Последние изменения файлов</div>
-          <div className='color-error ml-2'>(в стадии разработке)</div>
+          <div className='color-error ml-2'>(в стадии разработки)</div>
         </div>
         <div className='scroll-y paginate column m-1'>
           <div className='table-line m-0'>

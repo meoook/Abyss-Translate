@@ -1,7 +1,7 @@
 import React, { useState, useEffect, useContext } from "react"
 import AppContext from "../../context/application/appContext"
 
-const TranslateMark = ({ mark, langOrig, langTrans, same }) => {
+const TranslateMark = ({ mark, langOrig, langTrans, same, setActive }) => {
   const originalDisplay = mark.translates_set.find((translate) => translate.language === langOrig)
   const { transChange } = useContext(AppContext)
   const [inputVal, setInputVal] = useState("")

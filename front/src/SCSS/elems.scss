@@ -43,6 +43,50 @@
   border-radius: $indent * 1.5;
   overflow: hidden;
   @include shadow();
+  &-translate {
+    border: 1px solid rgba($texth, 0.2);
+    border-radius: $indent;
+    background: rgba($shadow, 0.3);
+    & > * {
+      border-bottom: 1px solid rgba($texth, 0.2);
+    }
+    hr {
+      margin: $indent / 2 0;
+    }
+    & > :last-child {
+      border-radius: inherit;
+      border-top-left-radius: 0;
+      border-top-right-radius: 0;
+      border-bottom: 0;
+    }
+    &-head {
+      display: flex;
+      flex-direction: row;
+      justify-content: space-between;
+      border-radius: inherit;
+      border-bottom-left-radius: 0;
+      border-bottom-right-radius: 0;
+      padding: $indent/8 $indent * 2;
+    }
+    &-content {
+      background: $head;
+      padding: $indent/2 $indent * 2;
+    }
+    &-input {
+      overflow: hidden;
+      input {
+        padding: $indent/2 $indent * 2;
+        min-width: 100%;
+        min-height: 100%;
+        // border-width: 0;
+      }
+    }
+  }
+  &:hover {
+    img {
+      transform: scale(1.2);
+    }
+  }
   &-image {
     height: $indent * 20;
     width: $indent * 30;
@@ -51,11 +95,7 @@
       width: $indent * 18;
     }
   }
-  &:hover {
-    img {
-      transform: scale(1.2);
-    }
-  }
+
   &-info {
     animation: fade 0.8s linear backwards;
     // position: absolute;
