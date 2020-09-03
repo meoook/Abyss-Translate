@@ -1,5 +1,7 @@
 import os
 import logging
+
+from django.contrib.auth.models import User
 from rest_framework import viewsets, mixins, status, filters
 from rest_framework.parsers import MultiPartParser
 from rest_framework.pagination import PageNumberPagination
@@ -11,7 +13,8 @@ from django.core.exceptions import ObjectDoesNotExist
 from django.http import FileResponse
 
 from .serializers import ProjectSerializer, FoldersSerializer, LanguagesSerializer, FilesSerializer, \
-    TransferFileSerializer, FileMarksSerializer, PermissionsSerializer, TranslatesSerializer, FolderRepoSerializer
+    TransferFileSerializer, FileMarksSerializer, PermissionsSerializer, TranslatesSerializer, FolderRepoSerializer, \
+    PermsListSerializer
 from .models import Languages, Projects, Folders, FolderRepo, Files, Translated, FileMarks, ProjectPermissions
 from .services.file_manager import LocalizeFileManager
 from .tasks import file_parse_uploaded, file_create_translated, folder_update_repo_url
@@ -63,12 +66,13 @@ class ProjectPermsViewSet(viewsets.ModelViewSet):
     permission_classes = [IsAuthenticated, IsProjectOwnerOrAdmin]
     queryset = ProjectPermissions.objects.all()
 
-    def get_queryset(self):
-        if self.request.method == 'GET':
-            save_id = self.request.query_params.get('save_id')
-        else:
-            save_id = self.request.data.get('save_id')
-        return self.queryset.filter(project__save_id=save_id)
+    def list(self, request, *args, **kwargs):
+        save_id = self.request.query_params.get('save_id')
+        qs = User.objects.filter(projectpermissions__project__save_id=save_id)
+        print('QS:', qs)
+        serializer = PermsListSerializer(qs, many=True, context={'save_id': save_id})
+        print('DATA:', serializer.data)
+        return Response(serializer.data, status=status.HTTP_200_OK)
 
 
 # Folder ViewSet

@@ -2,6 +2,7 @@ import React, { useContext } from "react"
 import AppContext from "../context/application/appContext"
 // App icons
 import { ReactComponent as SvgLogoFull } from "../IMG/logofull.svg"
+import { ReactComponent as SvgAddCircle } from "../IMG/add_circle_out.svg"
 import { ReactComponent as SvgAttantion } from "../IMG/attantion.svg"
 import { ReactComponent as SvgApartment } from "../IMG/apartment.svg"
 import { ReactComponent as SvgSearch } from "../IMG/search.svg"
@@ -42,6 +43,8 @@ export const IcoMsg = ({ type }) => {
 }
 export const IcoGet = ({ name }) => {
   switch (name.toLowerCase()) {
+    case "addcircle":
+      return <SvgAddCircle />
     case "logofull":
       return <SvgLogoFull />
     case "arrows":
@@ -80,7 +83,7 @@ export const IcoLang = ({ language, displayShort = false, displayFull = false })
   // console.log(language, languages)
   const lang = languages.find((lang) => lang.id === language)
   const name = lang ? lang.name.toLowerCase() : ""
-  
+
   const LangIcon = () => {
     switch (name) {
       case "german":

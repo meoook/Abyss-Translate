@@ -19,6 +19,9 @@ import {
   PRJ_FOLDER_REFRESH,
   PRJ_FOLDER_ADD,
   PRJ_FOLDER_REMOVE,
+  PRJ_PERMISSION_REFRESH,
+  PRJ_PERMISSION_ADD,
+  PRJ_PERMISSION_REMOVE,
 } from "../actionTypes"
 
 import { nullState, connectErrMsg } from "../utils"
@@ -127,10 +130,7 @@ const AppState = ({ children }) => {
   const prjUpdate = async (project) => {
     try {
       const res = await axios.put(`${URL}/prj/${project.save_id}/`, project, config)
-      const payload = state.projects.map((prj) => {
-        if (prj.save_id !== res.data.save_id) return prj
-        else return res.data
-      })
+      const payload = state.projects.map((prj) => (prj.save_id !== res.data.save_id ? prj : res.data))
       dispatch({ type: USER_PROJECT_REFRESH, payload })
     } catch (err) {
       addMsg(connectErrMsg(err, "Ошибка при изменении проекта"))
@@ -165,9 +165,7 @@ const AppState = ({ children }) => {
   const fldrUpdate = async (folder) => {
     try {
       const res = await axios.put(`${URL}/prj/folder/${folder.id}/`, folder, config)
-      const payload = state.folders.map((fldr) => {
-        return fldr.id !== res.data.id ? fldr : res.data
-      })
+      const payload = state.folders.map((fldr) => (fldr.id !== res.data.id ? fldr : res.data))
       dispatch({ type: PRJ_FOLDER_REFRESH, payload })
     } catch (err) {
       addMsg(connectErrMsg(err, "Не могу изменить папку"))
@@ -191,9 +189,7 @@ const AppState = ({ children }) => {
       await axios.post(`${URL}/transfer/`, formData, {
         headers: { ...config.headers },
         onUploadProgress: (progressEvent) => {
-          setProgress({
-            [file.name]: Math.round((progressEvent.loaded / progressEvent.total) * 100),
-          })
+          setProgress({ [file.name]: Math.round((progressEvent.loaded / progressEvent.total) * 100) })
         },
       })
     } catch (err) {
@@ -216,16 +212,12 @@ const AppState = ({ children }) => {
       addMsg(connectErrMsg(err, "Не могу скачать файл"))
     }
   }
-  // PROJECTS: File explorer
+  // PROJECTS: File explorer TODO: DELETE file or rename
   const explList = async (save_id, folder_id, page, size) => {
-    if (!save_id && !folder_id) {
-      dispatch({ type: EXPLORER_REFRESH, payload: {} })
-    } else {
+    if (!save_id && !folder_id) dispatch({ type: EXPLORER_REFRESH, payload: {} })
+    else {
       try {
-        const res = await axios.get(`${URL}/file`, {
-          ...config,
-          params: { save_id, folder_id, page, size },
-        })
+        const res = await axios.get(`${URL}/file`, { ...config, params: { save_id, folder_id, page, size } })
         dispatch({ type: EXPLORER_REFRESH, payload: res.data })
         addMsg({ text: "Получен список файлов", type: "success" })
       } catch (err) {
@@ -235,20 +227,18 @@ const AppState = ({ children }) => {
   }
   // TRANSLATES
   const transFileInfo = async (fID, page, size, same, noTrans) => {
+    console.log("EXPLORER", fID, page)
     try {
       const res = await axios.get(`${URL}/file/${fID}`, config)
       dispatch({ type: TRANSLATE_FILE_INFO, payload: res.data })
-      await transList(fID, page, size, same, noTrans)  // FIXME: REMAKE
+      await transList(fID, page, size, same, noTrans) // FIXME: REMAKE
     } catch (err) {
       addMsg(connectErrMsg(err, "Не могу получить файл"))
     }
   }
   const transList = async (file_id, page, size, distinct, no_trans) => {
     try {
-      const res = await axios.get(`${URL}/marks`, {
-        ...config,
-        params: { file_id, page, size, distinct, no_trans },
-      })
+      const res = await axios.get(`${URL}/marks`, { ...config, params: { file_id, page, size, distinct, no_trans } })
       dispatch({ type: TRANSLATE_PAGE_REFRESH, payload: res.data })
     } catch (err) {
       addMsg(connectErrMsg(err, "Не могу получить текст файла"))
@@ -261,11 +251,7 @@ const AppState = ({ children }) => {
       const payload = state.translates.results.map((transItem) => {
         if (transItem.id !== mark_id) return transItem
         const haveTransBefore = transItem.translates_set.find((item) => item.language === lang_id)
-        if (!haveTransBefore)
-          return {
-            ...transItem,
-            translates_set: [...transItem.translates_set, res.data],
-          }
+        if (!haveTransBefore) return { ...transItem, translates_set: [...transItem.translates_set, res.data] }
         const newTransSet = transItem.translates_set.map((item) => {
           if (item.language !== lang_id) return item
           return res.data
@@ -275,6 +261,32 @@ const AppState = ({ children }) => {
       dispatch({ type: TRANSLATE_CHANGE, payload })
     } catch (err) {
       addMsg(connectErrMsg(err, "Не могу получить текст файла"))
+    }
+  }
+  // PERMISSIONS
+  const permList = async (save_id) => {
+    console.log("GETTINNG PERMISSSIONS STATE")
+    try {
+      const res = await axios.get(`${URL}/prj/perm/`, { ...config, params: { save_id } })
+      dispatch({ type: PRJ_PERMISSION_REFRESH, payload: res.data })
+    } catch (err) {
+      addMsg(connectErrMsg(err, "Ошибка получения списка прав"))
+    }
+  }
+  const permAdd = async (save_id, permission) => {
+    try {
+      const res = await axios.post(`${URL}/prj/perm/`, { save_id, permission }, config)
+      dispatch({ type: PRJ_PERMISSION_ADD, payload: res.data })
+    } catch (err) {
+      addMsg(connectErrMsg(err, "Не могу добавить права"))
+    }
+  }
+  const permRemove = async (perm_id) => {
+    try {
+      await axios.delete(`${URL}/prj/perm/${perm_id}/`, config)
+      dispatch({ type: PRJ_PERMISSION_REMOVE, payload: perm_id })
+    } catch (err) {
+      addMsg(connectErrMsg(err, "Ошибка при удалении прав"))
     }
   }
 
@@ -287,6 +299,7 @@ const AppState = ({ children }) => {
         user: state.user,
         languages: state.languages,
         projects: state.projects,
+        permissions: state.permissions,
         folders: state.folders,
         explorer: state.explorer,
         translates: state.translates,
@@ -309,8 +322,11 @@ const AppState = ({ children }) => {
         uploadFile,
         downloadFile,
         transFileInfo,
-        transMarkList: transList,
+        transList,
         transChange,
+        permList,
+        permAdd,
+        permRemove,
       }}>
       {children}
     </AppContext.Provider>

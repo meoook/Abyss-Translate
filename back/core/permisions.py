@@ -16,15 +16,19 @@ class IsProjectOwnerOrReadOnly(permissions.BasePermission):
 
 
 class IsProjectOwnerOrAdmin(permissions.BasePermission):
-    """ Project manage access - owner and admin """
+    """ Project manage other user rights """
     def has_permission(self, request, view):
-        if request.method in permissions.SAFE_METHODS:
-            save_id = request.query_params.get('save_id')
-        else:
-            save_id = request.data.get('save_id')
+        if request.method in (*permissions.SAFE_METHODS, 'POST'):
+            save_id = request.query_params.get('save_id') or request.data.get('save_id')
+            if request.user.has_perm('core.creator'):
+                return request.user.projects_set.filter(save_id=save_id).exists()
+            return request.user.projectpermissions_set.filter(project__save_id=save_id, permission=9).exists()
+        return True
+
+    def has_object_permission(self, request, view, obj):
         if request.user.has_perm('core.creator'):
-            return request.user.projects_set.filter(save_id=save_id).exists()
-        return request.user.projectpermissions_set.filter(project__save_id=save_id, permission=9).exists()
+            return request.user.projects_set.filter(folders__id=obj.id).exists()
+        return request.user.projectpermissions_set.filter(project__folders__id=obj.id, permission=9).exists()
 
 
 class IsProjectOwnerOrManage(permissions.BasePermission):
@@ -59,6 +63,8 @@ class IsFileOwnerOrHaveAccess(permissions.BasePermission):
     def has_object_permission(self, request, view, obj):
         if request.user.has_perm('core.creator'):
             return request.user.projects_set.filter(folders__files__id=obj.id).exists()
+        elif request.method in permissions.SAFE_METHODS:
+            return request.user.projectpermissions_set.filter(project__folders__files__id=obj.id, permission=0).exists()
         return request.user.projectpermissions_set.filter(project__folders__files__id=obj.id, permission=8).exists()
 
 

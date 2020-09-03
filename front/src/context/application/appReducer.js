@@ -15,6 +15,9 @@ import {
   TRANSLATE_PAGE_REFRESH,
   TRANSLATE_FILE_INFO,
   TRANSLATE_CHANGE,
+  PRJ_PERMISSION_REFRESH,
+  PRJ_PERMISSION_ADD,
+  PRJ_PERMISSION_REMOVE,
 } from "../actionTypes"
 
 import { getNextId, nullState } from "../utils"
@@ -46,8 +49,14 @@ const handlers = {
   }),
   [EXPLORER_REFRESH]: (state, { payload }) => ({ ...state, explorer: payload }),
   [TRANSLATE_FILE_INFO]: (state, { payload }) => ({ ...state, translates: payload }),
-  [TRANSLATE_PAGE_REFRESH]: (state, { payload }) => ({...state, translates: { ...state.translates, ...payload } }),
+  [TRANSLATE_PAGE_REFRESH]: (state, { payload }) => ({ ...state, translates: { ...state.translates, ...payload } }),
   [TRANSLATE_CHANGE]: (state, { payload }) => ({ ...state, translates: { ...state.translates, results: payload } }),
+  [PRJ_PERMISSION_REFRESH]: (state, { payload }) => ({ ...state, permissions: payload }),
+  [PRJ_PERMISSION_ADD]: (state, { payload }) => ({ ...state, permissions: [...state.permissions, payload] }),
+  [PRJ_PERMISSION_REMOVE]: (state, { payload }) => ({
+    ...state,
+    permissions: state.permissions.filter((perm) => perm.id !== payload),
+  }),
   DEFAULT: (state) => state,
 }
 

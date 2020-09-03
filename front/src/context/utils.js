@@ -5,6 +5,7 @@ export const nullState = {
   msgs: [],
   languages: [],
   projects: [],
+  permissions: [],
   folders: [],
   explorer: {},
   translates: {},

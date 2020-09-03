@@ -71,7 +71,8 @@ $msg-danger: #dc3545;
   text-align: center;
   padding: $indent * 4 $indent * 2;
   position: relative;
-  color: $texth;
+  color: rgba($texth, 0.55);
+  font-weight: 500;
   font-size: $indent * 3.75;
   &:hover {
     border-color: $green;

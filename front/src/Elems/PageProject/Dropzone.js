@@ -45,7 +45,9 @@ const Dropzone = ({ addFiles, disabled }) => {
       onClick={openFileDialog}
       onDragOver={onDragOver}
       onDragLeave={onDragLeave}
-      onDrop={onFileDropped}>
+      onDrop={onFileDropped}
+      style={{ backgroundImage: "url(/add_circle_out.svg)" }} // is it ok ?
+    >
       Нажми или перетащи файлы в область для добавления
     </div>
   )

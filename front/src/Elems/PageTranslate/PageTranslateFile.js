@@ -13,7 +13,7 @@ import VariantServer from "./VariantServer"
 const PageTranslateFile = (props) => {
   // STATE
   const { id } = useParams()
-  const { transMarkList, transFileInfo, translates } = useContext(AppContext)
+  const { transList, transFileInfo, translates } = useContext(AppContext)
   const [loading, setLoading] = useState(true)
   const [page, setPage] = useState(1)
   const [size, setSize] = useState(25)
@@ -26,7 +26,7 @@ const PageTranslateFile = (props) => {
   const [activeMark, setActiveMark] = useState(null)
 
   useEffect(() => {
-    transFileInfo(id, page, size, same, noTrans) // TODO: make like Promise
+    if (id) transFileInfo(id, page, size, same, noTrans) // TODO: make like Promise
     // eslint-disable-next-line
   }, [id])
 
@@ -44,17 +44,17 @@ const PageTranslateFile = (props) => {
     setLoading(true)
     setPage(fixedNumber)
     setSize(pageSize)
-    transMarkList(id, fixedNumber, pageSize, same, noTrans).then(() => {
+    transList(id, fixedNumber, pageSize, same, noTrans).then(() => {
       setLoading(false)
     })
   }
   const changeSame = () => {
-    transMarkList(id, page, size, !noSame, noTrans)
+    transList(id, page, size, !noSame, noTrans)
     setNoSame(!noSame)
   }
   const changeNoTrans = () => {
     let val = noTrans ? 0 : langTrans
-    transMarkList(id, page, size, same, val)
+    transList(id, page, size, same, val)
     setNoTrans(val)
   }
 
@@ -101,8 +101,8 @@ const PageTranslateFile = (props) => {
             <div className='col col-7 column'>
               <div className='table-head'>Текст для перевода</div>
               <div className={`scroll-y${translates.count / size > 1 ? " paginate" : ""}`}>
-                {!translates.results ? (
-                  <div>NO ITEMS</div>
+                {!translates.results || !translates.results.length ? (
+                  <h3 className='m-2 mh-3'>&nbsp;Список пуст</h3>
                 ) : (
                   translates.results.map((mark) => (
                     <TranslateMark
@@ -128,17 +128,21 @@ const PageTranslateFile = (props) => {
               <div className='scroll-y ml-3'>
                 <VariantGoogle markID={activeMark} />
                 <VariantServer markID={activeMark} />
-                {activeMark ? (    <>         
-                  <h3 className='mt-3'>
-                    <span>Последние изменения</span>
-                    <span className='color-error t-vsmall'>&nbsp;(в стадии разработки)</span>
-                  </h3>
-                  <hr/>
-                  <div>
-                    <span className='color-white mr-0'>10.01.20 meok</span>
-                    <span>On what i changed text</span>
-                  </div>
-                  </>): <></>}
+                {activeMark ? (
+                  <>
+                    <h3 className='mt-3'>
+                      <span>Последние изменения</span>
+                      <span className='color-error t-vsmall'>&nbsp;(в стадии разработки)</span>
+                    </h3>
+                    <hr />
+                    <div>
+                      <span className='color-white mr-0'>10.01.20 meok</span>
+                      <span>On what i changed text</span>
+                    </div>
+                  </>
+                ) : (
+                  <></>
+                )}
               </div>
             </div>
           </div>

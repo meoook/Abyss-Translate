@@ -4,7 +4,7 @@ from .views import ProjectViewSet, FolderViewSet, LanguageViewSet, FileViewSet, 
 
 router = routers.DefaultRouter()
 router.register('prj/folder', FolderViewSet, 'folder')
-router.register('prj/perms', ProjectPermsViewSet, 'perms')
+router.register('prj/perm', ProjectPermsViewSet, 'permissions')
 router.register('prj', ProjectViewSet, 'project')
 router.register('lang', LanguageViewSet, 'language')
 router.register('file', FileViewSet, 'file')        # Model view

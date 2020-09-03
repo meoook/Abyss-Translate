@@ -53,7 +53,7 @@ export const PageAddPrj = (props) => {
       }
       if (checked.name && checked.icon_chars.length === 2) {
         if (projects.find((prj) => prj.name === checked.name)) {
-          addMsg({ text: "Проект с таким именем уже существует", type: "warning" })
+          addMsg({ text: "Игра с таким именем уже существует", type: "warning" })
         } else {
           setProject(checked)
           setShadow(checked)
@@ -85,12 +85,10 @@ export const PageAddPrj = (props) => {
 
   return (
     <div className='container-fluid'>
-      <h1>Add project</h1>
-      <hr />
-      <div className='row'>
+      <div className='row m-3'>
         <div className='col col-8 offset-2'>
           <div className='form'>
-            <h1>облачное пространство buhs</h1>
+            <h1>Облачное пространство игры</h1>
             <div className='title'>{titles[phase - 1]}</div>
             <div className='steps row'>
               <div className='steps-line'>
@@ -100,26 +98,26 @@ export const PageAddPrj = (props) => {
                 <i className='big'>
                   <IcoGet name='descr' />
                 </i>
-                <div>Name</div>
+                <div>Название</div>
               </div>
               <div className={`steps-step col col-4 ${phase > 1 ? "active" : ""}`}>
                 <i className='big'>
                   <IcoGet name='language' />
                 </i>
-                <div>Language</div>
+                <div>Языковые настройки</div>
               </div>
               <div className={`steps-step col col-4 ${phase > 2 ? "active" : ""}`}>
                 <i className='big'>
                   <IcoGet name='summary' />
                 </i>
-                <div>Summary</div>
+                <div>Итого</div>
               </div>
             </div>
             <div className={`progress-bar ${phase > 1 ? "finish" : ""}`}>
               <div style={{ width: `${phase * 33.33}%` }}></div>
             </div>
             <div className='row justify center'>
-              <h3>Создаем новый проект</h3>
+              <h3>Настройки игры</h3>
               <div>Шаг {phase} из 3</div>
             </div>
             {phase === 1 && <PrjNameInput shadow={shadow} setShadow={setShadow} />}

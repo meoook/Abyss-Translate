@@ -1,5 +1,6 @@
 from rest_framework import serializers
 from rest_framework.exceptions import APIException
+from django.contrib.auth.models import User
 
 from .models import Languages, Projects, ProjectPermissions, Folders, FolderRepo, Files, ErrorFiles, Translated, FileMarks, Translates 
 
@@ -109,14 +110,34 @@ class FolderRepoSerializer(serializers.ModelSerializer):
 
 class PermissionsSerializer(serializers.ModelSerializer):
     """ Manage users permissions to project (project id must be hidden) """
+    # user = serializers.SlugRelatedField(slug_field='username', read_only=True)
+    # project = serializers.SlugRelatedField(slug_field='save_id', read_only=True)
 
     class Meta:
         model = ProjectPermissions
-        fields = ["id", "user", "project", "permission"]
+        fields = ["id", "permission"]
         extra_kwargs = {
-            'user': {'source': 'user.username'},
-            'project': {'source': 'project.save_id'},  # , 'write_only': True},
+            # 'user': {'source': 'user__username'},
+            # 'project': {'write_only': True},
         }
+
+
+class PermsListSerializer(serializers.ModelSerializer):
+    """ List of users and there rights to selected project """
+    # permissions = PermissionsSerializer(many=True, read_only=True)
+    prj_perms = serializers.SerializerMethodField()
+
+    class Meta:
+        model = User
+        fields = ['username', 'prj_perms']
+        # fields = '__all__'
+
+    def get_prj_perms(self, instance):
+        save_id = self.context.get('save_id')
+        # return instance.projectpermissions_set.filter(project__save_id=save_id).values_list("permission", flat=True)
+        qs = instance.projectpermissions_set.filter(project__save_id=save_id)
+        serializer = PermissionsSerializer(qs, many=True)
+        return serializer.data
 
 
 class ProjectSerializer(serializers.ModelSerializer):
@@ -135,7 +156,7 @@ class ProjectSerializer(serializers.ModelSerializer):
 
     def get_permissions_set(self, instance):
         request = self.context.get('request')
-        return instance.projectpermissions_set.filter(user=request.user).values_list("permission", flat=True) if request else []
+        return instance.projectpermissions_set.filter(user=request.user).values_list("permission", flat=True)  # if request else []
 
     def get_author(self, instance):
         return instance.owner.username

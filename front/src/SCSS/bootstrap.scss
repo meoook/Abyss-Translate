@@ -672,7 +672,14 @@ table {
 }
 
 .dropzone {
+  // position: relative;
+  // overflow: hidden;
   @extend %border-big;
+  background-position-x: center;
+  background-position-y: center;
+  background-repeat: no-repeat;
+  background-size: $indent * 18;
+
   &.disable {
     border-color: $red;
   }
