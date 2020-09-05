@@ -1,15 +1,17 @@
 import React, { useContext, useEffect, useState } from "react"
 import AppContext from "../../context/application/appContext"
 import Loader from "../AppComponents/Loader"
+import PermissionsAddMenu from "./PermissionsAddMenu"
 
 const ProjectPermissions = ({ prjID }) => {
   const { permissions, permList, permAdd, permRemove } = useContext(AppContext)
   const [loading, setLoading] = useState(true)
+  const [accName, setAccName] = useState(null)
 
   useEffect(() => {
-    console.log("GETTINNG PERMISSSIONS COMP")
     if (prjID) {
       setLoading(true)
+      setAccName(null)
       permList(prjID).then(() => {
         setLoading(false)
       })
@@ -19,10 +21,6 @@ const ProjectPermissions = ({ prjID }) => {
   return (
     <div className='expl row mt-2'>
       <div className='col col-7 column'>
-        {/* <div className='table-head'>
-          <span>Список прав пользователей</span>
-          <span className='color-error t-vsmall ml-1'>&nbsp;(в стадии разработки)</span>
-        </div> */}
         <div className='table-head'>
           <div className='col col-4'>Имя</div>
           <div className='col col-2'>trans</div>
@@ -38,7 +36,7 @@ const ProjectPermissions = ({ prjID }) => {
           ) : (
             <div>
               {permissions.map((item) => (
-                <PermissionItem key={item.username} perm={item} />
+                <PermissionItem key={item.username} perm={item} setAcc={setAccName} />
               ))}
             </div>
           )}
@@ -49,9 +47,7 @@ const ProjectPermissions = ({ prjID }) => {
           <span>Выдача прав пользователям</span>
           <span className='color-error t-vsmall ml-1'>&nbsp;(в стадии разработки)</span>
         </div>
-        <div className='scroll-y ml-2'>
-          <div className='m-2'>Add menu</div>
-        </div>
+        <PermissionsAddMenu accName={accName} />
       </div>
     </div>
   )
@@ -59,9 +55,9 @@ const ProjectPermissions = ({ prjID }) => {
 
 export default ProjectPermissions
 
-const PermissionItem = ({ perm }) => {
+const PermissionItem = ({ perm, setAcc }) => {
   return (
-    <div className='table-line m-1'>
+    <div className='table-line link m-1' onClick={setAcc.bind(this, perm.username)}>
       <div className='col col-4'>{perm.username}</div>
       <div className='col col-2'>{perm.prj_perms.find((item) => item.permission === 0) && "x"}</div>
       <div className='col col-2'>{perm.prj_perms.find((item) => item.permission === 5) && "x"}</div>

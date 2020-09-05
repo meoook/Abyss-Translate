@@ -227,7 +227,6 @@ const AppState = ({ children }) => {
   }
   // TRANSLATES
   const transFileInfo = async (fID, page, size, same, noTrans) => {
-    console.log("EXPLORER", fID, page)
     try {
       const res = await axios.get(`${URL}/file/${fID}`, config)
       dispatch({ type: TRANSLATE_FILE_INFO, payload: res.data })
@@ -265,7 +264,6 @@ const AppState = ({ children }) => {
   }
   // PERMISSIONS
   const permList = async (save_id) => {
-    console.log("GETTINNG PERMISSSIONS STATE")
     try {
       const res = await axios.get(`${URL}/prj/perm/`, { ...config, params: { save_id } })
       dispatch({ type: PRJ_PERMISSION_REFRESH, payload: res.data })

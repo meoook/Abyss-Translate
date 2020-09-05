@@ -11,6 +11,7 @@
     padding: 0 $indent * 4;
     &.big {
       height: $indent * 10;
+      border-radius: $indent;
     }
     &.vbig {
       height: $indent * 27;
@@ -135,9 +136,9 @@ img {
 }
 .link {
   cursor: pointer;
-  border-radius: $indent;
   &:hover {
     background-color: rgba($texth, 0.1);
+    color: $texth;
   }
 }
 .menu {
@@ -171,6 +172,34 @@ img {
   }
   &-folder {
     position: relative;
+  }
+  &-perms {
+    margin-bottom: $indent;
+    position: relative;
+    display: flex;
+    align-items: center;
+    vertical-align: middle;
+    border: 1px solid rgba($texth, 0.2);
+    background: rgba($shadow, 0.3);
+    text-transform: uppercase;
+    & > * {
+      padding: $indent * 1.5;
+      background: $head;
+    }
+    &-toggle {
+      position: absolute;
+      top: 0;
+      bottom: 0;
+      right: 0;
+      color: $texth;
+      background-color: rgba($red, 0.3);
+      min-width: $indent * 8;
+      border-left: 1px solid rgba($texth, 0.2);
+      text-align: center;
+      &.on {
+        background-color: rgba($green, 0.3);
+      }
+    }
   }
 }
 
