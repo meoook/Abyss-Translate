@@ -6,8 +6,6 @@ services:
     image: redis:alpine
     expose:
       - 6379
-#    ports:
-#      - 6379:6379
   postgres:
     container_name: localize-postgres-dev
     image: postgres:12-alpine
@@ -15,8 +13,6 @@ services:
       - postgres_data:/var/lib/postgresql/data/
     expose:
       - 5432
-#    ports:
-#      - 5432:5432
     environment:
       - POSTGRES_DB=postgres
       - POSTGRES_USER=postgres
@@ -25,11 +21,12 @@ services:
     container_name: localize-django-dev
     build: ./back
     image: localize-django-dev
-    # command: sh -c "python manage.py migrate --no-input && gunicorn localize.wsgi -b 0:8000"
-    command: sh -c "python manage.py migrate --no-input && python manage.py runserver 0.0.0.0:8000"
+    command: sh -c "python manage.py migrate --no-input && gunicorn localize.wsgi -b 0:8000"
+    # command: sh -c "python manage.py migrate --no-input && python manage.py runserver 0.0.0.0:8000"
     volumes:
       - ./back:/usr/src/back/
       - users_files:/usr/src/back/users/
+      - logs:/usr/src/back/logs/
     ports:
       - 8000:8000
     depends_on:
@@ -61,3 +58,4 @@ volumes:
   postgres_data:
   users_files:
   node_modules:
+  logs:
