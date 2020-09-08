@@ -11,7 +11,7 @@ front/.env.local
 # Back
 back/celerybeat-schedule
 back/users
-back/logs
+# back/logs
 back/*/__pycache__/
 back/*/*/__pycache__/
 
