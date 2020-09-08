@@ -19,9 +19,8 @@ import {
   PRJ_FOLDER_REFRESH,
   PRJ_FOLDER_ADD,
   PRJ_FOLDER_REMOVE,
+  PRJ_PERMISSION_LIST,
   PRJ_PERMISSION_REFRESH,
-  PRJ_PERMISSION_ADD,
-  PRJ_PERMISSION_REMOVE,
 } from "../actionTypes"
 
 import { nullState, connectErrMsg } from "../utils"
@@ -277,7 +276,7 @@ const AppState = ({ children }) => {
   const permList = async (save_id) => {
     try {
       const res = await axios.get(`${URL}/prj/perm/`, { ...config, params: { save_id } })
-      dispatch({ type: PRJ_PERMISSION_REFRESH, payload: res.data })
+      dispatch({ type: PRJ_PERMISSION_LIST, payload: res.data })
     } catch (err) {
       addMsg(connectErrMsg(err, "Ошибка получения списка прав"))
     }
@@ -285,19 +284,23 @@ const AppState = ({ children }) => {
   const permAdd = async (save_id, username, permission) => {
     try {
       const res = await axios.post(`${URL}/prj/perm/`, { save_id, username, permission }, config)
-      dispatch({ type: PRJ_PERMISSION_ADD, payload: res.data })
+      let user = state.permissions.find((item) => item.username === username)
+      if (!user) user = { username, prj_perms: [res.data] }
+      else user.prj_perms = [...user.prj_perms, res.data]
+      dispatch({ type: PRJ_PERMISSION_REFRESH, payload: user })
     } catch (err) {
       addMsg(connectErrMsg(err, "Не могу добавить права"))
     }
   }
   const permRemove = async (save_id, username, permission) => {
-    const userPerms = state.permissions.find((item) => item.username === username)
-    if (!userPerms) return addMsg({ text: "У юзера нет прав к игре" })
-    const perm_id = userPerms.find((item) => (item.permission = permission))
-    if (!perm_id) return addMsg({ text: "У юзера нет таких прав" })
+    let user = state.permissions.find((item) => item.username === username)
+    if (!user) return addMsg({ text: "У юзера нет прав к игре" })
+    const perm = user.prj_perms.find((item) => item.permission === permission)
+    if (!perm) return addMsg({ text: "У юзера нет таких прав" })
     try {
-      await axios.delete(`${URL}/prj/perm/${perm_id}/`, config)
-      dispatch({ type: PRJ_PERMISSION_REMOVE, payload: perm_id })
+      await axios.delete(`${URL}/prj/perm/${perm.id}/`, config)
+      user.prj_perms = user.prj_perms.filter((item) => item.permission !== permission)
+      dispatch({ type: PRJ_PERMISSION_REFRESH, payload: user })
     } catch (err) {
       addMsg(connectErrMsg(err, "Ошибка при удалении прав"))
     }

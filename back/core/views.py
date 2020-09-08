@@ -3,6 +3,7 @@ import logging
 
 from django.contrib.auth.models import User
 from rest_framework import viewsets, mixins, status, filters
+from rest_framework.generics import get_object_or_404
 from rest_framework.parsers import MultiPartParser
 from rest_framework.pagination import PageNumberPagination
 from rest_framework.permissions import IsAuthenticated
@@ -68,9 +69,14 @@ class ProjectPermsViewSet(viewsets.ModelViewSet):
 
     def list(self, request, *args, **kwargs):
         save_id = self.request.query_params.get('save_id')
-        qs = User.objects.filter(projectpermissions__project__save_id=save_id)
+        qs = User.objects.filter(projectpermissions__project__save_id=save_id).distinct()
         serializer = PermsListSerializer(qs, many=True, context={'save_id': save_id})
         return Response(serializer.data, status=status.HTTP_200_OK)
+
+    def perform_create(self, serializer):
+        project = get_object_or_404(Projects, save_id=self.request.data.get('save_id'))
+        user = get_object_or_404(User, username=self.request.data.get('username'))
+        return serializer.save(project=project, user=user)
 
 
 # Folder ViewSet

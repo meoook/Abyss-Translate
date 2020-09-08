@@ -12,44 +12,39 @@ const PermissionsAddMenu = ({ accName, prjID }) => {
   const LEN_TO_SEARCH = 3
 
   useEffect(() => {
-    if (accName) {
-      setName(accName)
-      setInput(accName)
-      const userPerms = permissions.find((item) => item.username === accName)
-      if (userPerms) setPerms(userPerms.prj_perms.map((item) => item.permission))
-      else setPerms([])
-    } else {
+    if (!accName && !input) {
       setName("")
       setInput("")
+    } else {
+      const username = accName ? accName : input
+      setName(username)
+      setInput(username)
+      const userPerms = permissions.find((item) => item.username === username)
+      if (userPerms) setPerms(userPerms.prj_perms.map((item) => item.permission))
+      else setPerms([])
     }
     setOptions([])
   }, [accName, permissions])
 
   const changeInput = (value) => {
     const searchVal = value.trim()
-    console.log("ROOT: CHECK NEW INPUT", searchVal)
-    // TODO: Fix change perms
     if (!searchVal) {
-      console.log("ROOT: RESET")
       setName("")
       setOptions([])
       setPerms([])
     } else if (options.find((item) => item.toLowerCase() === searchVal.toLowerCase())) {
-      console.log("ROOT: FOUND", permissions)
       setName(searchVal)
+      setInput(searchVal)
       const userPerms = permissions.find((item) => item.username.toLowerCase() === searchVal.toLowerCase())
-      console.log("ROOT: FOUND", userPerms)
       if (userPerms) setPerms(userPerms.prj_perms.map((item) => item.permission))
       else setPerms([])
     } else if (LEN_TO_SEARCH === searchVal.length) {
-      console.log("ROOT: UPDATE SEARCH")
       usersList(searchVal).then((newOptions) => {
         setOptions(newOptions.map((item) => item.username))
       })
       setName("")
       setPerms([])
     } else if (LEN_TO_SEARCH > searchVal.length) {
-      console.log("ROOT: NULL SEARCH")
       setName("")
       setOptions([])
       setPerms([])
@@ -64,7 +59,6 @@ const PermissionsAddMenu = ({ accName, prjID }) => {
     if (!name) return
     if (perms.includes(perm)) permRemove(prjID, name, perm)
     else permAdd(prjID, name, perm)
-    // else permsAdd(perm, name, save_id)
   }
 
   return (
@@ -83,7 +77,7 @@ const PermissionsAddMenu = ({ accName, prjID }) => {
               <div className='box-perms-toggle'>-</div>
             )}
           </div>
-          <div className='box-perms link'>
+          <div className='box-perms link' onClick={togglePerm.bind(this, 5)}>
             <div className='col'>Приглашать переводчиков</div>
             {perms.includes(5) ? (
               <div className='box-perms-toggle on'>x</div>
@@ -91,7 +85,7 @@ const PermissionsAddMenu = ({ accName, prjID }) => {
               <div className='box-perms-toggle'>-</div>
             )}
           </div>
-          <div className='box-perms link'>
+          <div className='box-perms link' onClick={togglePerm.bind(this, 8)}>
             <div className='col'>Управлять файлами</div>
             {perms.includes(8) ? (
               <div className='box-perms-toggle on'>x</div>
@@ -99,7 +93,7 @@ const PermissionsAddMenu = ({ accName, prjID }) => {
               <div className='box-perms-toggle'>-</div>
             )}
           </div>
-          <div className='box-perms link'>
+          <div className='box-perms link' onClick={togglePerm.bind(this, 9)}>
             <div className='col'>Управлять правами</div>
             {perms.includes(9) ? (
               <div className='box-perms-toggle on'>x</div>

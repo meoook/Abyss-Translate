@@ -27,8 +27,8 @@ class IsProjectOwnerOrAdmin(permissions.BasePermission):
 
     def has_object_permission(self, request, view, obj):
         if request.user.has_perm('core.creator'):
-            return request.user.projects_set.filter(folders__id=obj.id).exists()
-        return request.user.projectpermissions_set.filter(project__folders__id=obj.id, permission=9).exists()
+            return request.user.projects_set.filter(projectpermissions__id=obj.id).exists()
+        return request.user.projectpermissions_set.filter(project=obj.project, permission=9).exists()
 
 
 class IsProjectOwnerOrManage(permissions.BasePermission):

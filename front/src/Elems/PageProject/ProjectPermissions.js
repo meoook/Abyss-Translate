@@ -44,10 +44,7 @@ const ProjectPermissions = ({ prjID }) => {
         </div>
       </div>
       <div className='col col-5 column'>
-        <div className='table-head ml-2'>
-          <span>Выдача прав пользователям</span>
-          <span className='color-error t-vsmall ml-1'>&nbsp;(в стадии разработки)</span>
-        </div>
+        <div className='table-head ml-2'>Выдача прав пользователям</div>
         <PermissionsAddMenu accName={accName} prjID={prjID} />
       </div>
     </div>

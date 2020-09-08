@@ -21,6 +21,3 @@ with mail.get_connection() as connection:
 coverage run --source='.' ./manaage.py test .
 coverage report
 coverage html
-
-
-{"count":8,"next":null,"previous":null,"results":[{"id":23,"md5sum":"541ae878d7c1aa0348299977ec620acc","words":2,"translates_set":[{"text":"Ускорение Дворянина","translator":null,"language":75}]},{"id":24,"md5sum":"5e8110431e271e756f2863617d41aa85","words":2,"translates_set":[{"text":"Скор. Атк. +2%.","translator":null,"language":75}]},{"id":25,"md5sum":"6ff8da04ddf90d74659736c53fabcc57","words":3,"translates_set":[{"text":"Магический Барьер Дворянина","translator":null,"language":75}]},{"id":26,"md5sum":"70f4884d532e272d626d9bef938c8f43","words":2,"translates_set":[{"text":"Маг. Защ. +3%.","translator":null,"language":75}]},{"id":27,"md5sum":"06d1f50f12d3f3426428c3de06aac118","words":1,"translates_set":[{"text":"Заблокировано","translator":null,"language":75}]},{"id":28,"md5sum":"50446a8997aab8c37ba82e7e72feb883","words":2,"translates_set":[{"text":"Способность неактивна","translator":null,"language":75}]},{"id":29,"md5sum":"06d1f50f12d3f3426428c3de06aac118","words":1,"translates_set":[{"text":"Заблокировано","translator":null,"language":75}]},{"id":30,"md5sum":"50446a8997aab8c37ba82e7e72feb883","words":2,"translates_set":[{"text":"Способность неактивна","translator":null,"language":75}]}]}

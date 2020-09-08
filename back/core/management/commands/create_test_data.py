@@ -9,14 +9,14 @@ class Command(BaseCommand):
     help = 'Manager to create test objects to test UI'
 
     def handle(self, *args, **options):
-        name = 'cr'
+        name = 'alex'
         password = '2'
         user = User.objects.create_user(username=name, email=f'{name}@gmail.com', password=password)
         creator = Permission.objects.get(codename='creator')
         user.user_permissions.add(creator)
         self.stdout.write(f'Created user name: {name} password: {password} with rights creator')
 
-        project1_props = {'owner': user, 'name': self.__random_name(), 'icon_chars': 'P1', 'lang_orig_id': 75}
+        project1_props = {'owner': user, 'name': 'snow', 'icon_chars': 'P1', 'lang_orig_id': 75}
         project1 = Projects.objects.create(**project1_props)
         project1.translate_to.set([15, 18, 22])
         Folders.objects.create(project=project1, name=self.__random_name(), position=1)
@@ -30,15 +30,17 @@ class Command(BaseCommand):
             ProjectPermissions.objects.create(user=user, project=project1, permission=perm)
             self.stdout.write(f'Created user name: {name} password:{password} with access {perm} to project {project1.name}')
 
-        project2_props = {'owner': user, 'name': self.__random_name(), 'icon_chars': 'P2', 'lang_orig_id': 15}
+        project2_props = {'owner': user, 'name': 'desert', 'icon_chars': 'P2', 'lang_orig_id': 75}
         project2 = Projects.objects.create(**project2_props)
-        project2.translate_to.set([75, 18])
+        project2.translate_to.set([18, 22])
         self.stdout.write(f'Created second project {project2.name} with owner:{name}')
 
         name = 'q1'
         user = User.objects.create_user(username=name, email=f'{name}@gmail.com', password=password)
         ProjectPermissions.objects.create(user=user, project=project1, permission=0)
-        ProjectPermissions.objects.create(user=user, project=project2, permission=0)
+        ProjectPermissions.objects.create(user=user, project=project1, permission=5)
+        ProjectPermissions.objects.create(user=user, project=project1, permission=8)
+        ProjectPermissions.objects.create(user=user, project=project2, permission=9)
         self.stdout.write(f'Created user name: {name} password: {password} with access 0 to P1 and P2')
 
         self.stdout.write(' TEST DATA CREATED '.center(60, '='))

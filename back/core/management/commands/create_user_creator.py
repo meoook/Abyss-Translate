@@ -1,12 +1,15 @@
 import random
 from django.core.management.base import BaseCommand
 
-from core.models import Projects, Folders
 from django.contrib.auth.models import User, Permission
+
+from core.models import Projects, Folders
+
+# TODO: Create user by username and email - send email with password to this user
 
 
 class Command(BaseCommand):
-    help = 'Manager to create user with test project'
+    help = 'Manager to create user with perms - creator'
 
     def add_arguments(self, parser):
         parser.add_argument('name', type=str, nargs='?', default=None)
@@ -26,15 +29,15 @@ class Command(BaseCommand):
 
     def user_reg_creator(self, name):
         """ Create test data -> Can be used in tests """
-        password = '1'
+        password = '2'
         user = User.objects.create_user(username=name, email=f'{name}@gmail.com', password=password)
-        self.stdout.write(f'User {name} created with password: {password}')
+        self.stdout.write(f'User {name} with creator permissions registered with password: {password}')
         creator = Permission.objects.get(codename='creator')
         user.user_permissions.add(creator)
 
         project_props = {
             'owner': user,
-            'name': f'Project {name}',
+            'name': f'Desert',
             'icon_chars': 'Pr',
             'lang_orig_id': 75,
         }
