@@ -124,7 +124,6 @@ class PermissionsSerializer(serializers.ModelSerializer):
 
 class PermsListSerializer(serializers.ModelSerializer):
     """ List of users and there rights to selected project """
-    # permissions = PermissionsSerializer(many=True, read_only=True)
     prj_perms = serializers.SerializerMethodField()
 
     class Meta:
@@ -134,7 +133,6 @@ class PermsListSerializer(serializers.ModelSerializer):
 
     def get_prj_perms(self, instance):
         save_id = self.context.get('save_id')
-        # return instance.projectpermissions_set.filter(project__save_id=save_id).values_list("permission", flat=True)
         qs = instance.projectpermissions_set.filter(project__save_id=save_id)
         serializer = PermissionsSerializer(qs, many=True)
         return serializer.data

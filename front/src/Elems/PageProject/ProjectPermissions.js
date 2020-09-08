@@ -4,7 +4,7 @@ import Loader from "../AppComponents/Loader"
 import PermissionsAddMenu from "./PermissionsAddMenu"
 
 const ProjectPermissions = ({ prjID }) => {
-  const { permissions, permList, permAdd, permRemove } = useContext(AppContext)
+  const { permissions, permList } = useContext(AppContext)
   const [loading, setLoading] = useState(true)
   const [accName, setAccName] = useState(null)
 
@@ -16,6 +16,7 @@ const ProjectPermissions = ({ prjID }) => {
         setLoading(false)
       })
     }
+    // eslint-disable-next-line
   }, [prjID])
 
   return (
@@ -47,7 +48,7 @@ const ProjectPermissions = ({ prjID }) => {
           <span>Выдача прав пользователям</span>
           <span className='color-error t-vsmall ml-1'>&nbsp;(в стадии разработки)</span>
         </div>
-        <PermissionsAddMenu accName={accName} />
+        <PermissionsAddMenu accName={accName} prjID={prjID} />
       </div>
     </div>
   )

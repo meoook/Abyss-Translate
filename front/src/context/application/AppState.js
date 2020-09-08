@@ -263,6 +263,17 @@ const AppState = ({ children }) => {
     }
   }
   // PERMISSIONS
+  const usersList = async (filterStr) => {
+    // FIXME: Not correct way using (without reducer)
+    try {
+      const res = await axios.get(`${URL}/auth/usr`, { ...config, params: { name: filterStr } })
+      return res.data
+    } catch (err) {
+      addMsg(connectErrMsg(err, "Ошибка получения списка пользователей"))
+      // throw new Error("Ошибка получения списка пользователей")
+      return []
+    }
+  }
   const permList = async (save_id) => {
     try {
       const res = await axios.get(`${URL}/prj/perm/`, { ...config, params: { save_id } })
@@ -271,15 +282,19 @@ const AppState = ({ children }) => {
       addMsg(connectErrMsg(err, "Ошибка получения списка прав"))
     }
   }
-  const permAdd = async (save_id, permission) => {
+  const permAdd = async (save_id, username, permission) => {
     try {
-      const res = await axios.post(`${URL}/prj/perm/`, { save_id, permission }, config)
+      const res = await axios.post(`${URL}/prj/perm/`, { save_id, username, permission }, config)
       dispatch({ type: PRJ_PERMISSION_ADD, payload: res.data })
     } catch (err) {
       addMsg(connectErrMsg(err, "Не могу добавить права"))
     }
   }
-  const permRemove = async (perm_id) => {
+  const permRemove = async (save_id, username, permission) => {
+    const userPerms = state.permissions.find((item) => item.username === username)
+    if (!userPerms) return addMsg({ text: "У юзера нет прав к игре" })
+    const perm_id = userPerms.find((item) => (item.permission = permission))
+    if (!perm_id) return addMsg({ text: "У юзера нет таких прав" })
     try {
       await axios.delete(`${URL}/prj/perm/${perm_id}/`, config)
       dispatch({ type: PRJ_PERMISSION_REMOVE, payload: perm_id })
@@ -322,6 +337,7 @@ const AppState = ({ children }) => {
         transFileInfo,
         transList,
         transChange,
+        usersList,
         permList,
         permAdd,
         permRemove,

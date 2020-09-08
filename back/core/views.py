@@ -69,9 +69,7 @@ class ProjectPermsViewSet(viewsets.ModelViewSet):
     def list(self, request, *args, **kwargs):
         save_id = self.request.query_params.get('save_id')
         qs = User.objects.filter(projectpermissions__project__save_id=save_id)
-        print('QS:', qs)
         serializer = PermsListSerializer(qs, many=True, context={'save_id': save_id})
-        print('DATA:', serializer.data)
         return Response(serializer.data, status=status.HTTP_200_OK)
 
 
@@ -181,14 +179,10 @@ class FileMarksView(viewsets.ModelViewSet):
     def create(self, request, *args, **kwargs):
         """ Create or update translates. Update translate progress. If finished - create translate file. """
         file_id = request.data.get('file_id')
-        # mark_id = request.data.get('mark_id')
         lang_id = request.data.get('lang_id')
-        # md5sum = request.data.get('md5sum')
-        # text = request.data.get('text')     # TODO: Check mb can get in binary??
         file_manager = LocalizeFileManager(file_id)
         if file_manager.error:
             return Response(file_manager.error, status=status.HTTP_404_NOT_FOUND)
-        # resp, sts = file_manager.create_mark_translate(request.user.id, mark_id, lang_id, text, md5sum)
         resp, sts = file_manager.create_mark_translate(request.user.id, **request.data)
         if sts > 399:   # 400+ error codes
             return Response(resp, status=sts)

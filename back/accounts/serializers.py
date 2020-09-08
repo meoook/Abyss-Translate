@@ -57,3 +57,12 @@ class LoginSerializer(serializers.ModelSerializer):
 
 
 # Logoff serializer
+
+
+# User List (not creators)
+class UserListSerializer(serializers.ModelSerializer):
+
+    class Meta:
+        model = User  # settings.AUTH_USER_MODEL
+        fields = ['username']
+
