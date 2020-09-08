@@ -35,10 +35,12 @@ EXPOSE 8000
 RUN addgroup -S translate && adduser -S localize -G translate
 RUN mkdir -p /usr/src/back/users \
     && mkdir -p /usr/src/back/logs \
+    && touch /usr/src/back/logs/log.log \
     && chown -R localize:translate /usr/src/back/ \
     && chmod -R 777 /usr/src/back/users \
     && chmod -R 777 /usr/src/back/logs \
-    && chmod +x /usr/src/back/entrypoint.sh
+    && chmod +x /usr/src/back/entrypoint.sh \
+    && chmod +x /usr/src/back/logs/log.log
 USER localize
 
 # run entrypoint.sh
