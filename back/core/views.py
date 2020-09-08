@@ -74,6 +74,7 @@ class ProjectPermsViewSet(viewsets.ModelViewSet):
         return Response(serializer.data, status=status.HTTP_200_OK)
 
     def perform_create(self, serializer):
+        # TODO: Check perms if 5 - can create 0, if 9 can create other
         project = get_object_or_404(Projects, save_id=self.request.data.get('save_id'))
         user = get_object_or_404(User, username=self.request.data.get('username'))
         return serializer.save(project=project, user=user)

@@ -36,8 +36,8 @@ RUN addgroup -S translate && adduser -S localize -G translate
 RUN mkdir -p /usr/src/back/users \
     && mkdir -p /usr/src/back/logs \
     && chown -R localize:translate /usr/src/back/ \
-    && chmod -R 755 /usr/src/back/users \
-    && chmod -R 755 /usr/src/back/logs \
+    && chmod -R 777 /usr/src/back/users \
+    && chmod -R 777 /usr/src/back/logs \
     && chmod +x /usr/src/back/entrypoint.sh
 USER localize
 

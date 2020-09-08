@@ -16,7 +16,7 @@ const PermissionsAddMenu = ({ accName, prjID }) => {
       setName("")
       setInput("")
     } else {
-      const username = accName ? accName : input
+      const username = input ? input : accName
       setName(username)
       setInput(username)
       const userPerms = permissions.find((item) => item.username === username)

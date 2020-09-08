@@ -39,7 +39,7 @@ export const MenuMain = ({ closed, changeOpen }) => {
           </NavLink>
           {closed ? <hr /> : <div className='menu-title'>Игры</div>}
         </div>
-        <div className='menu-list mb-1'>
+        <div className='menu-list mb-3'>
           {loading ? (
             <Loader />
           ) : (

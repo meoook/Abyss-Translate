@@ -8,7 +8,7 @@ export const PageProjects = (props) => {
   const { user, projects } = useContext(AppContext)
 
   return (
-    <div className='container-fluid'>
+    <div className='container-fluid p-2'>
       <div className='row bottom justify'>
         <h1>Игры</h1>
 
