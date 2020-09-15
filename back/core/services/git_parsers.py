@@ -7,6 +7,7 @@ import base64
 
 class GitParser:
     """ Basic class structure for git parser """
+    _commit_msg = 'Create/update translated copy "{path}" from localize'
 
     def __init__(self, root, repo, file):
         self.__url_root = root
@@ -51,16 +52,26 @@ class GitParser:
         except (KeyError, TypeError):
             return 'Error parsing response with error code'
 
-    def request_obj_for_file_upload(self, git_obj, git_name, data, access):
+    @staticmethod
+    def hash_from_resp_upload(response):
+        """ Get file translated copy hash after uploaded to git repository """
+        try:
+            response = response.json()
+            return response['content']['sha']
+        except (KeyError, TypeError):
+            return 'Error parsing upload response'
+
+    def request_obj_for_file_upload(self, git_obj, git_name, git_hash, access, data):
         """ Create full request object with url, headers, and data """
         path = f'{git_obj["path"]}/{git_name}' if git_obj['path'] else git_name
         link = self._url_upload_format.format(**{**git_obj, 'path': path})
         head = {**access, 'Accept': 'application/vnd.github.v3+json', 'Content-type': 'application/json'}
         data_coded = base64.b64encode(data).decode('utf-8')
         obj = {
-            'message': 'Create new file via GitHub API',
+            'message': self._commit_msg.format(path=path),
             'content': data_coded,
             'branch': git_obj['branch'],
+            'sha': git_hash,
         }
         return {'url': link, 'headers': head, 'data': json.dumps(obj)}
 

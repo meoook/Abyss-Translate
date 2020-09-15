@@ -124,7 +124,7 @@ class Files(models.Model):
     updated = models.DateTimeField(auto_now=True)   # File updated
     items = models.PositiveIntegerField(null=True)  # FileMarks count
     words = models.PositiveIntegerField(null=True)  # Total words count
-    repo_hash = models.CharField(max_length=40, blank=True)     # TODO: Get hash by own
+    repo_hash = models.CharField(max_length=40, blank=True)     # TODO: Get by own
     repo_status = models.BooleanField(null=True)    # Null - no repo for related Folder
     lang_orig = models.ForeignKey(Languages, on_delete=models.DO_NOTHING)
     error = models.CharField(max_length=255, blank=True)
@@ -141,6 +141,7 @@ class Translated(models.Model):
     finished = models.BooleanField(default=False)   # All items have translations
     checked = models.BooleanField(default=False)    # Translations checked by admin?
     translate_copy = models.FileField(max_length=255, blank=True, storage=settings.STORAGE_ROOT)
+    repo_hash = models.CharField(max_length=40, blank=True)     # TODO: Get by own
 
     class Meta:
         unique_together = ['file', 'language']

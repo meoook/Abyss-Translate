@@ -172,20 +172,24 @@ class GitManage:
                 filo.write(data)
         return 'success'
 
-    def upload_file(self, path, git_name):
+    def upload_file(self, path, git_name, git_hash=None):
         """ Upload file to git repository """
         if not self.__object_check:
             return False
         print(path, git_name)
         access = self.__repo['access'] if self.__repo['access'] else KNOWN_PROVIDERS[self.__repo['provider']]['access']
-        with open(path, 'rb') as filo:
-            request_obj = self.__git.request_obj_for_file_upload(self.__repo, git_name, filo.read(), access)
-            print('REQ OBJ', request_obj)
-        with requests.delete(**request_obj) as resp:
+        try:
+            with open(path, 'rb') as filo:
+                request_obj = self.__git.request_obj_for_file_upload(self.__repo, git_name, git_hash, access, filo.read())
+                print('REQ OBJ', request_obj['url'])
+        except FileNotFoundError:
+            self.__error = f'Translated copy "{path}" not found'
+            return False
+        with requests.put(**request_obj) as resp:
             print('CODE', resp.status_code)
-            print('RESPONSE', resp.json())
-            if resp.status_code == requests.codes.ok:
-                return True
+            if resp.status_code < 300:
+                return self.__git.hash_from_resp_upload(resp)
+            print('RESPONSE ERR', resp.json())
         return False
 
     @staticmethod
@@ -288,7 +292,7 @@ if __name__ == '__main__':
         # else:
         #     print(git.error)
         print('====================================')
-        file_hash = git.upload_file(path=repo['file_list'][1]['path'], git_name='test-en.txt')
+        file_hash = git.upload_file(path=repo['file_list'][1]['path'], git_name='test-en.txt', git_hash='2ef267e25bd6c6a300bb473e604b092b6a48523b')
         if file_hash:
             print('Success', file_hash)
         else:

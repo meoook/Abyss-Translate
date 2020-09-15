@@ -170,6 +170,7 @@ class Migration(migrations.Migration):
                 ('translate_copy', models.FileField(blank=True, max_length=255, storage=django.core.files.storage.FileSystemStorage(base_url='/users/', location='/usr/src/back/users'), upload_to='')),
                 ('file', models.ForeignKey(on_delete=django.db.models.deletion.CASCADE, to='core.files')),
                 ('language', models.ForeignKey(on_delete=django.db.models.deletion.DO_NOTHING, to='core.languages')),
+                ('repo_hash', models.CharField(blank=True, max_length=40)),
             ],
             options={
                 'unique_together': {('file', 'language')},

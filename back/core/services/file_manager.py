@@ -155,8 +155,10 @@ class LocalizeFileManager:
             copy = self.__file.translated_set.get(language_id=lang_id)
             git_manager = GitManage()
             git_manager.repo = self.__file.folder.folderrepo
-            file_hash = git_manager.upload_file(copy.translate_copy.path, copy.translate_copy.name)
+            file_hash = git_manager.upload_file(copy.translate_copy.path, copy.translate_copy.name, copy.repo_hash)
             if file_hash:
+                copy.repo_hash = file_hash
+                copy.save()
                 logger.info(f"Success uploaded file copy {self.__log_name} for lang {lang_id} to repository")
                 return True
             else:
