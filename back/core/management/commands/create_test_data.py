@@ -40,8 +40,14 @@ class Command(BaseCommand):
         ProjectPermissions.objects.create(user=user, project=project1, permission=0)
         ProjectPermissions.objects.create(user=user, project=project1, permission=5)
         ProjectPermissions.objects.create(user=user, project=project1, permission=8)
-        ProjectPermissions.objects.create(user=user, project=project2, permission=9)
-        self.stdout.write(f'Created user name: {name} password: {password} with access 0 to P1 and P2')
+        ProjectPermissions.objects.create(user=user, project=project1, permission=9)
+        self.stdout.write(f'Created user name: {name} password: {password} with full access to P1')
+
+        name = 'q2'
+        user = User.objects.create_user(username=name, email=f'{name}@gmail.com', password=password)
+        ProjectPermissions.objects.create(user=user, project=project1, permission=0)
+        ProjectPermissions.objects.create(user=user, project=project2, permission=5)
+        self.stdout.write(f'Created user name: {name} password: {password} with mixed access to P1 and P2')
 
         self.stdout.write(' TEST DATA CREATED '.center(60, '='))
         self.stdout.write(' TOTAL USERS '.center(60, '='))

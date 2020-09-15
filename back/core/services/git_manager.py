@@ -51,7 +51,7 @@ class GitManage:
     def check_url(self, link):
         """ Create repo_obj from URL """
         # FIXME: folder names with special chars
-        url_items = re.match(r'^http[s]?\:\/\/([^\/]+)\/(\w+)\/(\w+)(?:\/(?:tree|src)\/(\w+)\/?)?(.+)?', link)
+        url_items = re.match(r'^http[s]?\:\/\/([^\/]+)\/(\w+)\/(\w+)(?:\/(?:tree|src|-\/tree)\/(\w+)\/?)?(.+)?', link)
         if url_items:
             self.repo = {
                 'provider': url_items.group(1), 'owner': url_items.group(2), 'name': url_items.group(3),

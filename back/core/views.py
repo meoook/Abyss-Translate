@@ -223,7 +223,7 @@ class TransferFileView(viewsets.ViewSet):
                         status=status.HTTP_204_NO_CONTENT)
 
     def create(self, request):
-        """ Create file obj and related translated progress after file download (uploaded by user) """
+        """ Create file git_obj and related translated progress after file download (uploaded by user) """
         folder_id = request.data.get('folder_id')
         folder = Folders.objects.select_related('project__lang_orig').get(id=folder_id)
         # Create file object

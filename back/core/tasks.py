@@ -11,7 +11,8 @@ from core.services.file_manager import LocalizeFileManager
 
 from core.services.folder_manager import LocalizeFolderManager
 
-logger = logging.getLogger('logfile')
+# logger = logging.getLogger('logfile')
+logger = logging.getLogger('django')
 
 
 # retries=3, default_retry_delay=1
@@ -27,9 +28,11 @@ def file_parse_uploaded(file_id, new=True):
     """ After file uploaded -> If possible update it from repo then get info and parse data into text to translate """
     # Git update first
     file_manager = LocalizeFileManager(file_id)
-    file_manager.update_from_repo()     # TODO: Limit to 1 try (amount retry)
+    if file_parse_uploaded.request.retries == 0:    # First try - update from repository
+        logger.info(f'File id:{file_id} try update from repo')
+        file_manager.update_from_repo()
     try:
-        if file_manager.error or not file_manager.parse():
+        if not file_manager.parse():
             logger.warning(f'File id:{file_id} parse error: {file_manager.error}')
             file_parse_uploaded.retry()
     except MaxRetriesExceededError:
@@ -51,12 +54,13 @@ def file_create_translated(file_id, lang_id):
     """ After file translated to language -> Create translated copy then create or update it in repo """
     file_manager = LocalizeFileManager(file_id)
     try:
-        if file_manager.error or not file_manager.create_translated_copy(lang_id):
-            logger.warning(f'File id:{file_id} create translated copy error err: {file_manager.error}')
+        if not file_manager.create_translated_copy(lang_id):
+            logger.warning(f'File id:{file_id} create translated copy error')
             file_create_translated.retry()
+        elif file_manager.update_copy_in_repo(lang_id):
+            logger.info(f'Translated copy lang:{lang_id} uploaded to git repo for file id:{file_id}')
         else:
-            # Git update
-            pass
+            logger.warning(f'Failed upload translated copy lang:{lang_id} to git repo for file id:{file_id}')
     except MaxRetriesExceededError:
         logger.critical('File create translated copy retries limit')
 
@@ -76,6 +80,21 @@ def folder_update_repo_url(folder_id, repo_url):
         folder_manager.change_repo_url(repo_url)
     except SoftTimeLimitExceeded:
         logger.warning(f'Checking folder id:{folder_id} too slow')
+
+
+@shared_task(
+    name="T4: Delete project or folder",
+    max_retries=0,
+    soft_time_limit=2,
+    time_limit=5,
+    ignore_result=True
+)
+def delete_folder_object(obj_id, obj_type='folder'):
+    """ After delete project or folder -> Delete in database and in file system """
+    try:
+        pass
+    except SoftTimeLimitExceeded:
+        logger.warning(f'Checking {"folder" if obj_type == "folder" else "project"} id:{obj_id} too slow')
 
 
 @periodic_task(

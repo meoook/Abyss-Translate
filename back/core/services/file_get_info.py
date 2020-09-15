@@ -186,7 +186,7 @@ class DataGetInfo:
             if row in ('', '\r'):       # Usefull data palced after first empty row
                 if start:
                     height = row_n - start
-                    if height != 7:     # Default number of rows for 1 obj in UE file
+                    if height != 7:     # Default number of rows for 1 git_obj in UE file
                         self.__error = f'cell height is not standard - {height}'
                     break
                 else:

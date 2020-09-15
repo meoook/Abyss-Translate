@@ -9,7 +9,7 @@ from core.services.file_cr_trans_copy import CreateTranslatedCopy
 
 from core.services.file_get_info import DataGetInfo
 from core.services.file_rebuild import FileRebuild
-from core.services.git_manager import GitManage
+from core.services.gitgit import GitManage
 
 logger = logging.getLogger('django')
 
@@ -20,7 +20,7 @@ class LocalizeFileManager:
     def __init__(self, file_id):
         """ Get file object from database to do other actions """
         self.__file = None
-        self.error = True
+        self.error = "File object not set"  # Error don't reset for each function. Get it only when func return False
         try:
             self.__file = Files.objects.select_related('lang_orig').get(id=file_id)
         except ObjectDoesNotExist:
@@ -30,14 +30,13 @@ class LocalizeFileManager:
             self.error = f"Unknown exception while getting file object. ID: {file_id} exception: {exc}"
             logger.critical(self.error)
         else:
-            self.error = False
+            self.error = None
             self.__lang_orig = self.__file.lang_orig
             self.__log_name = f'{self.__file.name}(id:{self.__file.id})'
 
     def parse(self):
         """ Get file info then parse """
-        if not self.__file:
-            logger.error(f"File object parse error: {self.error if self.error else 'unknown'}")
+        if not self.__check_object('parse'):
             return False
         logger.info(f"Starting parse file ID: {self.__file.id}")
         # Null file object fields
@@ -76,8 +75,9 @@ class LocalizeFileManager:
     def create_mark_translate(self, translator_id, mark_id, lang_id, text, md5sum=None, **kwargs):
         """ Create or update translates. Update translate progress. If finished - create translate file. """
         # TODO: Log translates
-        if not self.__file:
-            self.error = self.error if self.error else 'unknown'    # Error must be already set
+        if not self.__check_object('create_mark_translate'):
+            self.error = self.error if self.error else 'unknown'
+            pass  # Error must be already set
         elif not mark_id or not lang_id or not translator_id:
             self.error = "Request params error"
         # Can't change original text
@@ -111,8 +111,7 @@ class LocalizeFileManager:
 
     def check_progress(self, lang_id):
         """ Update file progress for language """
-        if not self.__file:
-            logger.error(f"File object check progress error: {self.error if self.error else 'unknown'}")
+        if not self.__check_object('check_progress'):
             return False
         try:
             progress = self.__file.translated_set.get(language=lang_id)
@@ -131,18 +130,16 @@ class LocalizeFileManager:
 
     def create_progress(self):
         """ Create related translate progress to file """
-        if not self.__file:
-            logger.error(f"File object create progress error: {self.error if self.error else 'unknown'}")
-            return False
-        translate_to_ids = self.__file.folder.project.translate_to.values_list('id', flat=True)
-        objects_to_create = [Translated(file_id=self.__file.id, language_id=lang_id) for lang_id in translate_to_ids]
-        Translated.objects.bulk_create(objects_to_create)
+        if self.__check_object('create_progress'):
+            translate_to_ids = self.__file.folder.project.translate_to.values_list('id', flat=True)
+            objects_to_create = [Translated(file_id=self.__file.id, language_id=lang_id) for lang_id in translate_to_ids]
+            Translated.objects.bulk_create(objects_to_create)
+            return True
+        return False
 
     def create_translated_copy(self, lang_to_id):
         """ Create translation copy of the file """
-        if not self.__file:
-            logger.error(f"File object check progress error: {self.error if self.error else 'unknown'}")
-        elif self.check_progress(lang_to_id):   # Progress exist and finished
+        if self.__check_object('create_translated_copy') and self.check_progress(lang_to_id):
             tr_copy = CreateTranslatedCopy(self.__file, lang_to_id)
             if tr_copy.copy_name:
                 progress = self.__file.translated_set.get(language_id=lang_to_id)
@@ -152,20 +149,58 @@ class LocalizeFileManager:
                 return True
         return False
 
+    def update_copy_in_repo(self, lang_id):
+        """ Update file translated copy in repository """
+        if self.__check_object('update_copy_in_repo') and self.__file.folder.repo_status:
+            copy = self.__file.translated_set.get(language_id=lang_id)
+            git_manager = GitManage()
+            git_manager.repo = self.__file.folder.folderrepo
+            file_hash = git_manager.upload_file(copy.translate_copy.path, copy.translate_copy.name)
+            if file_hash:
+                logger.info(f"Success uploaded file copy {self.__log_name} for lang {lang_id} to repository")
+                return True
+            else:
+                logger.error(f"Error uploading copy for {self.__log_name} to lang {lang_id} - {git_manager.error}")
+                return False
+        else:
+            logger.info(f"Folder repository not found for file {self.__log_name}")
+        return False
+
     def update_from_repo(self):
         """ Update file from repo (then parse?) """
-        if not self.__file:
-            logger.error(f"File object update from repo error: {self.error if self.error else 'unknown'}")
-        elif self.__file.folder.repo_status:
-            logger.info(f"File {self.__log_name} updating from repo")
+        if self.__check_object('update_from_repo') and self.__file.folder.repo_status:
+            logger.info(f"File {self.__log_name} trying to update from repo")
             f = self.__file
             one_file_list = ({'id': f.id, 'name': f.name, 'hash': f.repo_hash, 'path': f.data.path},)
             # Get list of updated files from git
             git_manager = GitManage()
             git_manager.repo = self.__file.folder.folderrepo
             updated_files = git_manager.update_files(one_file_list)
-            return len(updated_files) == 1
+            if updated_files:
+                if not updated_files[0]['error']:
+                    return True
+                logger.warning(f"File object update from repo error: {updated_files[0]['error']}")
+            else:
+                logger.error(f"Git manager error: {git_manager.error}")
+        else:
+            logger.info(f"Folder repository not found for file {self.__log_name}")
         return False
+
+    def save_error(self):
+        """ Save error file to analyze  """
+        if not self.error:
+            logger.warning("Can't save error file because there are no errors")
+            return False
+        if not self.__check_object('save_error'):
+            return False
+        try:
+            error_file = ErrorFiles(error=self.error, data=self.__file.data)
+            err_obj = error_file.save()
+        except ValidationError:
+            logger.error(f"Can't save error file for {self.__log_name} ")
+            return False
+        logger.info(f'For file {self.__log_name} created error file {err_obj.id}')
+        return err_obj.id, self.error
 
     def __null_file_fields(self):
         """ Refresh database object file """
@@ -177,19 +212,9 @@ class LocalizeFileManager:
             self.__file.error = ''
             self.__file.options = None
 
-    def save_error(self):
-        """ Save error file to analyze  """
-        if not self.error:
-            logger.warning("Can't save error file because there are no errors")
-            return False
+    def __check_object(self, func_name=''):
         if not self.__file:
-            logger.error(f"File object not set to save error: {self.error if self.error else 'unknown'}")
-            return False
-        try:
-            error_file = ErrorFiles(error=self.error, data=self.__file.data)
-            err_obj = error_file.save()
-        except ValidationError:
-            logger.error(f"Can't save error file for {self.__log_name} ")
-            return False
-        logger.info(f'For file {self.__log_name} created error file {err_obj.id}')
-        return err_obj.id, self.error
+            return True
+        logger.error(f'File object not set when call "{func_name}"')
+        return False
+
