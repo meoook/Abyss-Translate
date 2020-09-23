@@ -193,7 +193,7 @@ class FileMarksView(viewsets.ModelViewSet):
         resp, sts = file_manager.create_mark_translate(request.user.id, **request.data)
         if sts > 399:   # 400+ error codes
             return Response(resp, status=sts)
-        if file_manager.check_progress(lang_id):
+        if file_manager.update_progress(lang_id):
             # Run celery task - create_translated_copy
             file_create_translated.delay(file_id, lang_id)
         serializer = TranslatesSerializer(resp, many=False)

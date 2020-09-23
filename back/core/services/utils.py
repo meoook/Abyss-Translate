@@ -1,3 +1,4 @@
+""" Application utils method. Some b-logic is also here like count_words """
 import hashlib
 import re
 

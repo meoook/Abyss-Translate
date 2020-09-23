@@ -15,7 +15,7 @@ logger = logging.getLogger('django')
 
 
 class LocalizeFileManager:
-    """ Grouped class to manage long time tasks on file (have subclasses) """
+    """ Grouped class to manage long time tasks (& others) on file (have subclasses) """
 
     def __init__(self, file_id):
         """ Get file object from database to do other actions """
@@ -73,7 +73,7 @@ class LocalizeFileManager:
         return True
 
     def create_mark_translate(self, translator_id, mark_id, lang_id, text, md5sum=None, **kwargs):
-        """ Create or update translates. Update translate progress. If finished - create translate file. """
+        """ API FUNC: Create or update translate(s) and return response data with status code """
         # TODO: Log translates
         if not self.__check_object('create_mark_translate'):
             self.error = self.error if self.error else 'unknown'
@@ -109,7 +109,7 @@ class LocalizeFileManager:
         return_trans = translates.get(mark_id=mark_id)
         return return_trans, status.HTTP_200_OK
 
-    def check_progress(self, lang_id):
+    def update_progress(self, lang_id):
         """ Update file progress for language """
         if not self.__check_object('check_progress'):
             return False
@@ -139,7 +139,7 @@ class LocalizeFileManager:
 
     def create_translated_copy(self, lang_to_id):
         """ Create translation copy of the file """
-        if self.__check_object('create_translated_copy') and self.check_progress(lang_to_id):
+        if self.__check_object('create_translated_copy') and self.update_progress(lang_to_id):
             tr_copy = CreateTranslatedCopy(self.__file, lang_to_id)
             if tr_copy.copy_name:
                 progress = self.__file.translated_set.get(language_id=lang_to_id)

@@ -12,7 +12,7 @@ logger = logging.getLogger('django')
 # TODO: Remove binary from data base
 
 class CreateTranslatedCopy:
-    """ Create translated copy of file for selected language """
+    """ Create translated copy of file for selected language (file_manager subclass) """
 
     # TODO: REMAKE AS BUILD
     def __init__(self, file_obj, language_to):

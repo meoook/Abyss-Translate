@@ -1,23 +1,24 @@
 import requests
-import base64
 import re
 
-from core.services.git_parsers import GitHubParser, GitLabParser, BitBucketParser
+from core.services.git_formatters import GitHubFormatter, GitLabFormatter, BitBucketFormatter
 
 # TODO: remake by djanggo.http.requests ?
-# TODO: upload files
 
 KNOWN_PROVIDERS = {
     'github.com': {
-        'parser': GitHubParser,
+        'parser': GitHubFormatter,
         'access': {"Authorization": "Basic bWVvb29rOmozMjYybmV3"},
     },
     'bitbucket.org': {
-        'parser': BitBucketParser,
-        'access': {"Authorization": "Basic bWVvb29rOmozMjYybmV3"},
+        'parser': BitBucketFormatter,
+        # 'access': {"Authorization": "Basic bWVva29rOmozWVVLY3o0VlduSktFNG5ONk1x"},
+        # 'access': {"Authorization": "Bearer 0WlTc1M5xvoQyP2iAlngD4FC"},
+        'access': {},
+        # 'access': {"Authorization": "JWT mljGwCcMuMf9TLMQC6DJFEAD"},
     },
     'gitlab.com': {
-        'parser': GitLabParser,
+        'parser': GitLabFormatter,
         'access': {'PRIVATE-TOKEN': 'ZocaYQAp9UYd18wk1Psk'},
     }
 }
@@ -25,6 +26,8 @@ REPO_CHECK_KEYS = ('provider', 'owner', 'name', 'path', 'branch', 'hash', 'acces
 
 
 class GitManage:
+    """ Class to work with git repositories - GitHub, GitLab, BitBucket (file_manager and folder_manager subclass) """
+
     def __init__(self):
         self.__repo = None
         self.__sha = None   # hash is in py function
@@ -104,15 +107,12 @@ class GitManage:
 
     def __api_url_create(self, filename=None):
         """ Builder for API URLs by provider """
-        repo = {**self.__repo}
-        if filename:
-            repo['path'] = f'{repo["path"]}/{filename}' if repo['path'] else filename
-        return self.__git.url_create(repo, bool(filename))
+        return self.__git.url_create(self.__repo, filename)
 
     def __request(self, link, as_file=False):
         """ Check url and return JSON  """
         access = self.__repo['access'] if self.__repo['access'] else KNOWN_PROVIDERS[self.__repo['provider']]['access']
-        headers = {**self.__git.headers, **access, 'Content-type': 'application/json'}
+        headers = {**self.__git.headers, **access}
         with requests.get(link, headers=headers) as resp:
             if resp.status_code == requests.codes.ok:
                 return self.__git.data_from_resp(resp, as_file=as_file)
@@ -124,9 +124,9 @@ class GitManage:
             self.__error = f'Git provider not set'
             return False
         # Check connect
-        hash, err = self.__request(self.url)
-        if hash:
-            self.__sha = hash
+        repo_hash, err = self.__request(self.url)
+        if repo_hash:
+            self.__sha = repo_hash
             return True
         self.__error = err
         return False
@@ -138,10 +138,10 @@ class GitManage:
         elif not isinstance(file_list, list):
             self.__error = 'Params error - need list of file objects'
         else:
-            return self.__check_files(file_list)
+            return self.__update_files(file_list)
         return False
 
-    def __check_files(self, file_list):
+    def __update_files(self, file_list):
         """ Get new hash and data or download URL for files in list """
         return_arr = []
         for file_item in file_list:
@@ -176,20 +176,25 @@ class GitManage:
         """ Upload file to git repository """
         if not self.__object_check:
             return False
-        print(path, git_name)
+        print('START UPLOAD', path, git_name)
         access = self.__repo['access'] if self.__repo['access'] else KNOWN_PROVIDERS[self.__repo['provider']]['access']
         try:
             with open(path, 'rb') as filo:
-                request_obj = self.__git.request_obj_for_file_upload(self.__repo, git_name, git_hash, access, filo.read())
-                print('REQ OBJ', request_obj['url'])
+                values = (self.__repo, access, git_name, git_hash, filo.read())
+                request_obj = self.__git.request_obj_for_file_upload(*values)
+                print('REQUEST URL', request_obj['url'])
         except FileNotFoundError:
             self.__error = f'Translated copy "{path}" not found'
-            return False
-        with requests.put(**request_obj) as resp:
-            print('CODE', resp.status_code)
-            if resp.status_code < 300:
-                return self.__git.hash_from_resp_upload(resp)
-            print('RESPONSE ERR', resp.json())
+        else:
+            # print('REQUEST DATA', request_obj['params'])
+            print('REQUEST DATA', request_obj)
+            with requests.request(**request_obj) as resp:
+                print('CODE', resp.status_code)
+                print('HEADER R', resp.request.headers)
+                if resp.status_code < 300:
+                    print('ANSWER', resp.json())
+                    return self.__git.hash_from_resp_upload(resp)
+                print('RESPONSE ERR', self.__git.error_from_resp(resp))
         return False
 
     @staticmethod
@@ -198,7 +203,7 @@ class GitManage:
         # NOTE the stream=True parameter below
         with requests.get(download_url, stream=True) as r:
             if r.status_code == requests.codes.ok:
-                # r.raise_for_status()
+                r.raise_for_status()
                 for chunk in r.iter_content(chunk_size=8192):
                     # If you have chunk encoded response uncomment if
                     # and set chunk_size parameter to None.
@@ -212,88 +217,3 @@ class GitManage:
         return path_items.group(1) if path_items else full_path
 
 
-# USE IN TESTS
-
-if __name__ == '__main__':
-
-    repos = [
-        {
-            'provider': 'github.com', 'owner': 'meoook', 'name': 'testrepo1',
-            'branch': 'master', 'path': 'Test',
-            'hash': None, 'access': None,
-            'file_list': [
-                {'path': 'C:/tmp/error_github.txt', 'name': 'new.txt', 'hash': '6d1280d85312042a9a3964bf2e34382a999e171b'},
-                {'path': 'C:/tmp/test_file_github.txt', 'name': 'test_file.txt', 'hash': ''},
-                {'path': 'C:/tmp/not_found.txt', 'name': 'not_found.txt', 'hash': ''},
-            ],
-        },
-#         {
-#             'provider': 'github.com', 'owner': 'meoook', 'name': 'testrepo1',
-#             'branch': 'master', 'path': 'Test',
-#             'hash': '35646d4053e5cea51fd560f63fc98a2298e77e48', 'access': None,
-#             'file_list': [
-#                 {'path': 'C:/tmp/error_github.txt', 'name': 'new.txt', 'hash': ''},
-#                 {'path': 'C:/tmp/err_github.txt', 'name': 'test_file.txt', 'hash': '2ef267e25bd6c6a300bb473e604b092b6a48523b'},
-#
-#             ],
-#         },
-#         {
-#             'provider': 'gitlab.com', 'owner': 'mewooook', 'name': 'testproject',
-#             'branch': 'master', 'path': 'Folder1',
-#             'hash': None, 'access': None,
-#             'file_list': [
-#                 {'path': 'C:/tmp/error_gitlab.txt', 'name': '_csv.txt', 'hash': '6b882514cbadfceb1775a0347ffa2d321e7b8297'},
-#                 {'path': 'C:/tmp/test_file_gitlab.txt', 'name': 'test_file.txt', 'hash': ''},
-#                 {'path': 'C:/tmp/not_found.txt', 'name': 'not_found.txt', 'hash': ''},
-#             ],
-#         },
-#         {
-#             'provider': 'gitlab.com', 'owner': 'mewooook', 'name': 'testproject',
-#             'branch': 'master', 'path': 'Folder1',
-#             'hash': '72930c112a2a1b3e634321cf107192fc85106081', 'access': None,
-#             'file_list': [
-#                 {'path': 'C:/tmp/error_github.txt', 'name': '_csv.txt', 'hash': ''},
-#                 {'path': 'C:/tmp/err_github.txt', 'name': 'test_file.txt', 'hash': '54d622dd730f79aa5b8d2582bb5fb2cc6f92bfa4'},
-#
-#             ],
-#         },
-#         {
-#             'provider': 'bitbucket.org', 'owner': 'meokok', 'name': 'test',
-#             'branch': 'master', 'path': 'Folder1',
-#             'hash': None, 'access': None,
-#             'file_list': [
-#                 {'path': 'C:/tmp/error_bitbucket.txt', 'name': 'csv.txt', 'hash': '0b6c4d34f4658341164d90e1d8c2c6deb61c2cfa'},
-#                 {'path': 'C:/tmp/test_file__bitbucket.txt', 'name': 'test_file.txt', 'hash': ''},
-#                 {'path': 'C:/tmp/not_found.txt', 'name': 'not_found.txt', 'hash': ''},
-#             ],
-#         },
-#         {
-#             'provider': 'bitbucket.org', 'owner': 'meokok', 'name': 'test',
-#             'branch': 'master', 'path': 'Folder1',
-#             'hash': '0b6c4d34f4658341164d90e1d8c2c6deb61c2cfa', 'access': None,
-#             'file_list': [
-#                 {'path': 'C:/tmp/error_bitbucket.txt', 'name': 'csv.txt', 'hash': ''},
-#                 {'path': 'C:/tmp/err_bitbucket.txt', 'name': 'test_file.txt', 'hash': '0b6c4d34f4658341164d90e1d8c2c6deb61c2cfa'},
-#             ],
-#         },
-    ]
-
-    for repo in repos:
-        git = GitManage()
-        git.repo = repo
-        # print('====================================')
-        # print(git.url)
-        # if git.sha:
-        #     print(git.sha)
-        #     print('Need update?', git.need_update)
-        #     if git.need_update:
-        #         updated = git.update_files(repo['file_list'])
-        #         [print(x['name'], x['hash'], x['err'], x['updated']) for x in updated]
-        # else:
-        #     print(git.error)
-        print('====================================')
-        file_hash = git.upload_file(path=repo['file_list'][1]['path'], git_name='test-en.txt', git_hash='2ef267e25bd6c6a300bb473e604b092b6a48523b')
-        if file_hash:
-            print('Success', file_hash)
-        else:
-            print('Error', git.error)

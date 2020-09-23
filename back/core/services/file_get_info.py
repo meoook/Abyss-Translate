@@ -26,7 +26,7 @@ UNREAL_ENGINE_STRINGS = [
 
 
 class DataGetInfo:
-    """ file_manager sub class """
+    """ Get method of file and other info (file_manager subclass) """
 
     def __init__(self, data, lang_orig, *args, **kwargs):
         self.__data = data

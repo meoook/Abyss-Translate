@@ -11,6 +11,7 @@ logger = logging.getLogger('django')
 
 
 class LocalizeFolderManager:
+    """ Manage project folders (have subclasses) """
 
     def __init__(self, folder_id):
         self.__id = folder_id

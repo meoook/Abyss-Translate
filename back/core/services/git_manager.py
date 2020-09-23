@@ -22,6 +22,8 @@ REPO_CHECK_KEYS = ('provider', 'owner', 'name', 'path', 'branch', 'hash', 'acces
 
 
 class GitManage:
+    """ Class to work with git repositories - GitHub, GitLab, BitBucket (file_manager and folder_manager subclass) """
+
     def __init__(self, *args, **kwargs):
         self.__repo_obj = None  # { provider owner name path branch hash update access }
         self.new_hash = None  # if yes - need to update

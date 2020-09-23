@@ -158,7 +158,7 @@ class FileMarks(models.Model):
     file = models.ForeignKey(Files, on_delete=models.CASCADE)
     mark_number = models.PositiveIntegerField()
     col_number = models.PositiveIntegerField(null=True)  # Col for CSV
-    options = models.JSONField(null=True)                # Key for UE method, tag for html,
+    options = models.JSONField(null=True)                # Key for UE method, position for html,
     md5sum = models.CharField(max_length=32)             # Check same values
     md5sum_clear = models.CharField(max_length=32)       # Help translate - MD5 without special chars or digits
     words = models.PositiveIntegerField()                # The words more then 2 letter count
