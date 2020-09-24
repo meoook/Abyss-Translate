@@ -242,12 +242,14 @@ const AppState = ({ children }) => {
       addMsg(connectErrMsg(err, "Не могу получить текст файла"))
     }
   }
-  const transChange = async (mark_id, lang_id, text, md5 = "") => {
+  const transChange = async (mark_id, lang_id, text, md5sum = "") => {
     const file_id = state.translates.id
     try {
-      const res = await axios.post(`${URL}/marks/`, { file_id, mark_id, lang_id, text, md5 }, config)
+      const res = await axios.post(`${URL}/marks/`, { file_id, mark_id, lang_id, text, md5sum }, config)
       const payload = state.translates.results.map((transItem) => {
-        if (transItem.id !== mark_id) return transItem
+        if (md5sum) {
+          if (transItem.md5sum !== md5sum) return transItem
+        } else if (transItem.id !== mark_id) return transItem
         const haveTransBefore = transItem.translates_set.find((item) => item.language === lang_id)
         if (!haveTransBefore) return { ...transItem, translates_set: [...transItem.translates_set, res.data] }
         const newTransSet = transItem.translates_set.map((item) => {

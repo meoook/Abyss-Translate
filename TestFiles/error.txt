@@ -1,0 +1,2 @@
+Type	SkillID	SkillLev	Depth	Column	RequireLev	RequireSkillID	RequireSkillLev	RequireCount	Name	Icon	IconPanel	LevelDesc_cnt	LevelDesc[0]	LevelDesc[1]	LevelDesc[2]	LevelDesc[3]
+1	19123	4	1	1	99	0	0	0	u,Ускорение Двор

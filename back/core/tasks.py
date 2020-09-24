@@ -1,4 +1,3 @@
-from __future__ import absolute_import, unicode_literals
 import logging
 
 from celery import shared_task
@@ -7,15 +6,13 @@ from celery.schedules import crontab
 from celery.exceptions import SoftTimeLimitExceeded, MaxRetriesExceededError
 
 from core.models import Folders
-from core.services.file_manager import LocalizeFileManager
 
+from core.services.file_manager import LocalizeFileManager
 from core.services.folder_manager import LocalizeFolderManager
 
-# logger = logging.getLogger('logfile')
-logger = logging.getLogger('django')
+logger = logging.getLogger('logfile')
 
 
-# retries=3, default_retry_delay=1
 @shared_task(
     name="T1: Update file from repo then parse it",
     max_retries=2,

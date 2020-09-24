@@ -48,7 +48,8 @@ services:
       - node_modules:/usr/src/front/node_modules/
       - ./front:/usr/src/front/
     environment:
-      - REACT_APP_API_URL=http://91.225.238.193:8000/api
+      # - REACT_APP_API_URL=http://91.225.238.193:8000/api
+      - REACT_APP_API_URL=http://127.0.0.1:8000/api
     ports:
       - 3000:3000
     tty: true

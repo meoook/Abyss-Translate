@@ -1,21 +1,22 @@
 import requests
-# import base64
 import re
 
-# TODO: remake by djanggo.http.requests
-# TODO: upload files
+from core.services.git_formatters import GitHubFormatter, GitLabFormatter, BitBucketFormatter
+
+# TODO: remake by djanggo.http.requests ?
 
 KNOWN_PROVIDERS = {
     'github.com': {
-        'repo': 'https://api.github.com/repos/{owner}/{name}',
-        'content': '/contents/{path}?ref={branch}',
-        'branch': '/branches/{branch}'
+        'parser': GitHubFormatter,
+        'access': {"Authorization": "Basic bWVvb29rOmozMjYybmV3"},
     },
     'bitbucket.org': {
-        'repo': 'https://api.bitbucket.com/2.0/repositories/{owner}/{name}',
-        # 'content': '/src/{branch}/{path}',  # ?format=meta
-        'content': '/src/{branch}/{path}?format=meta',
-        'branch': '/commit/{branch}'
+        'parser': BitBucketFormatter,
+        'access': {},
+    },
+    'gitlab.com': {
+        'parser': GitLabFormatter,
+        'access': {'PRIVATE-TOKEN': 'ZocaYQAp9UYd18wk1Psk'},
     }
 }
 REPO_CHECK_KEYS = ('provider', 'owner', 'name', 'path', 'branch', 'hash', 'access')
@@ -24,205 +25,191 @@ REPO_CHECK_KEYS = ('provider', 'owner', 'name', 'path', 'branch', 'hash', 'acces
 class GitManage:
     """ Class to work with git repositories - GitHub, GitLab, BitBucket (file_manager and folder_manager subclass) """
 
-    def __init__(self, *args, **kwargs):
-        self.__repo_obj = None  # { provider owner name path branch hash update access }
-        self.new_hash = None  # if yes - need to update
-        self.error = None
+    def __init__(self):
+        self.__repo = None
+        self.__sha = None   # hash is in-py function
+        self.__git = None
+        self.__error = None
+        self.__url = None
 
     @property
-    def need_update(self):
-        # len(<hash>) == 40
-        if self.__repo_obj:
-            return self.new_hash == self.__repo_obj['hash']
-        return False
+    def error(self):
+        return self.__error
 
     @property
     def repo(self):
-        return self.__repo_obj
+        """ To get repo object from parsed URL """
+        return self.__repo
 
     @repo.setter
     def repo(self, value):
-        """ Init repo_obj and check it by hash """
-        # check_keys = ('provider', 'owner', 'name', 'path', 'branch', 'hash', 'access')
-        if isinstance(value, dict) and all(k in REPO_CHECK_KEYS for k in value):
-            self.__repo_obj = value
+        """ Init repository object """
+        self.__repo = None
+        self.__sha = None
+        self.__git = None
+        self.__error = None
+        self.__url = None
+        if not isinstance(value, dict) and not all(k in REPO_CHECK_KEYS for k in value):
+            self.__error = 'Not a valid repository object'
+        elif value['provider'] not in KNOWN_PROVIDERS:
+            self.__error = f'Git provider {value["provider"]} not configured'
         else:
-            self.error = 'Not a valid repo object'
-            self.__repo_obj = None
+            self.__repo = value
+            self.__git = KNOWN_PROVIDERS[value['provider']]['parser']()
+            self.__url = self.__api_url_create()
 
-    def check_url(self, link):
-        """ Create repo_obj from URL """
+    @property
+    def url(self):
+        return self.__url
+
+    @url.setter
+    def url(self, link):
+        """ Create repository object from URL """
         # FIXME: folder names with special chars
-        url_items = re.match(r'^http[s]?\:\/\/([^\/]+)\/(\w+)\/(\w+)(?:\/(?:tree|src|-\/tree)\/(\w+)\/?)?(.+)?', link)
+        assert isinstance(link, str)
+        url_items = re.match(r'^http[s]?://([^/]+)/(\w+)/(\w+)(?:/(?:tree|src|-/tree)/(\w+)/?)?(.+)?', link)
         if url_items:
             self.repo = {
                 'provider': url_items.group(1), 'owner': url_items.group(2), 'name': url_items.group(3),
                 'branch': url_items.group(4) if url_items.group(4) else 'master',
                 'path': self.__path_fix(url_items.group(5)) if url_items.group(5) else '',
-                'hash': None, 'access': ('meoook', 'j3262new')
+                'hash': None, 'access': None,
             }
-            return self.check_repo()
         else:
-            self.error = f'Repo URL parse error: {link}'
-            return False
+            self.__error = f'Repo URL parse error: {link}'
 
-    def __api_url_create(self, in_path=None, as_branch=False):
-        """ Builder for API URLs by provider """
-        provider_obj = KNOWN_PROVIDERS[self.__repo_obj['provider']]
-        owner = self.__repo_obj['owner']
-        name = self.__repo_obj['name']
-        branch = self.__repo_obj['branch']
-        path = in_path if in_path else ''
-        url_format = provider_obj['repo'] + (provider_obj['branch'] if as_branch else provider_obj['content'])
-        return url_format.format(owner=owner, name=name, branch=branch, path=path)
+    @property
+    def sha(self):
+        """ Repository object new hash (income object hash not updated - update it manualy) """
+        if self.__object_check and self.__sha or self.__repository_connect():
+            return self.__sha
+        return False
 
-    def check_repo(self):
-        """ Check access and exist status. """
-        provider = self.__repo_obj['provider']
-        if self.error or not self.__repo_obj:
-            return False
-        if self.__repo_obj['provider'] not in KNOWN_PROVIDERS:
-            self.error = f'Git provider {provider} not configured'
-            return False
-        link = self.__api_url_create(self.__repo_obj['path'])
-        # Check connect
-        resp = self.__request_url(link)
-        if not resp:
-            return False
-        if provider == 'github.com':
-            return self.__check_github(resp)
-        elif provider == 'bitbucket.org':
-            return self.__check_bitbucket(resp)
-        else:
-            self.error = f'Method repo_obj_check not set for provider: {provider}'
-            return False
-
-    def __check_bitbucket(self, resp):
-        """ Check response and get hash """
-        if 'commit' in resp and 'type' in resp and resp['type'] == 'commit_directory':
-            self.new_hash = resp['commit']['hash']
+    @property
+    def need_update(self):
+        """ Repository object update status """
+        if self.sha and self.__sha != self.__repo['hash']:
             return True
-        self.error = 'Bitbucket api error. Wrong response.'
         return False
 
-    def __check_github(self, resp):     # TODO: can get data as symlink with no context
-        """ Check response and get hash """
-        if not isinstance(resp, list):
-            self.error = 'Github api error. Wrong response.'
+    @property
+    def __object_check(self):
+        """ Function to check object """
+        if self.error:
             return False
-        # Get hash from content of head folder. If head folder is root folder -> find hash in branch.
-        if self.__repo_obj['path']:
-            updated_path, search_item = self.__path_cut(self.__repo_obj['path'])
-            link = self.__api_url_create(updated_path)
-            resp = self.__request_url(link)
-            if not resp:
-                return False
-            obj = self.__find_by_name(search_item, resp)
-            if obj and 'path' in obj and 'sha' in obj and 'size' in obj:
-                self.new_hash = obj['sha']
-                return True
-        else:
-            link = self.__api_url_create(as_branch=True)
-            resp = self.__request_url(link)
-            if not resp:
-                return False
-            if 'commit' in resp and 'name' in resp and resp['name'] == self.__repo_obj['branch']:
-                self.new_hash = resp['commit']['sha']
-                return True
-        self.error = f'Wrong response for URL: {link}'
-        return False
+        elif not self.repo:
+            self.__error = 'Repository object not set'
+            return False
+        return True
 
-    def __request_url(self, link):
-        """ Check url and return JSON """
-        headers = {'Content-type': 'application/vnd.github.VERSION.html'}
-        resp = requests.get(link, headers=headers) if self.__repo_obj['access'] else requests.get(link, headers=headers)
-        if resp.status_code == requests.codes.ok:
-            return resp.json()
-        self.error = f'Connect error: {link}'
-        return None
+    def __api_url_create(self, filename=None):
+        """ Builder for API URLs by provider """
+        return self.__git.url_create(self.__repo, filename)
+
+    def __request(self, link, as_file=False):
+        """ Check url and return JSON  """
+        access = self.__repo['access'] if self.__repo['access'] else KNOWN_PROVIDERS[self.__repo['provider']]['access']
+        headers = {**self.__git.headers, **access}
+        with requests.get(link, headers=headers) as resp:
+            if resp.status_code == requests.codes.ok:
+                return self.__git.data_from_resp(resp, as_file=as_file)
+        return None, f'Connect {link} error: {self.__git.error_from_resp(resp)}'
+
+    def __repository_connect(self):
+        """ Check access and exist status and set hash for repository object """
+        if not self.__git:
+            self.__error = f'Git provider not set'
+            return False
+        # Check connect
+        repo_hash, err = self.__request(self.url)
+        if repo_hash:
+            self.__sha = repo_hash
+            return True
+        self.__error = err
+        return False
 
     def update_files(self, file_list):
-        """ Return list of success downloaded files """
-        uploaded_files = []
-        if self.error:
+        """ Return file_list with new hash and error field for each file after check and update try """
+        if not self.__object_check:
             pass
-        elif not self.__repo_obj:
-            self.error = 'Repo object not set'
-        elif not isinstance(file_list, list):
-            self.error = 'Params error - need list of file obj'
+        elif not isinstance(file_list, (list, tuple)):
+            self.__error = f'Params error - need list of file objects but: {type(file_list)}'
         else:
-            checked_files = self.__check_files(file_list)
-            uploaded_files = self.__download_file_list(checked_files)
-        return uploaded_files
+            return self.__update_files(file_list)
+        return False
 
-    def __check_files(self, file_list):
-        """ Check files_obj (name, hash) on exist and need to update. """
+    def __update_files(self, file_list):
+        """ Get new hash and data or download URL for files in list """
         return_arr = []
         for file_item in file_list:
-            item_to_add = {**file_item, 'success': False, 'download_url': None}
-            link = self.__api_url_create(in_path=f'{self.__repo_obj["path"]}/{file_item["name"]}')
-            resp = self.__request_url(link)
-            if not resp:
-                continue
-            if self.__repo_obj['provider'] == 'github.com':
-                if 'sha' in resp and 'download_url' in resp and 'name' in resp and resp['name'] == file_item['name']:
-                    item_to_add['success'] = True
-                    if resp['sha'] != file_item['hash']:
-                        item_to_add['hash'] = resp['sha']
-                        item_to_add['download_url'] = resp['download_url']
-            elif self.__repo_obj['provider'] == 'bitbucket.org':
-                if 'links' in resp and 'commit' in resp and 'type' in resp and resp['type'] == 'commit_file':
-                    item_to_add['success'] = True
-                    if resp['commit']['hash'] != file_item['hash']:
-                        item_to_add['hash'] = resp['commit']['hash']
-                        item_to_add['download_url'] = resp['links']['self']['href']
-            return_arr.append(item_to_add)
+            add_item = {**file_item, 'err': '', 'updated': False}  # Don't rename err -> error
+            link = self.__api_url_create(add_item["name"])
+            file_hash, options = self.__request(link, as_file=True)
+            if not file_hash:
+                add_item['err'] = options
+            elif file_hash != add_item['hash']:
+                saved = self.__save_file(add_item['path'], options)
+                if saved == 'success':
+                    add_item['updated'] = True
+                else:
+                    add_item['err'] = saved
+            add_item['hash'] = file_hash
+            return_arr.append(add_item)
+        self.__error = None  # Error set for each file but no need to repo object
         return return_arr
 
-    def __download_file_list(self, file_list):
-        """ Download file list and return seccuss file list () """
-        success_upload_list = []
-        for file_item in file_list:
-            if file_item['success'] and file_item['download_url']:
-                try:
-                    self.__download_file(file_item['download_url'], file_item['path'])
-                except requests.exceptions.ConnectionError:
-                    # LOGGER
-                    continue
-                else:
-                    success_upload_list.append(file_item)
-        return success_upload_list
+    def __save_file(self, path, data):
+        """ Download and update status/new_hash for files in list """
+        # TODO: Exceptions
+        with open(path, 'wb') as filo:
+            if data[:5] == 'https':
+                self.__download_file(filo, data)
+                # except requests.exceptions.ConnectionError:
+            else:
+                filo.write(data)
+        return 'success'
+
+    def upload_file(self, path, git_name, git_hash=None):
+        """ Upload file to git repository """
+        if not self.__object_check:
+            return False
+        print('START UPLOAD', path, git_name)
+        access = self.__repo['access'] if self.__repo['access'] else KNOWN_PROVIDERS[self.__repo['provider']]['access']
+        try:
+            with open(path, 'rb') as filo:
+                values = (self.__repo, access, git_name, git_hash, filo.read())
+                request_obj = self.__git.request_obj_for_file_upload(*values)
+                print('REQUEST URL', request_obj['url'])
+        except FileNotFoundError:
+            self.__error = f'Translated copy "{path}" not found'
+        else:
+            # print('REQUEST DATA', request_obj['params'])
+            print('REQUEST DATA', request_obj)
+            with requests.request(**request_obj) as resp:
+                print('CODE', resp.status_code)
+                print('HEADER R', resp.request.headers)
+                if resp.status_code < 300:
+                    print('ANSWER', resp.json())
+                    return self.__git.hash_from_resp_upload(resp)
+                print('RESPONSE ERR', self.__git.error_from_resp(resp))
+        return False
 
     @staticmethod
-    def __download_file(download_url, file_path):
-        """ Download file from repo. Then update or create file """
+    def __download_file(filo, download_url):
+        """ Download file from git repository """
         # NOTE the stream=True parameter below
         with requests.get(download_url, stream=True) as r:
             if r.status_code == requests.codes.ok:
-                # r.raise_for_status()
-                with open(file_path, 'wb') as f:
-                    for chunk in r.iter_content(chunk_size=8192):
-                        # If you have chunk encoded response uncomment if
-                        # and set chunk_size parameter to None.
-                        # if chunk:
-                        f.write(chunk)
+                r.raise_for_status()
+                for chunk in r.iter_content(chunk_size=8192):
+                    # If you have chunk encoded response uncomment if
+                    # and set chunk_size parameter to None.
+                    # if chunk:
+                    filo.write(chunk)
 
     @staticmethod
     def __path_fix(full_path):
         """ Remove filename from path if it's found """
-        path_items = re.match(r'^(.+)\/(?:[^\/\s]+\.[^\/\s]+)?$', full_path)
+        path_items = re.match(r'^(.+)/(?:[^/\s]+\.[^/\s]+)?$', full_path)
         return path_items.group(1) if path_items else full_path
 
-    @staticmethod
-    def __path_cut(folder_path):
-        """ Remove last folder name from path """
-        cut_path = re.match(r'^(?:(.*)\/)?(\w+)\/?$', folder_path)
-        return (cut_path.group(1), cut_path.group(2)) if cut_path else ('', '')
-
-    @staticmethod
-    def __find_by_name(name, arr):
-        for item in arr:
-            if 'name' in item and item['name'] == name:
-                return item
-        else:
-            return None

@@ -1,6 +1,7 @@
 """ Application utils method. Some b-logic is also here like count_words """
 import hashlib
 import re
+import os
 
 
 def get_md5_f(binary_data, clear=False):
@@ -32,8 +33,15 @@ def count_words(text):
 
 
 def csv_validate_text(text):
-    # if re.match('^([N|n]one|[F|f]alse|[0-9]*\,+[0-9]*|[0-9\s]*|([^\s]*[\.\_][^\s]+)+)$', text):
     text = text.strip()
     if re.match(r'^([N|n]one|[F|f]alse|[T|t]rue|[0-9]*,+[0-9]*|[0-9\s]*|[^\s]*[._][^\s]+)$', text):
         return False
     return text
+
+
+def filename_from_path(path, suffix=None):
+    file_name = os.path.basename(path)
+    if not suffix:
+        return file_name
+    name, ext = os.path.splitext(file_name)
+    return f'{name}-{suffix}{ext}'

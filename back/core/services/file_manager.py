@@ -1,6 +1,8 @@
+import os
 import logging
 
 from django.db.models import Q
+from django.forms.models import model_to_dict
 from django.core.exceptions import ObjectDoesNotExist, ValidationError
 from rest_framework import status
 
@@ -9,9 +11,9 @@ from core.services.file_cr_trans_copy import CreateTranslatedCopy
 
 from core.services.file_get_info import DataGetInfo
 from core.services.file_rebuild import FileRebuild
-from core.services.gitgit import GitManage
+from core.services.git_manager import GitManage
 
-logger = logging.getLogger('django')
+logger = logging.getLogger('logfile')
 
 
 class LocalizeFileManager:
@@ -154,8 +156,9 @@ class LocalizeFileManager:
         if self.__check_object('update_copy_in_repo') and self.__file.folder.repo_status:
             copy = self.__file.translated_set.get(language_id=lang_id)
             git_manager = GitManage()
-            git_manager.repo = self.__file.folder.folderrepo
-            file_hash = git_manager.upload_file(copy.translate_copy.path, copy.translate_copy.name, copy.repo_hash)
+            git_manager.repo = model_to_dict(self.__file.folder.folderrepo)
+            file_repo_name = os.path.basename(copy.translate_copy.path)
+            file_hash = git_manager.upload_file(copy.translate_copy.path, file_repo_name, copy.repo_hash)
             if file_hash:
                 copy.repo_hash = file_hash
                 copy.save()
@@ -176,12 +179,14 @@ class LocalizeFileManager:
             one_file_list = ({'id': f.id, 'name': f.name, 'hash': f.repo_hash, 'path': f.data.path},)
             # Get list of updated files from git
             git_manager = GitManage()
-            git_manager.repo = self.__file.folder.folderrepo
+            # git_manager.repo = {**self.__file.folder.folderrepo}
+            git_manager.repo = model_to_dict(self.__file.folder.folderrepo)
             updated_files = git_manager.update_files(one_file_list)
             if updated_files:
-                if not updated_files[0]['error']:
+                if not updated_files[0]['err']:
+                    logger.info(f"File {self.__log_name} updated from repo")
                     return True
-                logger.warning(f"File object update from repo error: {updated_files[0]['error']}")
+                logger.warning(f"File object update from repo error: {updated_files[0]['err']}")
             else:
                 logger.error(f"Git manager error: {git_manager.error}")
         else:
@@ -197,12 +202,12 @@ class LocalizeFileManager:
             return False
         try:
             error_file = ErrorFiles(error=self.error, data=self.__file.data)
-            err_obj = error_file.save()
+            error_file.save()
         except ValidationError:
             logger.error(f"Can't save error file for {self.__log_name} ")
             return False
-        logger.info(f'For file {self.__log_name} created error file {err_obj.id}')
-        return err_obj.id, self.error
+        logger.info(f'For file {self.__log_name} created error file {error_file.id}')
+        return error_file.id, self.error
 
     def __null_file_fields(self):
         """ Refresh database object file """
@@ -215,8 +220,7 @@ class LocalizeFileManager:
             self.__file.options = None
 
     def __check_object(self, func_name=''):
-        if not self.__file:
+        if self.__file:
             return True
         logger.error(f'File object not set when call "{func_name}"')
         return False
-

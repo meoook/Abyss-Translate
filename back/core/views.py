@@ -106,12 +106,17 @@ class FolderViewSet(viewsets.ModelViewSet):
         """ Check changing repository on update. If updated - update """
         folder_instance = self.get_object()
         repo_url = request.data.get('repo_url')
+        # Before object update
+        need_update = False
         if repo_url != folder_instance.repo_url:   # Repository URL have been changed
-            # Run celery task to check folder in repository and update files if needed
-            folder_update_repo_url.delay(folder_instance.id, repo_url)
+            need_update = True
         serializer = self.get_serializer(folder_instance, data=request.data)
         serializer.is_valid(raise_exception=True)
         self.perform_update(serializer)
+        # After object update
+        if need_update:
+            # Run celery task to check folder in repository and update files if needed
+            folder_update_repo_url.delay(folder_instance.id, repo_url)
         return Response(serializer.data, status=status.HTTP_200_OK)
 
 
