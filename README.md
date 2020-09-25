@@ -4,12 +4,13 @@
 файлы игр для локализации, оставляя для переводчика только
 **_полезный текст_**, отсекая _технические данные_.
 
-* work site: [localize.ru][work site]
+* prod site: [localize.ru][prod] (not set)
+* pre prod: [91.225.238.193][pre prod]
 * version: 1.01.3
 * author: [meok][author]
 * build: react, django, postgres, celery, redis, nginx
 
-[Dev help][dev_help]
+[Dev help][dev help]
 
 ## Функции приложения:
 
@@ -59,11 +60,11 @@ docker-compose version 1.26.2, build 1110ad01
 ```
 
 > For alpine, the following dependency packages are needed:
-> `py-pip`, `python-dev`, `libffi-dev`, `openssl-dev`, `gcc`, `libc-dev`, and `make`.
+> `py-pip`, `python-dev`, `libffi-dev`, `openssl-dev`, `gcc`, `libc-dev`, and `make?`.
 
 ## Запуск приложения
 
-из папки приложения выполняем
+После установки зависимостей, выполняем из папки приложения
 
 ```sh
 $ docker-compose up -d --build
@@ -79,7 +80,8 @@ $ sh ./runner.sh 5
 
 [Release notes][log]
 
-[work site]: <https://localize.eee.ru> "Abyss localize system"
+[prod]: <https://localize.wuku.ru> "Abyss localize system"
+[pre prod]: <http://91.225.238.193:3000/> "Preprod server"
 [log]: <READ-LOG.md> "Release notes"
 [dev help]: <READ-DEV.md> "Help for development"
 [author]: <https://ruinf.ru> "meok home page"
