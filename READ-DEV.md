@@ -26,6 +26,12 @@ redis_1 | WARNING overcommit_memory is set to 0! Background save may fail under 
 redis_1 | WARNING you have Transparent Huge Pages (THP) support enabled in your kernel. This will create latency and memory usage issues with Redis. To fix this issue run the command 'echo never > /sys/kernel/mm/transparent_hugepage/enabled' as root, and add it to your /etc/rc.local in order to retain the setting after a reboot. Redis must be restarted after THP is disabled.
 ```
 
+### Bitbucket URL to add app
+https://bitbucket.org/meokok/workspace/settings/oauth-consumers/new
+
+### OAuth simple APP
+https://bitbucket.org/atlassian/bb-cloud-auth-code-grant-sample-app/src/master/
+
 ### Send mail
 
 ```python
