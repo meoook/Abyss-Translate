@@ -1,4 +1,4 @@
-from core.services.gitgit import GitManage
+from core.services.git_manager import GitManage
 
 
 def test_git_manager():

@@ -4,7 +4,7 @@ import base64
 
 
 class GitFormatter:
-    """ Basic class structure for git parser """
+    """ Basic class structure for git parser. Public methods are like GitHub """
 
     _commit_msg = 'Create/update translated copy {path} from localize'
 
