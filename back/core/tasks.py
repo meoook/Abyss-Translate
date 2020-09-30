@@ -70,17 +70,21 @@ def file_create_translated(file_id, lang_id):
     # rate_limit='12/h',
     ignore_result=True
 )
-def folder_update_repo_url(folder_id, repo_url):
+def folder_update_repo_after_change(folder_id, repo_url, access_value=None):
     """ After changing git url -> Update folder files from git repository folder """
     try:
         folder_manager = LocalizeFolderManager(folder_id)
-        folder_manager.change_repo_url(repo_url)
+        if access_value:
+            folder_manager.change_repo_access(access_value)
+        else:
+            folder_manager.change_repo_url(repo_url)
+        folder_manager.update_files()
     except SoftTimeLimitExceeded:
         logger.warning(f'Checking folder id:{folder_id} too slow')
 
 
 @shared_task(
-    name="T4: Delete project or folder",
+    name="T5: Delete project or folder",
     max_retries=0,
     soft_time_limit=2,
     time_limit=5,

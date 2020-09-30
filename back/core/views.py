@@ -2,7 +2,7 @@ import os
 import logging
 
 from django.contrib.auth.models import User
-from rest_framework import viewsets, mixins, status, filters
+from rest_framework import viewsets, mixins, status, filters, views
 from rest_framework.generics import get_object_or_404
 from rest_framework.parsers import MultiPartParser
 from rest_framework.pagination import PageNumberPagination
@@ -13,16 +13,19 @@ from django.core.exceptions import ObjectDoesNotExist
 
 from django.http import FileResponse
 
+from .git.git_oauth2 import GitOAuth2
 from .serializers import ProjectSerializer, FoldersSerializer, LanguagesSerializer, FilesSerializer, \
     TransferFileSerializer, FileMarksSerializer, PermissionsSerializer, TranslatesSerializer, FolderRepoSerializer, \
     PermsListSerializer
 from .models import Languages, Projects, Folders, FolderRepo, Files, Translated, FileMarks, ProjectPermissions
 from .services.file_manager import LocalizeFileManager
-from .tasks import file_parse_uploaded, file_create_translated, folder_update_repo_url
+from .tasks import file_parse_uploaded, file_create_translated, folder_update_repo_after_change
 from .permisions import IsProjectOwnerOrReadOnly, IsProjectOwnerOrAdmin, IsProjectOwnerOrManage, \
     IsFileOwnerOrHaveAccess, IsFileOwnerOrTranslator, IsFileOwnerOrManager
 
 logger = logging.getLogger('django')
+
+
 # TODO: ORDERING !!!
 
 
@@ -81,7 +84,7 @@ class ProjectPermsViewSet(viewsets.ModelViewSet):
         # TODO: Check perms if 5 - can create 0, if 9 can create other
         project = get_object_or_404(Projects, save_id=self.request.data.get('save_id'))
         user = get_object_or_404(User, username=self.request.data.get('username'))
-        return serializer.save(project=project, user=user)
+        serializer.save(project=project, user=user)
 
 
 # Folder ViewSet
@@ -97,14 +100,19 @@ class FolderViewSet(viewsets.ModelViewSet):
         serializer = self.get_serializer(qs, many=True)
         return Response(serializer.data, status=status.HTTP_200_OK)
 
-    def create(self, request, *args, **kwargs):
-        """ Increment position. ID is hidden from users - using save_id """
-        project = Projects.objects.get(save_id=request.data.get('save_id'))   # Project exist check in perms
+    def perform_create(self, serializer):
+        project = Projects.objects.get(save_id=self.request.data.get('save_id'))  # Project exist check in perms
         position = self.get_queryset().aggregate(m=Max('position')).get('m') or 0
-        serializer = self.get_serializer(data={**request.data, 'project': project.id})
-        serializer.is_valid(raise_exception=True)
-        serializer.save(position=position + 1)
-        return Response(serializer.data, status=status.HTTP_201_CREATED)
+        serializer.save(project=project, position=position + 1)
+
+    # def create(self, request, *args, **kwargs):
+    #     """ Increment position. ID is hidden from users - using save_id """
+    #     project = Projects.objects.get(save_id=request.data.get('save_id'))   # Project exist check in perms
+    #     position = self.get_queryset().aggregate(m=Max('position')).get('m') or 0
+    #     serializer = self.get_serializer(data={**request.data, 'project': project.id})
+    #     serializer.is_valid(raise_exception=True)
+    #     serializer.save(position=position + 1)
+    #     return Response(serializer.data, status=status.HTTP_201_CREATED)
 
     def update(self, request, *args, **kwargs):
         """ Check changing repository on update. If updated - update """
@@ -112,7 +120,7 @@ class FolderViewSet(viewsets.ModelViewSet):
         repo_url = request.data.get('repo_url')
         # Before object update
         need_update = False
-        if repo_url != folder_instance.repo_url:   # Repository URL have been changed
+        if repo_url != folder_instance.repo_url:  # Repository URL have been changed
             need_update = True
         serializer = self.get_serializer(folder_instance, data=request.data)
         serializer.is_valid(raise_exception=True)
@@ -120,7 +128,7 @@ class FolderViewSet(viewsets.ModelViewSet):
         # After object update
         if need_update:
             # Run celery task to check folder in repository and update files if needed
-            folder_update_repo_url.delay(folder_instance.id, repo_url)
+            folder_update_repo_after_change.delay(folder_instance.id, repo_url)
         return Response(serializer.data, status=status.HTTP_200_OK)
 
     # def perform_destroy(self, instance):   # TODO: this
@@ -130,12 +138,36 @@ class FolderViewSet(viewsets.ModelViewSet):
 
 class FolderRepoViewSet(mixins.CreateModelMixin,
                         mixins.RetrieveModelMixin,
-                        mixins.UpdateModelMixin,
+                        # mixins.UpdateModelMixin,
+                        # mixins.DestroyModelMixin,
                         viewsets.GenericViewSet):
     serializer_class = FolderRepoSerializer
-    # http_method_names = ['get', 'post', 'put']
-    permission_classes = [IsAuthenticated, ]
+    # http_method_names = ['get', 'post']
+    permission_classes = [IsAuthenticated, IsProjectOwnerOrManage]
     queryset = FolderRepo.objects.all()
+
+    def create(self, request, *args, **kwargs):
+        """ Update access to git repository """
+        folder_id = request.data.get('folder_id')
+        repo = get_object_or_404(FolderRepo, folder_id=folder_id)
+
+        access_type = request.data.get('type')
+        access_value = request.data.get('code')
+        if access_type and access_value and access_type in ['basic', 'token', 'oauth']:
+            access_type = access_type.lower()
+            err = None
+            if access_type == 'oauth':
+                oauth = GitOAuth2(repo['provider'])
+                access_value, err = oauth.refresh_token(access_value)
+            if not err:
+                repo.access = {'type': access_type, 'token': access_value}
+                repo.save()
+                folder = repo.folder
+                if not folder.status:  # If folder repository status is - not connected
+                    # Run celery task to check folder in repository and update files if needed
+                    folder_update_repo_after_change.delay(folder_id, folder.repo_url, access_value)
+                return Response({'status': 'up to date' if folder.status else 'updating'}, status=status.HTTP_200_OK)
+        return Response({'err': 'request params error'}, status=status.HTTP_400_BAD_REQUEST)
 
 
 class FileViewSet(viewsets.ModelViewSet):
@@ -164,7 +196,7 @@ class FileViewSet(viewsets.ModelViewSet):
         else:
             save_id = request.query_params.get('save_id')
             qs = self.get_queryset().filter(folder__project__save_id=save_id, state=2)
-        page = self.paginate_queryset(qs.order_by('state', '-created'))    # TODO: Ordering filter
+        page = self.paginate_queryset(qs.order_by('state', '-created'))  # TODO: Ordering filter
         serializer = self.get_serializer(page, many=True)
         return self.get_paginated_response(data=serializer.data)
 
@@ -184,7 +216,7 @@ class FileMarksView(viewsets.ModelViewSet):
         """ Translates with pagination """
         file_id = request.query_params.get('file_id')
         distinct = request.query_params.get('distinct')
-        no_trans = request.query_params.get('no_trans')     # exclude marks that have translates to no_trans lang
+        no_trans = request.query_params.get('no_trans')  # exclude marks that have translates to no_trans lang
         # FIXME: mb other issue to save order
         # Entry.objects.order_by(Coalesce('summary', 'headline').desc())
         if distinct == 'true':
@@ -208,7 +240,7 @@ class FileMarksView(viewsets.ModelViewSet):
         if file_manager.error:
             return Response(file_manager.error, status=status.HTTP_404_NOT_FOUND)
         resp, sts = file_manager.create_mark_translate(request.user.id, **request.data)
-        if sts > 399:   # 400+ error codes
+        if sts > 399:  # 400+ error codes
             return Response(resp, status=sts)
         if file_manager.update_progress(lang_id):
             # Run celery task - create_translated_copy
@@ -219,7 +251,7 @@ class FileMarksView(viewsets.ModelViewSet):
 
 class TransferFileView(viewsets.ViewSet):
     """ FILE TRANSFER VIEW: Upload/Download files """
-    parser_classes = (MultiPartParser, )
+    parser_classes = (MultiPartParser,)
     permission_classes = [IsAuthenticated, IsFileOwnerOrManager]
 
     def retrieve(self, request, pk=None):

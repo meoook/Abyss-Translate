@@ -90,5 +90,3 @@ def test_git_manager():
 
 
 test_git_manager()
-
-

@@ -1,6 +1,8 @@
 import os
 import requests
 
+from core.git.git_oauth2 import GitOAuth2
+
 
 class GitProviderUtils:
     """ Util class to work with git repositories (morph class for git_providers) """
@@ -9,6 +11,7 @@ class GitProviderUtils:
 
     def __init__(self, git_obj: dict, abyss_access: dict, root: str, repo: str, file: str = None, upload: str = None):
         self.__access = None
+        self.__token = None
         self._git = git_obj
         self.__abyss_access = abyss_access
         self.__url_root = root
@@ -34,24 +37,29 @@ class GitProviderUtils:
         return self._url_http_format.format(**self._git)
 
     @property
-    def _access(self):  # TODO: Remake
+    def _access(self):
         """ Auth data (token or header) for selected repo or used abyss access as default """
-        if self.__access or self.__access_get():
-            return self.__access
+        if not self.__access:
+            self.__access_set()
+        return self.__access
 
-    def __access_get(self):  # TODO: Remake
+    def __access_set(self):
         if self._git['access']:
             if self._git['access']['type'] == 'basic':
-                return {'Authorization': f'Basic {self._git["access"]["token"]}'}
+                access = {'Authorization': f'Basic {self._git["access"]["token"]}'}
             elif self._git['access']['type'] == 'token':
-                return {'Authorization': f'Token {self._git["access"]["token"]}'}
-            elif self._git['access']['type'] == 'beaver':
-                return {'Authorization': f'Beaver {self._git["access"]["token"]}'}
+                access = {'Authorization': f'Token {self._git["access"]["token"]}'}
+            elif self._git['access']['type'] == 'bearer':
+                access = {'Authorization': f'Bearer {self._git["access"]["token"]}'}
             elif self._git['access']['type'] == 'oauth':
-                pass  # Get Auth token
+                oauth = GitOAuth2(self._git['provider'])
+                token, err = oauth.refresh_token(self._git["access"]["refresh_token"])
+                access = {'Authorization': f'Bearer {token}'}
+            else:
+                raise TypeError(f'Unknown access type {self._git["access"]["type"]}')
         else:
-            self.__access = self.__abyss_access
-        return True
+            access = self.__abyss_access
+        self.__access = access
 
     def _url_download_file(self, file_path: str):
         """ URL with filename to download file """
@@ -80,7 +88,6 @@ class GitProviderUtils:
 
     @staticmethod
     def _request(request_object):
-        """ Handle connection errors """
         """ Handle connection errors """
         err = f'Connect {request_object["url"]} error: '
         try:

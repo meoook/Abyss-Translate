@@ -6,7 +6,7 @@ from django.forms.models import model_to_dict
 from core.models import Folders, FolderRepo, Files
 from core.services.file_manager import LocalizeFileManager
 
-from core.services.git_manager import GitManage
+from core.git.git_manager import GitManager
 
 logger = logging.getLogger('logfile')
 
@@ -27,8 +27,13 @@ class LocalizeFolderManager:
     @property
     def __git(self):
         if not self.__git_manager:
-            self.__git_manager = GitManage()
+            self.__git_manager = GitManager()
         return self.__git_manager
+
+    def change_repo_access(self, access):
+        if not self.__folder:
+            logger.warning('Folder object not set')
+            return False
 
     def change_repo_url(self, repo_url):    # TODO: Make 2 func - control and __incapsulated
         """ This func must be used when repo_url != folder.repo_url """

@@ -83,10 +83,10 @@ class FoldersSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = Folders
-        fields = ['id', 'project', 'position', 'name', 'repo_url', 'repo_status', 'files_amount']
+        fields = ['id', 'position', 'name', 'repo_url', 'repo_status', 'files_amount']
         extra_kwargs = {
             'position': {'read_only': True},
-            'project': {'write_only': True, 'required': False},
+            # 'project': {'write_only': True, 'required': False},
             # 'repo_url': {'required': False},
             'repo_status': {'read_only': True},
         }

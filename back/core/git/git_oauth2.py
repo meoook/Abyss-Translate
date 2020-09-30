@@ -1,7 +1,6 @@
 import base64
 import requests
 
-
 OAUTH_PROVIDERS = {
     'github.com': {
         'auth': 'https://github.com/login/oauth/authorize',  # client_id, redirect_uri, login
@@ -32,27 +31,27 @@ class GitOAuth2:
     def __init__(self, provider):
         oauth = OAUTH_PROVIDERS[provider]
         self.__url = oauth['url_access']
-        self.__default_answer = {'refresh_token': '', 'access_token': '', 'error': ''}
-        self._basic_auth = oauth["app_id"], oauth["app_secret"]
+        self.__basic_auth = oauth["app_id"], oauth["app_secret"]
 
     @property
-    def _basic_auth(self):
+    def __basic_auth(self):
         """ App authorization credentials for provider """
-        return self.__basic_auth
+        return self.__basic_credentials
 
-    @_basic_auth.setter
-    def _basic_auth(self, credentials):
+    @__basic_auth.setter
+    def __basic_auth(self, credentials):
         app_id, app_secret = credentials
         encoded_credentials = f'{app_id}:{app_secret}'.encode()
-        self.__basic_auth = f'Basic {base64.b64encode(encoded_credentials).decode()}'
+        self.__basic_credentials = f'Basic {base64.b64encode(encoded_credentials).decode()}'
 
-    def refresh_token(self, refresh_token):  # Getter
+    def access_token(self, refresh_token):
+        """ Get token by refresh token """
         req_obj = {
             'method': 'POST',
             'url': self.__url,
             'headers': {
                 'Cache-Control': 'no-cache',
-                'Authorization': self._basic_auth,
+                'Authorization': self.__basic_auth,
             },
             'data': {
                 'grant_type': 'refresh_token',
@@ -61,33 +60,32 @@ class GitOAuth2:
         }
         response, err = self.__send_request(req_obj)
         if err:
-            return {**self.__default_answer, 'error': err}
+            return None, err
         access_token = response['access_token']
-        refresh_token = response['refresh_token']
-        return {**self.__default_answer, 'refresh_token': refresh_token, 'access_token': access_token}
+        # refresh_token = response['refresh_token']
+        return access_token, None
 
-    def get_token(self, code):
-        if code:
+    def refresh_token(self, user_code):
+        """ Get refresh and auth token by user_code - this code returned from provider callback OAuth2 """
+        if user_code:
             req_obj = {
                 "method": "POST",
                 "url": self.__url,
                 "headers": {
                     "Cache-Control": "no-cache",
-                    "Authorization": self._basic_auth,
+                    "Authorization": self.__basic_auth,
                     "Content-Type": "application/x-www-form-urlencoded",
                 },
                 "data": {
                     "grant_type": "authorization_code",
-                    "code": code,
+                    "user_code": user_code,
                 },
             }
-            resp = requests.request(**req_obj)
-            data = resp.json()
-            print('DATA IS', data)
-            access_token = data['access_token']
-            refresh_token = data['refresh_token']
-            print('access_token', access_token)
-            print('refresh_token', refresh_token)
+            response, err = self.__send_request(req_obj)
+            if err:
+                return None, err
+            refresh_token = response['refresh_token']
+            return refresh_token, None
 
     def random_request(self):
         return {
@@ -120,14 +118,13 @@ class GitOAuth2:
                 elif code == 404:
                     return None, err + 'not found'
                 else:
-                    return None, err + f'unknown code {code}'
+                    return None, err + f'unknown user_code {code}'
         except requests.exceptions.ConnectionError:
             return None, err + 'network error'
 
 
 if __name__ == '__main__':
-
     aa = GitOAuth2('bitbucket.org')
 
-    xx = aa.refresh_token('ZYSbgQSrEcAq33NPLxz')
+    xx = aa.refresh_token('ZYSbgQSrEcAq33NPLx')
     print(xx)
