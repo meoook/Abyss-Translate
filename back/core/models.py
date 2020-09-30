@@ -93,9 +93,10 @@ class FolderRepo(models.Model):
     name = models.CharField(max_length=100)
     path = models.CharField(max_length=100, blank=True)
     branch = models.CharField(max_length=100, blank=True)
-    hash = models.CharField(max_length=40, blank=True, null=True)
+    sha = models.CharField(max_length=40, blank=True, null=True)
     updated = models.DateTimeField(auto_now=True)
     access = models.JSONField(null=True)
+    error = models.CharField(max_length=255, blank=True)    # Access, exist or other errors
 
 
 def user_directory_path(instance, filename):
@@ -124,10 +125,11 @@ class Files(models.Model):
     updated = models.DateTimeField(auto_now=True)   # File updated
     items = models.PositiveIntegerField(null=True)  # FileMarks count
     words = models.PositiveIntegerField(null=True)  # Total words count
-    repo_hash = models.CharField(max_length=40, blank=True)     # TODO: Get by own
+    repo_sha = models.CharField(max_length=40, blank=True)     # Repository hash for this version of file
     repo_status = models.BooleanField(null=True)    # Null - no repo for related Folder
     lang_orig = models.ForeignKey(Languages, on_delete=models.DO_NOTHING)
-    error = models.CharField(max_length=255, blank=True)
+    warning = models.CharField(max_length=255, blank=True)  # To handle warnings (language or other checks errors)
+    error = models.CharField(max_length=255, blank=True)    # Parsing or save on disk problems
 
     class Meta:
         unique_together = ['folder', 'name']

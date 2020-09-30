@@ -1,13 +1,15 @@
 from django.db.models import Q
-from rest_framework import generics, permissions
+from rest_framework import generics, permissions, views
 from rest_framework.response import Response
 from knox.models import AuthToken
+
+from core.git.git_oauth2 import GitOAuth2
 from .serializers import UserSerializer, RegisterSerializer, LoginSerializer, UserListSerializer
 from django.contrib.auth.models import User
 
 
-# Register API
 class RegisterAPI(generics.GenericAPIView):
+    """ Register API """  # TODO: Turn off - users can be registered only from abyss
     serializer_class = RegisterSerializer
     permission_classes = [
         permissions.AllowAny
@@ -24,8 +26,8 @@ class RegisterAPI(generics.GenericAPIView):
         })
 
 
-# Login API
 class LoginAPI(generics.GenericAPIView):
+    """ Basic login API to retrieve auth token """
     serializer_class = LoginSerializer
     permission_classes = [
         permissions.AllowAny
@@ -42,8 +44,8 @@ class LoginAPI(generics.GenericAPIView):
         })
 
 
-# Get User API
 class UserAPI(generics.RetrieveAPIView):
+    """ Get User API """  # FIXME: Do we need it ?
     serializer_class = UserSerializer
     permission_classes = [
         permissions.AllowAny
@@ -53,8 +55,8 @@ class UserAPI(generics.RetrieveAPIView):
         return self.request.user
 
 
-# List not creator Users
 class UserListAPI(generics.ListAPIView):
+    """ List of users without role - creator """
     serializer_class = UserListSerializer
     queryset = User.objects.exclude(is_staff=True, is_superuser=True)
 
@@ -64,3 +66,14 @@ class UserListAPI(generics.ListAPIView):
         qs = qs.filter(username__icontains=username) if username else qs
         serializer = UserListSerializer(qs, many=True)
         return Response(serializer.data, status=200)
+
+
+class OAuth2API(views.APIView):
+    """ OAuth2 register """
+
+    def get(self, request, code):
+        print('CODE IS', code)
+        folder_id = request.query_params.get('folder_id')
+        print('Folder is', folder_id)
+        provider = 'bitbucket.org'  # Get provider from request (url or header)
+        oauth = GitOAuth2(provider)

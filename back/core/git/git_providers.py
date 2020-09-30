@@ -11,7 +11,7 @@ class GitHubConnect(GitProviderUtils):
         root = 'https://api.github.com/repos/{owner}/{name}'
         repo = '/contents/{path}?ref={branch}'
         file = '/contents/{path}?ref={branch}'
-        abyss_access = {'Authorization': 'Basic bWVvb29rOmozMjYybmV3'}  # FIXME: It's my credentials omg
+        abyss_access = {'Authorization': 'Token a64a7ef131c0a8823e9f4b8228b86f5c077fd6b9'}  # FIXME: It's my token omg
         super().__init__(git_obj, abyss_access, root, repo, file)
 
     def repo_get_sha(self):
@@ -20,14 +20,14 @@ class GitHubConnect(GitProviderUtils):
 
     def file_update(self, path, old_sha):
         """ Check file hash and download if updated """
-        link = self._file_download_request_url(path)
+        link = self._url_download_file(path)
         new_sha, err = self.__sha_get(link)
         add_header = {'Accept': 'application/vnd.github.v3.raw'}
-        return self._pre_download_file(link, path, old_sha, new_sha, err, add_header)
+        return self._file_pre_download(link, path, old_sha, new_sha, err, add_header)
 
     def file_upload(self, path, git_file_sha):
         """ Upload file to git repository (if sha set - use update method otherwise create) """
-        data_binary, err = self._read_file_data(path)
+        data_binary, err = self._file_read_data(path)
         if err:
             return None, err
         data_coded = base64.b64encode(data_binary).decode('utf-8')
@@ -42,7 +42,8 @@ class GitHubConnect(GitProviderUtils):
 
         def fn(x):  # Lambda function to find sha
             return x['content']['sha']
-        return self._file_upload_sha(req_obj, fn)
+
+        return self._file_upload_get_sha(req_obj, fn)
 
     def __sha_get(self, link):
         req_obj = {'method': 'HEAD', 'url': link, 'headers': self._access}
@@ -75,19 +76,19 @@ class GitLabConnect(GitProviderUtils):
 
     def file_update(self, path, old_sha):
         """ Check file hash and download if updated """
-        link = self._file_download_request_url(path)
+        link = self._url_download_file(path)
         new_sha, err = self.__sha_get(link, True)
-        return self._pre_download_file(link, path, old_sha, new_sha, err)
+        return self._file_pre_download(link, path, old_sha, new_sha, err)
 
     def file_upload(self, path, git_file_sha):
         """ Upload file to git repository (if sha set - use update method otherwise create) """
-        data_binary, err = self._read_file_data(path)
+        data_binary, err = self._file_read_data(path)
         if err:
             return None, err
         data_coded = base64.b64encode(data_binary).decode('utf-8')
         git_path, link, head = self._file_upload_request_values(path, self._access)
         obj = {
-            'commit_message': self._commit_msg.format(path=git_path),
+            'commit_message': self._commit_msg.format(file_path=git_path),
             'content': data_coded,
             'branch': self._git['branch'],
             'encoding': 'base64',
@@ -97,7 +98,8 @@ class GitLabConnect(GitProviderUtils):
 
         def fn(x):  # Lambda function to find sha
             return x['file_path']
-        return self._file_upload_sha(req_obj, fn)
+
+        return self._file_upload_get_sha(req_obj, fn)
 
     def __sha_get(self, link, as_file=False):
         method = 'HEAD' if as_file else 'GET'
@@ -109,12 +111,9 @@ class GitLabConnect(GitProviderUtils):
         if as_file:
             return self.__sha_from_header(response.headers)
         try:
-            response = response.json()
             return response[0]['id'], None
         except (KeyError, TypeError):
             return None, 'Comment id not found in response'
-        except ValueError:
-            return None, 'Json parse error'
 
     @staticmethod
     def __sha_from_header(headers):
@@ -145,14 +144,14 @@ class BitBucketConnect(GitProviderUtils):
 
     def file_update(self, path, old_sha):
         """ Check file hash and download if updated """
-        link = self._file_download_request_url(path)
+        link = self._url_download_file(path)
         new_sha, err = self.__sha_get(link + '?format=meta')
-        add_header = {'Accept': 'application/vnd.github.v3.raw'}
-        return self._pre_download_file(link, path, old_sha, new_sha, err, add_header)
+        add_header = {'Accept': 'application/vnd.github.v3.raw'}  # TODO: set header
+        return self._file_pre_download(link, path, old_sha, new_sha, err, add_header)
 
     def file_upload(self, path, git_file_sha):
         """ Upload file to git repository (if sha set - use update method otherwise create) """
-        data_binary, err = self._read_file_data(path)
+        data_binary, err = self._file_read_data(path)
         if err:
             return None, err
         data_coded = base64.b64encode(data_binary).decode('utf-8')
@@ -167,7 +166,8 @@ class BitBucketConnect(GitProviderUtils):
 
         def fn(x):  # Lambda function to find sha
             return x['commit']['hash']
-        return self._file_upload_sha(req_obj, fn)
+
+        return self._file_upload_get_sha(req_obj, fn)
 
     def __sha_get(self, link):
         req_obj = {'method': 'GET', 'url': link, 'headers': self._access}
@@ -177,9 +177,6 @@ class BitBucketConnect(GitProviderUtils):
     @staticmethod
     def __sha_from_response(response):
         try:
-            response = response.json()
             return response['commit']['hash'], None
         except (KeyError, TypeError):
             return None, 'Commit not found in response'
-        except ValueError:
-            return None, f'Json parse error {response.text}'

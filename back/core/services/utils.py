@@ -45,3 +45,4 @@ def filename_from_path(path, suffix=None):
         return file_name
     name, ext = os.path.splitext(file_name)
     return f'{name}-{suffix}{ext}'
+

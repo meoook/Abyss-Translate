@@ -59,6 +59,10 @@ class ProjectViewSet(viewsets.ModelViewSet):
     def perform_create(self, serializer):
         serializer.save(owner=self.request.user)
 
+    # def perform_destroy(self, instance):   # TODO: this
+    #     """ call celery task to delete """
+    #     pass
+
 
 class ProjectPermsViewSet(viewsets.ModelViewSet):
     """ Project permission manager """
@@ -119,6 +123,10 @@ class FolderViewSet(viewsets.ModelViewSet):
             folder_update_repo_url.delay(folder_instance.id, repo_url)
         return Response(serializer.data, status=status.HTTP_200_OK)
 
+    # def perform_destroy(self, instance):   # TODO: this
+    #     """ call celery task to delete """
+    #     pass
+
 
 class FolderRepoViewSet(mixins.CreateModelMixin,
                         mixins.RetrieveModelMixin,
@@ -159,6 +167,10 @@ class FileViewSet(viewsets.ModelViewSet):
         page = self.paginate_queryset(qs.order_by('state', '-created'))    # TODO: Ordering filter
         serializer = self.get_serializer(page, many=True)
         return self.get_paginated_response(data=serializer.data)
+
+    # def perform_destroy(self, instance):  # TODO: this
+    #     """ call celery task to delete """
+    #     pass
 
 
 class FileMarksView(viewsets.ModelViewSet):

@@ -1,3 +1,5 @@
+""" For this class and it's "extends" classes - all open methods(not getters) return (value, err) """
+
 import re
 
 from core.git.git_providers import GitHubConnect, GitLabConnect, BitBucketConnect
