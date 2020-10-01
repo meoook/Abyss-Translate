@@ -212,7 +212,7 @@ class DataGetInfo:
                 self.__error = 'language not detected'
 
     def __http_get_structure(self):
-        texts = re.findall(r'\>\s*([^\<\>]+[^\s])\s*\<', self.__data_decoded[:2048])
+        texts = re.findall(r'>\s*([^<>]+[^\s])\s*<', self.__data_decoded[:2048])
         self.__options['count'] = len(texts)
         all_texts_langs = [detect(x) for x in texts]
         if len(set(all_texts_langs)) == 1:

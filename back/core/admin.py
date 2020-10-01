@@ -20,17 +20,17 @@ class MarkInline(admin.TabularInline):
 @admin.register(Files)
 class FilesAdmin(admin.ModelAdmin):
     prepopulated_fields = {'method': ('name',)}
-    list_display = ['id', 'name', 'state', 'method', 'items', 'words', 'lang_orig', 'translated_set', 'created', 'updated', 'repo_status', 'repo_hash', 'get_thumb']
+    list_display = ['id', 'name', 'state', 'method', 'items', 'words', 'lang_orig', 'translated_set', 'created', 'updated', 'repo_status', 'repo_sha', 'get_thumb']
     list_display_links = ['name']
     list_filter = ['state', 'repo_status', 'method']
-    read_only_fields = ['state', 'method', 'items', 'words', 'created', 'updated', 'repo_status', 'repo_hash']
+    read_only_fields = ['state', 'method', 'items', 'words', 'created', 'updated', 'repo_status', 'repo_sha']
     list_editable = ['lang_orig']
     search_fields = ['name']
 
     fieldsets = (
         (None, {'fields': ('id', 'name', 'state', 'method', 'items', 'words')}),
         (None, {'fields': ('lang_orig', 'translated_set')}),
-        (None, {'classes': ('collapse',), 'fields': ('repo_status', 'repo_hash'), }),
+        (None, {'classes': ('collapse',), 'fields': ('repo_status', 'repo_sha'), }),
     )
 
     save_on_top = True      # Menu for save on top
@@ -81,7 +81,7 @@ class LanguagesAdmin(admin.ModelAdmin):
 
 # class LanguageChangeForm(forms.ModelForm):
 #     """A form for updating users. Includes all the fields on
-#     the user, but replaces the password field with admin's
+#     the user, but replaces the password field with admin
 #     password hash display field.
 #     """
 #     active = forms.BooleanField(label='Active', widget=forms.CheckboxInput)
@@ -122,5 +122,3 @@ class LanguagesAdmin(admin.ModelAdmin):
 #     search_fields = ('name',)
 #     ordering = ('name',)
 #     filter_horizontal = ()
-
-

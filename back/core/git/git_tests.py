@@ -6,39 +6,39 @@ def test_git_manager():
         {
             'provider': 'github.com', 'owner': 'meoook', 'name': 'testrepo1',
             'branch': 'master', 'path': '',
-            'sha': None, 'access': None,
+            'sha': None, 'access': {'type': 'Token', 'token': 'a64a7ef131c0a8823e9f4b8228b86f5c077fd6b9'},
             'file_list': [
                 {'path': 'C:/tmp/test-github-no.txt', 'sha': 'fb69b1309df009aa9664e38ed3c467cd3a136003'},
                 {'path': 'C:/tmp/test-github.txt', 'sha': ''},
                 {'path': 'C:/tmp/test-github-not-found.txt', 'sha': ''},
             ],
         },
-        {
-            'provider': 'github.com', 'owner': 'meoook', 'name': 'testrepo1',
-            'branch': 'master', 'path': '',
-            'sha': 'b1bad7c90b3cd797374304e67e52b2d0f7407e05', 'access': None,
-            'file_list': [
-                {'path': 'C:/tmp/test-github-upload.txt', 'sha': '821c898537855698fc858489e299b439f82e54ea'},
-            ],
-        },
-        {
-            'provider': 'gitlab.com', 'owner': 'mewooook', 'name': 'testproject',
-            'branch': 'master', 'path': 'Folder1',
-            'sha': None, 'access': None,
-            'file_list': [
-                {'path': 'C:/tmp/test-gitlab-no.txt', 'sha': 'c6097bb6c97cb672bd90b155fe26ea2ddfdbbcb9'},
-                {'path': 'C:/tmp/test-gitlab.txt', 'sha': ''},
-                {'path': 'C:/tmp/test-gitlab-not-found.txt', 'sha': ''},
-            ],
-        },
-        {
-            'provider': 'gitlab.com', 'owner': 'mewooook', 'name': 'testproject',
-            'branch': 'master', 'path': 'Folder1',
-            'sha': '0fa56b7da081483f01b435a74a41d678823de1ab', 'access': None,
-            'file_list': [
-                {'path': 'C:/tmp/test-gitlab-upload.txt', 'sha': 'aaa'},
-            ],
-        },
+        # {
+        #     'provider': 'github.com', 'owner': 'meoook', 'name': 'testrepo1',
+        #     'branch': 'master', 'path': '',
+        #     'sha': 'b1bad7c90b3cd797374304e67e52b2d0f7407e05', 'access': None,
+        #     'file_list': [
+        #         {'path': 'C:/tmp/test-github-upload.txt', 'sha': '821c898537855698fc858489e299b439f82e54ea'},
+        #     ],
+        # },
+        # {
+        #     'provider': 'gitlab.com', 'owner': 'mewooook', 'name': 'testproject',
+        #     'branch': 'master', 'path': 'Folder1',
+        #     'sha': None, 'access': None,
+        #     'file_list': [
+        #         {'path': 'C:/tmp/test-gitlab-no.txt', 'sha': 'c6097bb6c97cb672bd90b155fe26ea2ddfdbbcb9'},
+        #         {'path': 'C:/tmp/test-gitlab.txt', 'sha': ''},
+        #         {'path': 'C:/tmp/test-gitlab-not-found.txt', 'sha': ''},
+        #     ],
+        # },
+        # {
+        #     'provider': 'gitlab.com', 'owner': 'mewooook', 'name': 'testproject',
+        #     'branch': 'master', 'path': 'Folder1',
+        #     'sha': '0fa56b7da081483f01b435a74a41d678823de1ab', 'access': None,
+        #     'file_list': [
+        #         {'path': 'C:/tmp/test-gitlab-upload.txt', 'sha': 'aaa'},
+        #     ],
+        # },
         # {
         #     'provider': 'bitbucket.org', 'owner': 'meokok', 'name': 'test',
         #     'branch': 'master', 'path': 'Folder1',

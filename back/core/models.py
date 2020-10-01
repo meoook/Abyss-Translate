@@ -143,7 +143,7 @@ class Translated(models.Model):
     finished = models.BooleanField(default=False)   # All items have translations
     checked = models.BooleanField(default=False)    # Translations checked by admin?
     translate_copy = models.FileField(max_length=255, blank=True, storage=settings.STORAGE_ROOT)
-    repo_hash = models.CharField(max_length=40, blank=True)     # TODO: Get by own
+    repo_sha = models.CharField(max_length=40, blank=True)  # Not always hash - can be information about update status
 
     class Meta:
         unique_together = ['file', 'language']

@@ -66,14 +66,3 @@ class UserListAPI(generics.ListAPIView):
         qs = qs.filter(username__icontains=username) if username else qs
         serializer = UserListSerializer(qs, many=True)
         return Response(serializer.data, status=200)
-
-
-class OAuth2API(views.APIView):
-    """ OAuth2 register """
-
-    def get(self, request, code):
-        print('CODE IS', code)
-        folder_id = request.query_params.get('folder_id')
-        print('Folder is', folder_id)
-        provider = 'bitbucket.org'  # Get provider from request (url or header)
-        oauth = GitOAuth2(provider)

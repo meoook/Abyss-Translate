@@ -11,7 +11,6 @@ class GitProviderUtils:
 
     def __init__(self, git_obj: dict, abyss_access: dict, root: str, repo: str, file: str = None, upload: str = None):
         self.__access = None
-        self.__token = None
         self._git = git_obj
         self.__abyss_access = abyss_access
         self.__url_root = root
@@ -44,22 +43,18 @@ class GitProviderUtils:
         return self.__access
 
     def __access_set(self):
-        if self._git['access']:
+        self.__access = self.__abyss_access
+        if self._git['access'] and self._git['access']['type'] in ['basic', 'token', 'bearer', 'oauth']:
             if self._git['access']['type'] == 'basic':
-                access = {'Authorization': f'Basic {self._git["access"]["token"]}'}
+                self.__access = {'Authorization': f'Basic {self._git["access"]["token"]}'}
             elif self._git['access']['type'] == 'token':
-                access = {'Authorization': f'Token {self._git["access"]["token"]}'}
+                self.__access = {'Authorization': f'Token {self._git["access"]["token"]}'}
             elif self._git['access']['type'] == 'bearer':
-                access = {'Authorization': f'Bearer {self._git["access"]["token"]}'}
+                self.__access = {'Authorization': f'Bearer {self._git["access"]["token"]}'}
             elif self._git['access']['type'] == 'oauth':
                 oauth = GitOAuth2(self._git['provider'])
                 token, err = oauth.refresh_token(self._git["access"]["refresh_token"])
-                access = {'Authorization': f'Bearer {token}'}
-            else:
-                raise TypeError(f'Unknown access type {self._git["access"]["type"]}')
-        else:
-            access = self.__abyss_access
-        self.__access = access
+                self.__access = {'Authorization': f'Bearer {token}'}
 
     def _url_download_file(self, file_path: str):
         """ URL with filename to download file """

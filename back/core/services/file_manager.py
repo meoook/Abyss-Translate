@@ -1,4 +1,3 @@
-import os
 import logging
 
 from django.db.models import Q
@@ -11,7 +10,7 @@ from core.services.file_cr_trans_copy import CreateTranslatedCopy
 
 from core.services.file_get_info import DataGetInfo
 from core.services.file_rebuild import FileRebuild
-from core.services.git_manager import GitManage
+from core.git.git_manager import GitManager
 
 logger = logging.getLogger('logfile')
 
@@ -105,19 +104,25 @@ class LocalizeFileManager:
         # Add new translates if mark(marks for md5) have no translates
         if translates.count() != control_marks.count():
             def_obj = {"translator_id": translator_id, "language_id": lang_id, "text": text}
-            objs = [Translates(**def_obj, mark=mark) for mark in control_marks if mark.id not in translates.values_list("mark", flat=True)]
-            Translates.objects.bulk_create(objs)
+            objects = [Translates(**def_obj, mark=mark) for mark in control_marks if
+                       mark.id not in translates.values_list("mark", flat=True)]
+            Translates.objects.bulk_create(objects)
         # Translate for response
         return_trans = translates.get(mark_id=mark_id)
         return return_trans, status.HTTP_200_OK
 
-    def update_progress(self, lang_id):
+    def update_all_language_progress(self):
+        """ Update file progress for all languages """
+        for lang in self.__file.translated_set.all():
+            self.update_language_progress(lang.id)
+
+    def update_language_progress(self, lang_id):
         """ Update file progress for language """
         if not self.__check_object('check_progress'):
             return False
         try:
             progress = self.__file.translated_set.get(language=lang_id)
-        except ObjectDoesNotExist:    # App error, must be fixed
+        except ObjectDoesNotExist:  # App error, must be fixed
             logger.critical(f"For file {self.__file.id} related translated object not found: language {lang_id}")
             return False
         translated_items_amount = self.__file.filemarks_set.filter(Q(translates__language=lang_id),
@@ -134,14 +139,15 @@ class LocalizeFileManager:
         """ Create related translate progress to file """
         if self.__check_object('create_progress'):
             translate_to_ids = self.__file.folder.project.translate_to.values_list('id', flat=True)
-            objects_to_create = [Translated(file_id=self.__file.id, language_id=lang_id) for lang_id in translate_to_ids]
+            objects_to_create = [Translated(file_id=self.__file.id, language_id=lang_id) for lang_id in
+                                 translate_to_ids]
             Translated.objects.bulk_create(objects_to_create)
             return True
         return False
 
     def create_translated_copy(self, lang_to_id):
         """ Create translation copy of the file """
-        if self.__check_object('create_translated_copy') and self.update_progress(lang_to_id):
+        if self.__check_object('create_translated_copy') and self.update_language_progress(lang_to_id):
             tr_copy = CreateTranslatedCopy(self.__file, lang_to_id)
             if tr_copy.copy_name:
                 progress = self.__file.translated_set.get(language_id=lang_to_id)
@@ -155,43 +161,49 @@ class LocalizeFileManager:
         """ Update file translated copy in repository """
         if self.__check_object('update_copy_in_repo') and self.__file.folder.repo_status:
             copy = self.__file.translated_set.get(language_id=lang_id)
-            git_manager = GitManage()
-            git_manager.repo = model_to_dict(self.__file.folder.folderrepo)
-            file_repo_name = os.path.basename(copy.translate_copy.path)
-            file_hash = git_manager.upload_file(copy.translate_copy.path, file_repo_name, copy.repo_hash)
-            if file_hash:
-                copy.repo_hash = file_hash
-                copy.save()
-                logger.info(f"Success uploaded file copy {self.__log_name} for lang {lang_id} to repository")
-                return True
-            else:
-                logger.error(f"Error uploading copy for {self.__log_name} to lang {lang_id} - {git_manager.error}")
+            git_manager = GitManager()
+            try:
+                git_manager.repo = model_to_dict(self.__file.folder.folderrepo)
+                new_file_sha, err = git_manager.upload_file(copy.translate_copy.path, copy.repo_sha)
+            except AssertionError as err:
+                logger.warning(f"Can't set repository for file {self.__log_name} error: {err}")
                 return False
+            if err:
+                logger.error(f"Error uploading copy for {self.__log_name} to lang {lang_id} - {err}")
+                return False
+            copy.repo_hash = new_file_sha
+            copy.save()
+            logger.info(f"Success uploaded file copy {self.__log_name} for lang {lang_id} to repository")
+            return True
         else:
             logger.info(f"Folder repository not found for file {self.__log_name}")
         return False
 
     def update_from_repo(self):
-        """ Update file from repo (then parse?) """
+        """ Update file from git repository """
         if self.__check_object('update_from_repo') and self.__file.folder.repo_status:
-            logger.info(f"File {self.__log_name} trying to update from repo")
-            f = self.__file
-            one_file_list = ({'id': f.id, 'name': f.name, 'hash': f.repo_hash, 'path': f.data.path},)
+            self.__file.repo_status = False
+            logger.info(f"File {self.__log_name} trying to update from repository - set status False (not found)")
             # Get list of updated files from git
-            git_manager = GitManage()
-            # git_manager.repo = {**self.__file.folder.folderrepo}
-            git_manager.repo = model_to_dict(self.__file.folder.folderrepo)
-            updated_files = git_manager.update_files(one_file_list)
-            if updated_files:
-                if not updated_files[0]['err']:
-                    logger.info(f"File {self.__log_name} updated from repo")
-                    return True
-                logger.warning(f"File object update from repo error: {updated_files[0]['err']}")
+            git_manager = GitManager()
+            try:
+                git_manager.repo = model_to_dict(self.__file.folder.folderrepo)
+                new_sha, err = git_manager.update_file(self.__file.data.path, self.__file.repo_sha)
+            except AssertionError as error:
+                logger.error(f"Can't set repository for file {self.__log_name} error: {error}")
             else:
-                logger.error(f"Git manager error: {git_manager.error}")
+                if err:
+                    logger.warning(f"File update from repository error: {err}")
+                elif new_sha:
+                    logger.info(f"File {self.__log_name} updated from repository - set status True (found)")
+                    self.__file.repo_status = True
+                    self.__file.repo_sha = new_sha
+                else:  # If not set - file not updated in repository
+                    logger.info(f"File {self.__log_name} no need to update from repository - set status True (found)")
+                    self.__file.repo_status = True
+            self.__file.save()
         else:
             logger.info(f"Folder repository not found for file {self.__log_name}")
-        return False
 
     def save_error(self):
         """ Save error file to analyze  """
@@ -206,8 +218,8 @@ class LocalizeFileManager:
         except ValidationError:
             logger.error(f"Can't save error file for {self.__log_name} ")
             return False
-        logger.info(f'For file {self.__log_name} created error file {error_file.id}')
-        return error_file.id, self.error
+        logger.info(f'For file {self.__log_name} created error file {error_file.pk}')
+        return error_file.pk, self.error
 
     def __null_file_fields(self):
         """ Refresh database object file """

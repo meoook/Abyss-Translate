@@ -2,24 +2,24 @@ import os
 import logging
 
 from django.contrib.auth.models import User
-from rest_framework import viewsets, mixins, status, filters, views
+from rest_framework import viewsets, mixins, status, filters
 from rest_framework.generics import get_object_or_404
 from rest_framework.parsers import MultiPartParser
 from rest_framework.pagination import PageNumberPagination
 from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response
-from django.db.models import Max, Subquery, Q
+from django.db.models import Max, Q
 from django.core.exceptions import ObjectDoesNotExist
 
 from django.http import FileResponse
 
-from .git.git_oauth2 import GitOAuth2
 from .serializers import ProjectSerializer, FoldersSerializer, LanguagesSerializer, FilesSerializer, \
     TransferFileSerializer, FileMarksSerializer, PermissionsSerializer, TranslatesSerializer, FolderRepoSerializer, \
     PermsListSerializer
 from .models import Languages, Projects, Folders, FolderRepo, Files, Translated, FileMarks, ProjectPermissions
 from .services.file_manager import LocalizeFileManager
-from .tasks import file_parse_uploaded, file_create_translated, folder_update_repo_after_change
+from .tasks import file_parse_uploaded, file_create_translated, folder_update_repo_after_url_change, \
+    folder_repo_change_access_and_update
 from .permisions import IsProjectOwnerOrReadOnly, IsProjectOwnerOrAdmin, IsProjectOwnerOrManage, \
     IsFileOwnerOrHaveAccess, IsFileOwnerOrTranslator, IsFileOwnerOrManager
 
@@ -118,17 +118,12 @@ class FolderViewSet(viewsets.ModelViewSet):
         """ Check changing repository on update. If updated - update """
         folder_instance = self.get_object()
         repo_url = request.data.get('repo_url')
-        # Before object update
-        need_update = False
-        if repo_url != folder_instance.repo_url:  # Repository URL have been changed
-            need_update = True
+        need_update = repo_url != folder_instance.repo_url  # Repository URL have been changed
         serializer = self.get_serializer(folder_instance, data=request.data)
         serializer.is_valid(raise_exception=True)
         self.perform_update(serializer)
-        # After object update
-        if need_update:
-            # Run celery task to check folder in repository and update files if needed
-            folder_update_repo_after_change.delay(folder_instance.id, repo_url)
+        if need_update:  # Run celery task to check folder in repository and update files if needed
+            folder_update_repo_after_url_change.delay(folder_instance.id)
         return Response(serializer.data, status=status.HTTP_200_OK)
 
     # def perform_destroy(self, instance):   # TODO: this
@@ -149,24 +144,13 @@ class FolderRepoViewSet(mixins.CreateModelMixin,
     def create(self, request, *args, **kwargs):
         """ Update access to git repository """
         folder_id = request.data.get('folder_id')
-        repo = get_object_or_404(FolderRepo, folder_id=folder_id)
-
+        get_object_or_404(FolderRepo, folder_id=folder_id)  # Check exist status
         access_type = request.data.get('type')
         access_value = request.data.get('code')
-        if access_type and access_value and access_type in ['basic', 'token', 'oauth']:
-            access_type = access_type.lower()
-            err = None
-            if access_type == 'oauth':
-                oauth = GitOAuth2(repo['provider'])
-                access_value, err = oauth.refresh_token(access_value)
-            if not err:
-                repo.access = {'type': access_type, 'token': access_value}
-                repo.save()
-                folder = repo.folder
-                if not folder.status:  # If folder repository status is - not connected
-                    # Run celery task to check folder in repository and update files if needed
-                    folder_update_repo_after_change.delay(folder_id, folder.repo_url, access_value)
-                return Response({'status': 'up to date' if folder.status else 'updating'}, status=status.HTTP_200_OK)
+        if access_type and access_value:
+            # Run celery task to check folder in repository and update files if needed
+            folder_repo_change_access_and_update.delay(folder_id, access_type.lower(), access_value)
+            return Response({'status': 'updating', 'err': None}, status=status.HTTP_200_OK)
         return Response({'err': 'request params error'}, status=status.HTTP_400_BAD_REQUEST)
 
 
@@ -242,7 +226,7 @@ class FileMarksView(viewsets.ModelViewSet):
         resp, sts = file_manager.create_mark_translate(request.user.id, **request.data)
         if sts > 399:  # 400+ error codes
             return Response(resp, status=sts)
-        if file_manager.update_progress(lang_id):
+        if file_manager.update_language_progress(lang_id):
             # Run celery task - create_translated_copy
             file_create_translated.delay(file_id, lang_id)
         serializer = TranslatesSerializer(resp, many=False)

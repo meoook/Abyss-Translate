@@ -1,8 +1,6 @@
 import logging
 
 from celery import shared_task
-from celery.task import periodic_task
-from celery.schedules import crontab
 from celery.exceptions import SoftTimeLimitExceeded, MaxRetriesExceededError
 
 from core.models import Folders
@@ -63,21 +61,36 @@ def file_create_translated(file_id, lang_id):
 
 
 @shared_task(
-    name="T3: Update folder files from git repository folder",
+    name="T3: Git repository url changed",
     max_retries=0,
     soft_time_limit=5,
     time_limit=15,
     # rate_limit='12/h',
     ignore_result=True
 )
-def folder_update_repo_after_change(folder_id, repo_url, access_value=None):
+def folder_update_repo_after_url_change(folder_id):
     """ After changing git url -> Update folder files from git repository folder """
     try:
         folder_manager = LocalizeFolderManager(folder_id)
-        if access_value:
-            folder_manager.change_repo_access(access_value)
-        else:
-            folder_manager.change_repo_url(repo_url)
+        folder_manager.repo_url_changed()
+        folder_manager.update_files()
+    except SoftTimeLimitExceeded:
+        logger.warning(f'Checking folder id:{folder_id} too slow')
+
+
+@shared_task(
+    name="T4: Git repository access changed",
+    max_retries=0,
+    soft_time_limit=5,
+    time_limit=15,
+    # rate_limit='12/h',
+    ignore_result=True
+)
+def folder_repo_change_access_and_update(folder_id, access_type, access_value):
+    """ After changing git access -> Update folder files from git repository folder """
+    try:
+        folder_manager = LocalizeFolderManager(folder_id)
+        folder_manager.change_repo_access(access_type, access_value)
         folder_manager.update_files()
     except SoftTimeLimitExceeded:
         logger.warning(f'Checking folder id:{folder_id} too slow')
@@ -98,9 +111,9 @@ def delete_folder_object(obj_id, obj_type='folder'):
         logger.warning(f'Checking {"folder" if obj_type == "folder" else "project"} id:{obj_id} too slow')
 
 
-@periodic_task(
+@shared_task(
     name="P1: (3h) Update users files from git repositories",
-    run_every=crontab(minute=0, hour='*/3'),
+    # run_every=crontab(minute=0, hour='*/3'),
     max_retries=0,
     soft_time_limit=160,
     time_limit=180,
@@ -119,29 +132,3 @@ def check_all_file_repos():
             folder_manager.update_files()
     except SoftTimeLimitExceeded:
         logger.warning('Checking files too slow')
-
-
-# @periodic_task(
-#     name="P1: (4m) Upload translated files into git repositories",
-#     run_every=crontab(minute='*/4'),
-#     max_retries=2,
-#     soft_time_limit=30,
-#     time_limit=59,
-#     # rate_limit='1/h',
-#     ignore_result=True,
-#     store_errors_even_if_ignored=True
-# )
-# def upload_all_translated():
-#     """ It's a global app task -> Get all users translated files and upload them in git repos """
-#     # TODO: Do we need this task ?
-#     try:
-#         logger.info('Checking files too slow')
-#     except SoftTimeLimitExceeded:
-#         logger.warning('Checking files too slow')
-#     return True
-
-
-@periodic_task(run_every=crontab(minute=0, hour='*/1'), name="P0: (1h) Check celery. Run each hour.")
-def test_task():
-    logger.error('TEST CELERY ERROR')
-    return True
