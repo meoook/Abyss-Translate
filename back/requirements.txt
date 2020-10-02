@@ -4,7 +4,7 @@ django-rest-knox==4.1.0
 django-cors-headers==3.5.0
 celery==5.0.0
 redis==3.5.3
-# psycopg2==2.8.5
+# psycopg2==2.8.6
 psycopg2-binary==2.8.6
 chardet==3.0.4
 langdetect==1.0.8
