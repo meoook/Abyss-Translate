@@ -53,7 +53,7 @@ class GitProviderUtils:
                 self.__access = {'Authorization': f'Bearer {self._git["access"]["token"]}'}
             elif self._git['access']['type'] == 'oauth':
                 oauth = GitOAuth2(self._git['provider'])
-                token, err = oauth.refresh_token(self._git["access"]["refresh_token"])
+                token, err = oauth.refresh_token(self._git["access"]["token"])
                 self.__access = {'Authorization': f'Bearer {token}'}
 
     def _url_download_file(self, file_path: str):

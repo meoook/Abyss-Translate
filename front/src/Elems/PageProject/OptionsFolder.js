@@ -3,6 +3,7 @@ import React, { useState, useEffect, useContext } from "react"
 import DropzoneFileList from "./DropzoneFileList"
 import InputCkeckField from "../AppComponents/InputCheckField"
 import AppContext from "../../context/application/appContext"
+import OptionsFolderGit from "./OptionsFolderGit"
 
 const OptionsFolder = ({ fID, prjID }) => {
   const { folders, fldrUpdate, fldrRemove } = useContext(AppContext)
@@ -10,15 +11,15 @@ const OptionsFolder = ({ fID, prjID }) => {
   const findFolder = (folderID, foldersArr) => foldersArr.find((item) => item.id === folderID)
 
   // STATE
-  const [folder, setFolder] = useState(findFolder(fID, folders))
-  const [repo, setRepo] = useState("")
+  const [folder, setFolder] = useState(null)
+  const [repoUrl, setRepoUrl] = useState("")
   const [search, setSearch] = useState([]) // User folders name list to filter\error when input
 
   useEffect(() => {
     const fld = findFolder(fID, folders)
     if (fld) {
       setFolder(fld)
-      fld.repo_url ? setRepo(fld.repo_url) : setRepo("")
+      fld.repo_url ? setRepoUrl(fld.repo_url) : setRepoUrl("")
       setSearch(
         folders.reduce((res, item) => {
           if (item.id === fld.id) return res
@@ -28,21 +29,33 @@ const OptionsFolder = ({ fID, prjID }) => {
     }
   }, [fID, folders, prjID])
 
+  // Check folder or no component
+  if (!folder) return null
+
   // Handlers
   const changeGit = (event) => {
-    setRepo(event.target.value.trim())
+    setRepoUrl(event.target.value.trim())
   }
   const saveName = (name) => {
-    if (name !== folder.name) fldrUpdate({ save_id: prjID, id: fID, name, repo_url: repo })
+    if (name !== folder.name) fldrUpdate({ save_id: prjID, id: fID, name, repo_url: repoUrl })
   }
   const saveGit = () => {
-    if (repo !== folder.repo_url) fldrUpdate({ save_id: prjID, id: fID, name: folder.name, repo_url: repo })
+    if (repoUrl !== folder.repo_url) fldrUpdate({ save_id: prjID, id: fID, name: folder.name, repo_url: repoUrl })
   }
+
+  const testStyle = folder.repo_status
+    ? { border: "1px solid green" }
+    : folder.repo_status === false
+    ? { border: "1px solid red" }
+    : folder.repo_url
+    ? { border: "1px solid yellow" }
+    : { border: "1px solid blue" }
+
   return (
     <>
       <div className='col col-4 column'>
         <div className='table-head ml-3'>Загрузка файлов в папку</div>
-        <DropzoneFileList folderID={fID} />
+        <DropzoneFileList folderID={folder.id} />
       </div>
 
       <div className='col col-5 column'>
@@ -57,8 +70,18 @@ const OptionsFolder = ({ fID, prjID }) => {
         <div className='scroll-y paginate column ml-3'>
           <label>Сылка на папку в GIT репозитории (?)</label>
           <div>
-            <input type='text' value={repo} onChange={changeGit} placeholder='не указано' onBlur={saveGit} />
+            <input
+              type='text'
+              value={repoUrl}
+              onChange={changeGit}
+              placeholder='не указано'
+              onBlur={saveGit}
+              style={testStyle}
+            />
           </div>
+          {Boolean(folder.repo_url) && (
+            <OptionsFolderGit folderID={folder.id} prjID={prjID} repoStatus={folder.repo_status} />
+          )}
         </div>
 
         <div className='fix-bot column ml-3'>
@@ -66,7 +89,7 @@ const OptionsFolder = ({ fID, prjID }) => {
           <div className='row center justify'>
             <div>&nbsp;</div>
             <div>
-              <button className='btn red' onClick={fldrRemove.bind(this, fID)}>
+              <button className='btn red' onClick={fldrRemove.bind(this, folder.id)}>
                 Удалить папку
               </button>
             </div>

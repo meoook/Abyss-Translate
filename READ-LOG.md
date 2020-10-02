@@ -2,23 +2,25 @@
 
 | version | date     | changes                                                            |
 | ------- | -------- | ------------------------------------------------------------------ |
-|         |          | Merge check - отображение изменений                                |
-|         |          | Переработка способов парсинга файлов                               |
-|         |          | Save all "good" translates for search database                     |
-|         |          | Docker: pg_bouncer                                                 |
-|         |          | Что делать после ввода перевода для текста (проверки языка и т.п.) |
-|         |          | More translate filters or sorters (by like 70%)                    |
-|         |          | Переработка структуры для отображения "технических данных"         |
-|         |          | UI - UI config for user (sizing)                                   |
-|         |          | Model for user UI config and API                                   |
-|         |          | UI - страница переводов: hotkeys (Enter -> next translate)         |
-|         |          | UI - страница переводов: Прогресс перевода для выбранного языка    |
-|         |          | Translate examples: Google                                         |
-|         |          | Translate examples: translates from same file (by like)            |
-|         |          | Поиск по фразе (pgSQL vectors)                                     |
-|         |          | Последние изменениея перевода (юзерами - без merge check)          |
-|         |          | UI - OAuth2                                                        |
-|         |          | OAuth2 для авторизации у гит провайдеров                           |
+|   -?    |    +?    | Save all "good" translates for search database (machine learning)  |
+|   1d    |    +     | Docker: pg_bouncer                                                 |
+|   ?     |    +?    | Что делать после ввода перевода для текста (проверки языка и т.п.) |
+|   ?     |    ?     | UI - UI config for user (sizing)                                   |
+|   ?     |    ?     | Model for user UI config and API                                   |
+|   0d    |    ?     | UI - страница переводов: hotkeys (Enter -> next translate)         |
+|   1d    |    +     | UI - страница переводов: Прогресс перевода для выбранного языка    |
+|   ?     |    +     | Translate examples: Google                                         |
+|  1-2d   |    +     | Translate examples: translates from same file (by like)            |
+|   -     |  block?  | More translate filters or sorters (by like 70%)                    |
+|  1-2d   |  block+  | Поиск по фразе (pgSQL vectors)                                     |
+|   -     |  block?  | Переработка способов парсинга файлов                               |
+|   -     |  block?  | Merge check - отображение изменений                                |
+|   -     |  block+  | Context display - отображение исходника (исключены только цифры)   |
+|  1-3w   |  block+  | Переработка структуры: file - item - element - translate           |
+|  1-2d   |    +     | Последние изменениея перевода (юзерами - без merge check)          |
+| 1.01.6  | 01.09.20 | UI - OAuth2 и Token доступ к репозиторию (OAuth Callback)          |
+| 1.01.5  | 31.09.20 | Celery: Задача по изменению доступа к репозиторию (celery 5.0.0)   |
+| 1.01.4  | 30.09.20 | OAuth2 для авторизации у гит провайдеров                           |
 | 1.01.3  | 21.09.20 | Celery: Задача по расписанию для обновления файлов из репозиториев |
 | 1.01.2  | 19.09.20 | Celery: Задача для выгрузки переведенной копии в репозиторий       |
 | 1.01.1  | 18.09.20 | Переделан модуль для работы с Гит провайдерами                     |

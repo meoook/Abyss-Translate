@@ -3,16 +3,16 @@ from core.git.git_manager import GitManager
 
 def test_git_manager():
     repos = [
-        {
-            'provider': 'github.com', 'owner': 'meoook', 'name': 'testrepo1',
-            'branch': 'master', 'path': '',
-            'sha': None, 'access': {'type': 'Token', 'token': 'a64a7ef131c0a8823e9f4b8228b86f5c077fd6b9'},
-            'file_list': [
-                {'path': 'C:/tmp/test-github-no.txt', 'sha': 'fb69b1309df009aa9664e38ed3c467cd3a136003'},
-                {'path': 'C:/tmp/test-github.txt', 'sha': ''},
-                {'path': 'C:/tmp/test-github-not-found.txt', 'sha': ''},
-            ],
-        },
+        # {
+        #     'provider': 'github.com', 'owner': 'meoook', 'name': 'testrepo1',
+        #     'branch': 'master', 'path': '',
+        #     'sha': None, 'access': {'type': 'Token', 'token': 'a64a7ef131c0a8823e9f4b8228b86f5c077fd6b9'},
+        #     'file_list': [
+        #         {'path': 'C:/tmp/test-github-no.txt', 'sha': 'fb69b1309df009aa9664e38ed3c467cd3a136003'},
+        #         {'path': 'C:/tmp/test-github.txt', 'sha': ''},
+        #         {'path': 'C:/tmp/test-github-not-found.txt', 'sha': ''},
+        #     ],
+        # },
         # {
         #     'provider': 'github.com', 'owner': 'meoook', 'name': 'testrepo1',
         #     'branch': 'master', 'path': '',
@@ -39,16 +39,16 @@ def test_git_manager():
         #         {'path': 'C:/tmp/test-gitlab-upload.txt', 'sha': 'aaa'},
         #     ],
         # },
-        # {
-        #     'provider': 'bitbucket.org', 'owner': 'meokok', 'name': 'test',
-        #     'branch': 'master', 'path': 'Folder1',
-        #     'sha': None, 'access': None,
-        #     'file_list': [
-        #         {'path': 'C:/tmp/test-bitbucket-no.txt', 'sha': '4230031f23d36f561012235040bea66bc78f5975'},
-        #         {'path': 'C:/tmp/test-bitbucket.txt', 'sha': ''},
-        #         {'path': 'C:/tmp/test-bitbucket-not-found.txt', 'sha': ''},
-        #     ],
-        # },
+        {
+            'provider': 'bitbucket.org', 'owner': 'meokok', 'name': 'test',
+            'branch': 'master', 'path': 'Folder1',
+            'sha': None, 'access': {'type': 'oauth', 'token': 'ZYSbgQSrEcAq33NPLx'},
+            'file_list': [
+                {'path': 'C:/tmp/test-bitbucket-no.txt', 'sha': '4230031f23d36f561012235040bea66bc78f5975'},
+                {'path': 'C:/tmp/test-bitbucket.txt', 'sha': ''},
+                {'path': 'C:/tmp/test-bitbucket-not-found.txt', 'sha': ''},
+            ],
+        },
         # {
         #     'provider': 'bitbucket.org', 'owner': 'meokok', 'name': 'test',
         #     'branch': 'master', 'path': 'Folder1',

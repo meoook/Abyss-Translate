@@ -13,6 +13,7 @@ import PageRegister from "./Elems/PageAccount/PageRegister"
 import LoaderCar from "./Elems/AppComponents/LoaderCar"
 import PageProjects from "./Elems/PageProjects/PageProjects"
 import PageProject from "./Elems/PageProject/PageProject"
+import PageOAuthCB from "./Elems/PageOAuthCB/PageOAuthCB"
 
 // CARE - THIS CLASS HAVE 3 COMPONENTS INSIDE
 
@@ -25,6 +26,7 @@ const NavRouter = (props) => {
         <PrivateRoute path={"/translates"} component={PageTranslateRoot} />
         <PrivateRoute path={"/prj/add"} component={PageAddPrj} />
         <PrivateRoute path={"/prj/:id"} component={PageProject} />
+        <PrivateRoute path={"/oauth-callback"} component={PageOAuthCB} />
         <Route path={"/reg"} component={PageRegister} />
         <Route path={"/login"} component={PageLogin} />
         <PrivateRoute component={NoMatchPage} />

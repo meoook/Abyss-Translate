@@ -9,6 +9,7 @@ export const nullState = {
   folders: [],
   explorer: {},
   translates: {},
+  repository: {},
 }
 
 // FUNCTIONS

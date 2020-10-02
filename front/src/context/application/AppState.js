@@ -13,6 +13,7 @@ import {
   USER_PROJECT_REMOVE,
   USER_PROJECT_ADD,
   EXPLORER_REFRESH,
+  REPOSITORY_REFRESH,
   TRANSLATE_PAGE_REFRESH,
   TRANSLATE_FILE_INFO,
   TRANSLATE_CHANGE,
@@ -307,6 +308,23 @@ const AppState = ({ children }) => {
       addMsg(connectErrMsg(err, "Ошибка при удалении прав"))
     }
   }
+  // REPOSITORY
+  const repoGet = async (save_id, folder_id) => {
+    try {
+      const res = await axios.get(`${URL}/repo/${folder_id}`, { ...config, params: { save_id } })
+      dispatch({ type: REPOSITORY_REFRESH, payload: res.data })
+    } catch (err) {
+      addMsg(connectErrMsg(err, "Информация о репозитории не получена"))
+    }
+  }
+  const repoAccess = async (save_id, folder_id, type, code) => {
+    try {
+      const res = await axios.put(`${URL}/repo/${folder_id}/`, { save_id, type, code }, config)
+      dispatch({ type: REPOSITORY_REFRESH, payload: res.data })
+    } catch (err) {
+      addMsg(connectErrMsg(err, "Ошибка изменения доступа к репозиторию"))
+    }
+  }
 
   return (
     <AppContext.Provider
@@ -321,6 +339,7 @@ const AppState = ({ children }) => {
         folders: state.folders,
         explorer: state.explorer,
         translates: state.translates,
+        repository: state.repository,
         addMsg,
         delMsg,
         fetchLang,
@@ -346,6 +365,8 @@ const AppState = ({ children }) => {
         permList,
         permAdd,
         permRemove,
+        repoGet,
+        repoAccess,
       }}>
       {children}
     </AppContext.Provider>

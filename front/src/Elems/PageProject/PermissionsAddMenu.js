@@ -24,6 +24,7 @@ const PermissionsAddMenu = ({ accName, prjID }) => {
       else setPerms([])
     }
     setOptions([])
+    // eslint-disable-next-line
   }, [accName, permissions])
 
   const changeInput = (value) => {

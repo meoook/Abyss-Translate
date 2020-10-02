@@ -101,11 +101,12 @@ class FolderRepoSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = FolderRepo
-        fields = '__all__'
-        extra_kwargs = {
-            'access': {'write_only': True},     # 'required': False
-            'folder': {'write_only': True},
-        }
+        # fields = '__all__'
+        exclude = ['access']
+        # extra_kwargs = {
+        #     'access': {'write_only': True},     # 'required': False
+        #     'folder': {'write_only': True},
+        # }
 
 
 class PermissionsSerializer(serializers.ModelSerializer):
