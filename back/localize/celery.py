@@ -9,9 +9,9 @@ app.config_from_object('django.conf:settings', namespace='CELERY')
 app.autodiscover_tasks()
 
 app.conf.beat_schedule = {
-    'check-every-3-hours': {
+    'check-every-1-hours': {
         'task': 'tasks.check_all_file_repos',
-        'schedule': crontab(minute=0, hour='*/3'),
+        'schedule': crontab(minute=0, hour='*/1'),
         'args': (16, 16)
     },
 }

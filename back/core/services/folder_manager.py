@@ -41,7 +41,7 @@ class LocalizeFolderManager:
                 oauth = GitOAuth2(repo_obj.provider)
                 access_value, err = oauth.refresh_token(access_value)  # Get refresh token by code
                 if err:
-                    logger.warning(f'OAuth get access error for provider:{access_type}')
+                    logger.warning(f'For folder id:{repo_obj.folder_id} OAuth get access error for provider:{repo_obj.provider}')
                     error_for_user = 'OAuth access error'
         if error_for_user:
             repo_obj.error = error_for_user
@@ -94,10 +94,12 @@ class LocalizeFolderManager:
             logger.info(f'For folder id:{self.__id} changing folder repo status to: True - found')
         self.__folder.repo_status = repo_status
         self.__folder.save()
-        if repo_status:
+        if self.__git.repo:
             logger.info(f'Creating new repo obj for folder id:{self.__id}')
-            defaults = {**self.__git.repo, 'sha': self.__git.sha}
+            defaults = {**self.__git.repo, 'sha': self.__git.sha if repo_status else ''}
             FolderRepo.objects.update_or_create(folder_id=self.__id, defaults=defaults)
+        else:
+            logger.warning(f"Can't create repo obj from url {self.__url}")
 
     def update_files(self):
         """ To run by celery to update files from repo folder """
@@ -120,7 +122,7 @@ class LocalizeFolderManager:
                         if error_amount:
                             logger.warning(f'Error files({error_amount}) for folder id:{self.__id}')
                 except AssertionError as err:
-                    logger.error(f'Git manager error {err}')
+                    logger.error(err)
 
     def __update_files_from_repo(self, folder_files):
         updated_files_amount = 0
@@ -130,7 +132,8 @@ class LocalizeFolderManager:
             for filo in folder_files:
                 try:
                     new_file_sha, err = self.__git.update_file(filo.data.path, filo.repo_hash)
-                except AssertionError as err:
+                except AssertionError as error:
+                    err = error
                     new_file_sha = None  # No need but without - IDE error
                 if err:
                     error_files_amount += 1

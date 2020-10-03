@@ -66,7 +66,7 @@ class GitOAuth2:
         return access_token, None
 
     def refresh_token(self, user_code):
-        """ Get refresh and auth token by user_code - this code returned from provider callback OAuth2 """
+        """ Get refresh and auth token by user code - this code returned from provider callback OAuth2 """
         if user_code:
             req_obj = {
                 "method": "POST",
@@ -78,7 +78,7 @@ class GitOAuth2:
                 },
                 "data": {
                     "grant_type": "authorization_code",
-                    "user_code": user_code,
+                    "code": user_code,
                 },
             }
             response, err = self.__send_request(req_obj)
@@ -93,17 +93,15 @@ class GitOAuth2:
             "url": "https://api.bitbucket.org/2.0/repositories",
             "headers": {
                 "Cache-Control": "no-cache",
-                "Authorization": "Bearer 2ik-vcpPYX3--KOCmGNvKvh8JJDYytQsUEhz0nWhdIMlK7HuhaHaHQ0zXtxBM_lrNgfuWPTBKtObHFq6JWks-5g8fBPcF79aaPffs_CrM0t7LxCgGspzVWA="
+                "Authorization": "Bearer xxx"
             }
         }
 
     @staticmethod
     def __send_request(request_object):
-        """ Handle connection errors (same as in git_util class) """
-        print(request_object)
+        """ Handle connection errors """  # FIXME: same method as in git_util class
         err = f'Connect {request_object["url"]} error: '
         try:
-            print('REQUEST IS', request_object)
             with requests.request(**request_object) as response:
                 code = response.status_code
                 if code < 300:
@@ -112,15 +110,16 @@ class GitOAuth2:
                     try:
                         return response.json(), None
                     except ValueError:
-                        return None, f'json parse error'
+                        return None, 'json parse'
                 elif code == 403:
                     return None, err + 'no access'
                 elif code == 404:
                     return None, err + 'not found'
                 else:
-                    return None, err + f'unknown user_code {code}'
+                    print('RESP CODE IS', response.text)
+                    return None, err + f'unknown user code {code}'
         except requests.exceptions.ConnectionError:
-            return None, err + 'network error'
+            return None, err + 'network'
 
 
 if __name__ == '__main__':

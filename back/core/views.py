@@ -146,7 +146,6 @@ class FolderRepoViewSet(mixins.RetrieveModelMixin,
         folder_id = self.get_object().folder_id
         access_type = request.data.get('type')
         access_value = request.data.get('code')
-        print('FFFFFFFF', folder_id, access_type, access_value)
         if access_type and access_value:
             # Run celery task to check access for repository and update files if needed
             folder_repo_change_access_and_update.delay(folder_id, access_type.lower(), access_value)

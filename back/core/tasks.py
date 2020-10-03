@@ -112,7 +112,8 @@ def delete_folder_object(obj_id, obj_type='folder'):
 
 
 @shared_task(
-    name="P1: (3h) Update users files from git repositories",
+    # name="P1: (3h) Update users files from git repositories",
+    name="check_all_file_repos",
     # run_every=crontab(minute=0, hour='*/3'),
     max_retries=0,
     soft_time_limit=160,

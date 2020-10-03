@@ -7,13 +7,27 @@ const OptionsFolderGit = ({ folderID, prjID }) => {
   // Get repo information from server
   const { repository, repoGet, repoAccess } = useContext(AppContext)
   const [inToken, setInToken] = useState("")
+  // // Util
+  // const circleRepoGet = (save_id, folder_id) => {
+  //   if (!repository || repository.folder_id !== folder_id){
+  //     repoGet(save_id, folder_id)
+  //   window.setTimeout(()=>{
+  //     console.log('One more circle',repository, Boolean(repository))
+  //     if (!repository || repository.folder_id !== folder_id) circleRepoGet(save_id, folder_id)
+  //   }, 3000)}
+  // }
 
   useEffect(() => {
-    if (!repository || repository.folder_id !== folderID) repoGet(prjID, folderID)
+      // circleRepoGet(prjID, folderID)
+      if (!repository || repository.folder !== folderID) {
+      console.log('CHECK THIS', prjID, folderID, repository)
+      console.log('CHECK THIS', repository.folder !== folderID)
+        repoGet(prjID, folderID)}
     // eslint-disable-next-line
-  }, [folderID, prjID])
+  }, [repository, folderID, prjID])
 
-  if (!repository) return <Loader />
+  if (!repository.hasOwnProperty('name')) return <Loader />
+
   if (repository.error)
     return (
       <div>

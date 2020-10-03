@@ -2,7 +2,7 @@
 from django.contrib import admin
 from django.utils.safestring import mark_safe
 
-from .models import Languages, Files, Folders, FileMarks, Translates
+from .models import Languages, Files, Folders, FileMarks, Translates, FolderRepo
 
 
 class MarkInline(admin.TabularInline):
@@ -15,7 +15,7 @@ class MarkInline(admin.TabularInline):
 
     # def preview(self, obj):
     #     return get_tabular_photo_preview(obj.image)
-    
+
 
 @admin.register(Files)
 class FilesAdmin(admin.ModelAdmin):
@@ -55,6 +55,17 @@ class TranslatesAdmin(admin.ModelAdmin):
 @admin.register(Languages)
 class LanguagesAdmin(admin.ModelAdmin):
     list_display = ['id', 'name', 'short_name', 'active']
+
+
+@admin.register(Folders)
+class FolderAdmin(admin.ModelAdmin):
+    list_display = ['id', 'name', 'repo_url', 'repo_status']
+
+
+@admin.register(FolderRepo)
+class FolderRepoAdmin(admin.ModelAdmin):
+    list_display = ['folder_id', 'provider', 'owner', 'name', 'branch', 'path', 'access']
+
 
 # class LanguageCreationForm(forms.ModelForm):
 #     """A form for creating new users. Includes all the required

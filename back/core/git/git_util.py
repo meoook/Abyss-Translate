@@ -20,15 +20,15 @@ class GitProviderUtils:
 
     def repo_get_sha(self):
         """ Get repository new hash with err status """
-        raise NotImplemented('Method repo_get_sha not implemented in root(Git*Connect) class')
+        raise NotImplementedError('Method repo_get_sha not implemented in root(Git*Connect) class')
 
     def file_update(self, path: str, old_sha: str):
         """ Check file hash and download if updated """
-        raise NotImplemented('Method file_update not implemented in root(Git*Connect) class')
+        raise NotImplementedError('Method file_update not implemented in root(Git*Connect) class')
 
     def file_upload(self, path: str, old_sha: str):
         """ Upload file to git repository (if sha set - use update method otherwise create) """
-        raise NotImplemented('Method file_upload not implemented in root(Git*Connect) class')
+        raise NotImplementedError('Method file_upload not implemented in root(Git*Connect) class')
 
     @property
     def repo_http_url(self):
@@ -53,7 +53,7 @@ class GitProviderUtils:
                 self.__access = {'Authorization': f'Bearer {self._git["access"]["token"]}'}
             elif self._git['access']['type'] == 'oauth':
                 oauth = GitOAuth2(self._git['provider'])
-                token, err = oauth.refresh_token(self._git["access"]["token"])
+                token, err = oauth.access_token(self._git["access"]["token"])
                 self.__access = {'Authorization': f'Bearer {token}'}
 
     def _url_download_file(self, file_path: str):
@@ -86,16 +86,15 @@ class GitProviderUtils:
         """ Handle connection errors """
         err = f'Connect {request_object["url"]} error: '
         try:
-            print('REQUEST IS', request_object)
             with requests.request(**request_object) as response:
                 code = response.status_code
                 if code < 300:
                     if not response.text:
-                        return response, None
+                        return response, None   # Data in headers
                     try:
                         return response.json(), None
                     except ValueError:
-                        return None, f'json parse error'
+                        return None, 'json parse error'
                 elif code == 400:
                     return None, err + 'request params error'
                 elif code == 403:
