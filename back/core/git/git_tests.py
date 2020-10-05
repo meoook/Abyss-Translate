@@ -39,25 +39,24 @@ def test_git_manager():
         #         {'path': 'C:/tmp/test-gitlab-upload.txt', 'sha': 'aaa'},
         #     ],
         # },
-        {
-            'provider': 'bitbucket.org', 'owner': 'meokok', 'name': 'test',
-            'branch': 'master', 'path': 'Folder1',
-            'sha': None, 'access': {'type': 'oauth', 'token': 'ZYSbgQSrEcAq33NPLx'},
-            'file_list': [
-                {'path': 'C:/tmp/test-bitbucket-no.txt', 'sha': '4230031f23d36f561012235040bea66bc78f5975'},
-                {'path': 'C:/tmp/test-bitbucket.txt', 'sha': ''},
-                {'path': 'C:/tmp/test-bitbucket-not-found.txt', 'sha': ''},
-            ],
-        },
         # {
-        #     'provider': 'bitbucket.org', 'owner': 'meokok', 'name': 'test',
+        #     'provider': 'bitbucket.org', 'owner': 'mewooook', 'name': 'test',
         #     'branch': 'master', 'path': 'Folder1',
-        #     'sha': '4230031f23d36f561012235040bea66bc78f5975', 'access': None,
+        #     'sha': None, 'access': {'type': 'oauth', 'token': 'dT3cWh4p3QxvMf4WnG'},
         #     'file_list': [
-        #         {'path': 'C:/tmp/test-bitbucket-upload.txt', 'sha': ''},
-
+        #         {'path': 'C:/tmp/test-bitbucket-no.txt', 'sha': '1b4430ee417a7c32296424189dc3b93cec6005f0'},
+        #         {'path': 'C:/tmp/test-bitbucket.txt', 'sha': ''},
+        #         {'path': 'C:/tmp/test-bitbucket-not-found.txt', 'sha': ''},
         #     ],
         # },
+        {
+            'provider': 'bitbucket.org', 'owner': 'mewooook', 'name': 'test',
+            'branch': 'master', 'path': 'Folder1',
+            'sha': '1b4430ee417a7c32296424189dc3b93cec6005f0', 'access': {'type': 'oauth', 'token': 'dT3cWh4p3QxvMf4WnG'},
+            'file_list': [
+                {'path': 'C:/tmp/test-bitbucket-upload.txt', 'sha': ''},
+            ],
+        },
     ]
 
     for repo in repos:

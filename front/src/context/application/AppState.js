@@ -314,6 +314,7 @@ const AppState = ({ children }) => {
       const res = await axios.get(`${URL}/repo/${folder_id}`, { ...config, params: { save_id } })
       dispatch({ type: REPOSITORY_REFRESH, payload: res.data })
     } catch (err) {
+      dispatch({ type: REPOSITORY_REFRESH, payload: {} })
       addMsg(connectErrMsg(err, "Информация о репозитории не получена"))
     }
   }

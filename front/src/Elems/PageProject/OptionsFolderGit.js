@@ -18,15 +18,16 @@ const OptionsFolderGit = ({ folderID, prjID }) => {
   // }
 
   useEffect(() => {
-      // circleRepoGet(prjID, folderID)
-      if (!repository || repository.folder !== folderID) {
-      console.log('CHECK THIS', prjID, folderID, repository)
-      console.log('CHECK THIS', repository.folder !== folderID)
-        repoGet(prjID, folderID)}
+    // circleRepoGet(prjID, folderID)
+    if (!repository || repository.folder !== folderID) {
+      console.log("CHECK THIS", prjID, folderID, repository)
+      console.log("CHECK THIS", repository.folder !== folderID)
+      repoGet(prjID, folderID)
+    }
     // eslint-disable-next-line
   }, [repository, folderID, prjID])
 
-  if (!repository.hasOwnProperty('name')) return <Loader />
+  if (!repository.hasOwnProperty("name")) return <Loader />
 
   if (repository.error)
     return (
@@ -43,11 +44,31 @@ const OptionsFolderGit = ({ folderID, prjID }) => {
   }
 
   const redirectToProvider = () => {
-    const consumerKey = "xckDCgTDkpEAtWnfYe"
-    const response_type = "code"
+    let [consumerKey, response_type, providerAuthUrl, scope] = [null] * 4
+    switch (repository.provider) {
+      case "bitbucket.org":
+        consumerKey = "xckDCgTDkpEAtWnfYe"
+        response_type = "code"
+        providerAuthUrl = "https://bitbucket.org/site/oauth2/authorize"
+        break
+      case "github.com":
+        consumerKey = "55aa8a87265bfa0f5ccf"
+        providerAuthUrl = "https://github.com/login/oauth/authorize"
+        scope = "repo"
+        break
+      case "gitlab.com":
+        consumerKey = ""
+        providerAuthUrl = "https://gitlab.com/oauth/authorize"
+        break
+      default:
+        return
+    }
     localStorage.setItem("oauth_callback_folder", folderID)
     localStorage.setItem("oauth_callback_save_id", prjID)
-    const redirectTo = `https://bitbucket.org/site/oauth2/authorize?client_id=${consumerKey}&response_type=${response_type}`
+
+    let redirectTo = `${providerAuthUrl}?client_id=${consumerKey}`
+    redirectTo += `&response_type=${response_type}` ? response_type : ""
+    redirectTo += `&scope=${scope}` ? scope : ""
     window.location = redirectTo
   }
 

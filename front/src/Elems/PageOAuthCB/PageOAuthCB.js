@@ -5,7 +5,6 @@ import AppContext from "../../context/application/appContext"
 const PageOAuthCB = (props) => {
   const { repoAccess } = useContext(AppContext)
 
-  // useEffect(() => {
   const q = props.location.search
   const params = new URLSearchParams(q)
   const error_description = params.get("error_description")
@@ -18,7 +17,6 @@ const PageOAuthCB = (props) => {
 
   if (prjID && folderID && code_param) repoAccess(prjID, folderID, "oauth", code_param)
   else console.log(error_description)
-  // }, [props.location.search])
 
   if (prjID) return <Redirect from='*' to={`/prj/${prjID}`} />
   return <Redirect from='*' to='/' />

@@ -10,7 +10,7 @@ app.autodiscover_tasks()
 
 app.conf.beat_schedule = {
     'check-every-1-hours': {
-        'task': 'tasks.check_all_file_repos',
+        'task': 'back.core.tasks.check_all_file_repos',
         'schedule': crontab(minute=0, hour='*/1'),
         'args': (16, 16)
     },

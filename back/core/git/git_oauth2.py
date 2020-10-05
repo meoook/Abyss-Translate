@@ -6,6 +6,8 @@ OAUTH_PROVIDERS = {
         'auth': 'https://github.com/login/oauth/authorize',  # client_id, redirect_uri, login
         'access': 'https://github.com/login/oauth/access_token',  # scope, state, allow_signup
         'format': lambda access_token: {'Authorization': f'token {access_token}'},
+        'app_id': '55aa8a87265bfa0f5ccf',
+        'app_secret': 'fa43864806ab46c5fb45f39ee8828d110a4d8b59',
     },
     'bitbucket.org': {
         'url_auth': 'https://bitbucket.org/site/oauth2/authorize',
@@ -87,16 +89,6 @@ class GitOAuth2:
             refresh_token = response['refresh_token']
             return refresh_token, None
 
-    def random_request(self):
-        return {
-            "method": "GET",
-            "url": "https://api.bitbucket.org/2.0/repositories",
-            "headers": {
-                "Cache-Control": "no-cache",
-                "Authorization": "Bearer xxx"
-            }
-        }
-
     @staticmethod
     def __send_request(request_object):
         """ Handle connection errors """  # FIXME: same method as in git_util class
@@ -123,7 +115,7 @@ class GitOAuth2:
 
 
 if __name__ == '__main__':
-    aa = GitOAuth2('bitbucket.org')
+    aa = GitOAuth2('github.org')
 
     xx = aa.refresh_token('ZYSbgQSrEcAq33NPLx')
     print(xx)

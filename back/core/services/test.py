@@ -1,73 +1,65 @@
-# import base64
-# import json
-#
 import base64
+import json
 
 import requests
-#
-#
-# provider = {
-#   "consumerKey": "xckDCgTDkpEAtWnfYe",
-#   "consumerSecret": "TTuaxUvCPynXBZd6pMeumDtfuchzdJvp",
-#   "bitbucketAuthorizeUrl": "https://bitbucket.org/site/oauth2/authorize",
-#   "bitbucketAccessTokenUrl": "https://bitbucket.org/site/oauth2/access_token"
-# }
-#
-# #
-# # usr = 'localize:rkPVAewgjaaK4qCbNmLh'
-# # usr2 = 'mewooook@gmail.com:lkwpeter'
-# # usr3 = 'mewooook:lkwpeter'
-# #
-# # # print(base64.b64encode(b'localize:rkPVAewgjaaK4qCbNmLh').decode())
-# # # print(base64.b64encode(usr.encode()).decode())
-# # # print(base64.b64encode(usr2.encode()).decode())
-# # # print(base64.b64encode(usr3.encode()).decode())
-# #
-#
-# req_obj = {
-#     "method": "POST",
-#     "url": "https://bitbucket.org/site/oauth2/access_token",
-#     "headers": {
-#         "Cache-Control": "no-cache",
-#         "Authorization": "Basic eGNrRENnVERrcEVBdFduZlllOlRUdWF4VXZDUHluWEJaZDZwTWV1bUR0ZnVjaHpkSnZw",
-#         "Content-Type": "application/x-www-form-urlencoded"
-#     },
-#     "params": json.dumps({
-#         "grant_type": "authorization_code",
-#         "code": "dg9jH6BPExenx4MWKa"
-#     })
-# }
-#
-# r = requests.request(**req_obj)
-# print('HEADERS A', r.request.headers)
-# print('CONTENT', r.content)
-# print('JSON', r.json())
-# # print('TEXT', r.text)
-# from urllib import parse
-#
-# print(parse.quote_plus(f'mewooook/testproject'))
-#
-# url = 'https://api.github.com/repos/meoook/testrepo1/contents/test.txt?ref=master'
-# headers = {'Authorization': 'Basic bWVvb29rOmozMjYybmV3'}  # , 'Accept': 'application/vnd.github.v3.object'}
-#
-# with requests.request('HEAD', url, headers=headers) as req:
-#     print('HEADER IS', req.headers.get('ETag').split('"')[1])
-#
-#
-# aaa = {'aa': 'aa', 'bb': {'bb':'bb', 'cc':'dddddd'}}
-#
-#
-# def xaxa(val, fn):
-#     print(fn(val))
-#
-#
-# def fun(x):
-#     return x['bb']['cc']
-#
-#
-# xaxa(aaa, fun)
 
 
-cc = base64.b64decode('eGNrRENnVERrcEVBdFduZlllOlRUdWF4VXZDUHluWEJaZDZwTWV1bUR0ZnVjaHpkSnZw')
+def get_data(token):
+    url = "https://api.bitbucket.com/2.0/repositories/mewooook/test/src/master/Folder1"
+    # Method 1: Token in auth header (preferred)
+    headers = {
+        'Cache-Control': 'no-cache',
+        'Authorization': f'Bearer {token}',
+        'Accept': '*/*',
+    }
+    params = {'format': 'meta'}
+    print(headers)
+    response = requests.request("GET", url, headers=headers, params=params)
+    print('METHOD 1:', response.text)
 
-print(cc)
+    # Method 3: Token in URL (security warning)
+    params2 = {
+        'format': 'meta',
+        'access_token': token
+    }
+    headers = {
+        'Cache-Control': 'no-cache',
+        # 'Authorization': f'Bearer {token}',
+        'Accept': '*/*',
+    }
+    response2 = requests.request("GET", url, headers=headers, params=params2)
+    print('METHOD 3:', response2.text)
+    print('METHOD 3:', response2.headers)
+
+    response.close()
+    # response2.close()
+
+
+req_obj = {
+    "method": "POST",
+    "url": "https://bitbucket.org/site/oauth2/access_token",
+    "headers": {
+        "Cache-Control": "no-cache",
+        "Authorization": "Basic eGNrRENnVERrcEVBdFduZlllOlRUdWF4VXZDUHluWEJaZDZwTWV1bUR0ZnVjaHpkSnZw",
+        "Content-Type": "application/x-www-form-urlencoded"
+    },
+    "data": {
+        "grant_type": "refresh_token",
+        "refresh_token": "dT3cWh4p3QxvMf4WnG"
+    }
+}
+#
+# with requests.request(**req_obj) as req:
+#     if req.status_code < 300:
+#         data = req.json()
+#         # print('JSON IS', data)
+#         access_token = data['access_token']
+#         print('access_token', access_token)
+#         get_data(access_token)
+#     else:
+#         print('ERRR', req.text)
+
+
+
+
+get_data('9LQ4qzZam_wJke8_FaXhwrJcZQwboizBUGAVGxz9mZCfNQip9l0mOm0Wy6gdmsdS7FEktplthAzz4qnftLSRPflrPm7Yu9WCztwhOgoFVULgBNdrZkbTz3OS')
