@@ -1,11 +1,13 @@
 import os
 import uuid
 
+from django.contrib.postgres.indexes import GinIndex, BTreeIndex
 from django.db import models
 from django.conf import settings
 # from django.contrib.auth.models import User
 from django.db.models.signals import post_save, post_delete, pre_save
 
+import django.contrib.postgres.search as pg_search
 
 # class Profiles(models.Model):
 #     USER_ROLE_CHOICES = [
@@ -176,7 +178,8 @@ class Translates(models.Model):
     translator = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.SET_NULL, null=True)
     mark = models.ForeignKey(FileMarks, on_delete=models.CASCADE)
     language = models.ForeignKey(Languages, on_delete=models.DO_NOTHING)
-    text = models.TextField()
+    text = models.TextField()  # db_index=True
+    # words = pg_search.SearchVectorField(null=True)
     created = models.DateTimeField(auto_now_add=True)
     updated = models.DateTimeField(auto_now=True)
     checked = models.BooleanField(default=False)
@@ -184,6 +187,8 @@ class Translates(models.Model):
 
     class Meta:
         unique_together = ['mark', 'language']
+        indexes = [GinIndex(fields=['text'], name='core_transl_text_gintrgm')]
+        # indexes = [BTreeIndex(fields=['text'], opclasses=("text_ops", ), name='core_transl_text_gintrgm')]
 
 
 class TranslatesChangeLog(models.Model):

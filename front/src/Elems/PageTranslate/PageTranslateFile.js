@@ -24,6 +24,7 @@ const PageTranslateFile = (props) => {
   const [langOrig, setLangOrig] = useState(null)
   const [langTrans, setLangTrans] = useState(null)
   const [activeMark, setActiveMark] = useState(null)
+  const [searchText, setSearchText] = useState("")
 
   useEffect(() => {
     if (id) transFileInfo(id, page, size, same, noTrans) // TODO: make like Promise
@@ -49,12 +50,12 @@ const PageTranslateFile = (props) => {
     })
   }
   const changeSame = () => {
-    transList(id, page, size, !noSame, noTrans)
+    transList(id, page, size, !noSame, noTrans, searchText)
     setNoSame(!noSame)
   }
   const changeNoTrans = () => {
     let val = noTrans ? 0 : langTrans
-    transList(id, page, size, same, val)
+    transList(id, page, size, same, val, searchText)
     setNoTrans(val)
   }
 
@@ -96,6 +97,8 @@ const PageTranslateFile = (props) => {
             setLike={setLike}
             noTrans={noTrans}
             setNoTrans={changeNoTrans}
+            searchText={searchText}
+            setSearchText={setSearchText}
           />
           <div className='expl row'>
             <div className='col col-7 column'>

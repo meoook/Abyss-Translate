@@ -18,17 +18,27 @@ const TranslateMenu = ({
   setNoTrans,
   like,
   setLike,
+  searchText,
+  setSearchText,
 }) => {
   const { translates } = useContext(AppContext)
   const [original, setOriginal] = useState([])
   const [translate, setTransate] = useState([])
+  const [input, setInput] = useState("")
 
   useEffect(() => {
     if (!translates.translated_set) return
     const filtredLangs = translates.translated_set.filter((item) => item.finished).map((item) => item.language)
     if (filtredLangs.length) setOriginal([...filtredLangs, translates.lang_orig])
-    setTransate(translates.translated_set.filter((item) => item.language !== langOrig).map(itm => itm.language))
+    setTransate(translates.translated_set.filter((item) => item.language !== langOrig).map((itm) => itm.language))
   }, [translates, langOrig])
+
+  const searchOnBlur = (e) => {
+    setSearchText(input.trim())
+  }
+  const searchKeyPress = (e) => {
+    if ((e.key = "Enter")) setSearchText(input.trim())
+  }
 
   return (
     <div className='box row mb-2'>
@@ -56,6 +66,18 @@ const TranslateMenu = ({
       </div>
 
       <div className='col col-5'>
+        <div className='row'>
+          <div className='t-small'>
+            <input
+              type='text'
+              value={input}
+              onChange={(e) => setInput(e.target.value)}
+              onBlur={searchOnBlur}
+              onKeyPress={searchKeyPress}
+              className='input'
+            />
+          </div>
+        </div>
         <div className='row'>
           <div className='col col-6'>
             <div className='ml-0 t-small'>Язык оригиналов</div>

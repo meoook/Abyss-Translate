@@ -3,7 +3,7 @@ import AppContext from "../../context/application/appContext"
 import Loader from "../AppComponents/Loader"
 import { displayStringDate } from "../componentUtils"
 
-const OptionsFolderGit = ({ folderID, prjID }) => {
+const OptionsFolderGit = ({ folderID, prjID, repoStatus }) => {
   // Get repo information from server
   const { repository, repoGet, repoAccess } = useContext(AppContext)
   const [inToken, setInToken] = useState("")
@@ -24,6 +24,7 @@ const OptionsFolderGit = ({ folderID, prjID }) => {
       console.log("CHECK THIS", repository.folder !== folderID)
       repoGet(prjID, folderID)
     }
+    console.log("REPO STATUS", repoStatus ? "true" : "false")
     // eslint-disable-next-line
   }, [repository, folderID, prjID])
 
@@ -44,7 +45,8 @@ const OptionsFolderGit = ({ folderID, prjID }) => {
   }
 
   const redirectToProvider = () => {
-    let [consumerKey, response_type, providerAuthUrl, scope] = [null] * 4
+    // let [consumerKey, response_type, providerAuthUrl, scope] = [null] * 4
+    let [consumerKey, response_type, providerAuthUrl, scope] = [null, null, null, null] // FIXME: [null] * 4
     switch (repository.provider) {
       case "bitbucket.org":
         consumerKey = "xckDCgTDkpEAtWnfYe"
@@ -67,8 +69,8 @@ const OptionsFolderGit = ({ folderID, prjID }) => {
     localStorage.setItem("oauth_callback_save_id", prjID)
 
     let redirectTo = `${providerAuthUrl}?client_id=${consumerKey}`
-    redirectTo += `&response_type=${response_type}` ? response_type : ""
-    redirectTo += `&scope=${scope}` ? scope : ""
+    redirectTo += response_type ? `&response_type=${response_type}` : ""
+    redirectTo += scope ? `&scope=${scope}` : ""
     window.location = redirectTo
   }
 
@@ -84,18 +86,24 @@ const OptionsFolderGit = ({ folderID, prjID }) => {
       </div>
       <div>
         <h1>Доступ к репозиторию</h1>
-        <div>Введите токен вашего репозитория или войдите с помощью</div>
-        <button className='btn' onClick={redirectToProvider}>
-          {repository.provider}
-        </button>
-        <div>Token</div>
-        <input
-          type='text'
-          value={inToken}
-          onChange={(e) => setInToken(e.target.value)}
-          onKeyPress={saveTokenByEnter}
-          onBlur={saveToken}
-        />
+        {repoStatus ? (
+          <div>предоставлен</div>
+        ) : (
+          <>
+            <div>Введите токен вашего репозитория или войдите с помощью</div>
+            <button className='btn' onClick={redirectToProvider}>
+              {repository.provider}
+            </button>
+            <div>Token</div>
+            <input
+              type='text'
+              value={inToken}
+              onChange={(e) => setInToken(e.target.value)}
+              onKeyPress={saveTokenByEnter}
+              onBlur={saveToken}
+            />
+          </>
+        )}
       </div>
     </div>
   )

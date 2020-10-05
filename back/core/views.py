@@ -2,6 +2,7 @@ import os
 import logging
 
 from django.contrib.auth.models import User
+from django.contrib.postgres.search import SearchVector, SearchQuery, SearchRank
 from rest_framework import viewsets, mixins, status, filters
 from rest_framework.generics import get_object_or_404
 from rest_framework.parsers import MultiPartParser
@@ -200,6 +201,7 @@ class FileMarksView(viewsets.ModelViewSet):
         file_id = request.query_params.get('file_id')
         distinct = request.query_params.get('distinct')
         no_trans = request.query_params.get('no_trans')  # exclude marks that have translates to no_trans lang
+        search_text = request.query_params.get('search_text')  # filter by text
         # FIXME: mb other issue to save order
         # Entry.objects.order_by(Coalesce('summary', 'headline').desc())
         if distinct == 'true':
@@ -211,6 +213,14 @@ class FileMarksView(viewsets.ModelViewSet):
         if no_trans and int(no_trans) > 0:
             to_filter = queryset.filter(Q(translates__language=no_trans), ~Q(translates__text__exact=''))
             queryset = queryset.exclude(id__in=to_filter)
+        if search_text:  # TODO: Validate ?
+            search_vector = SearchVector('translates__words', 'translates__id')
+            search_query = None
+            for word in search_text.split(' '):
+                search_query &= SearchQuery(word)
+            search_rank = SearchRank(search_vector, search_query)
+            # queryset = queryset.annotate(search=search_vector).filter(search=search_query)
+            queryset = queryset.annotate(rank=search_rank).order_by('-rank')
         page = self.paginate_queryset(queryset)
         serializer = self.get_serializer(page, many=True)
         return self.get_paginated_response(data=serializer.data)

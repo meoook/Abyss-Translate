@@ -78,3 +78,27 @@ mixins.DestroyModelMixin,
 mixins.ListModelMixin,
 GenericViewSet
 ```
+
+```
+from django.contrib.postgres.indexes import GinIndex
+
+
+class GinSpaceConcatIndex(GinIndex):
+
+    def get_sql_create_template_values(self, model, schema_editor, using):
+
+        fields = [model._meta.get_field(field_name) for field_name, order in self.fields_orders]
+        tablespace_sql = schema_editor._get_index_tablespace_sql(model, fields)
+        quote_name = schema_editor.quote_name
+        columns = [
+            ('%s %s' % (quote_name(field.column), order)).strip()
+            for field, (field_name, order) in zip(fields, self.fields_orders)
+        ]
+        return {
+            'table': quote_name(model._meta.db_table),
+            'name': quote_name(self.name),
+            'columns': "({}) gin_trgm_ops".format(" || ' ' || ".join(columns)),
+            'using': using,
+            'extra': tablespace_sql,
+        }
+```

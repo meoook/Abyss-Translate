@@ -65,13 +65,16 @@ class FilesSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = Files
-        exclude = ['data', 'folder', 'codec', 'options', 'repo_hash']
+        exclude = ['data', 'folder', 'codec', 'options']
         extra_kwargs = {
             'state': {'read_only': True, 'source': 'get_state_display'},
             'method': {'read_only': True},
             'items': {'read_only': True},
             'words': {'read_only': True},
             'repo_status': {'read_only': True},
+            'warning': {'read_only': True},
+            'repo_sha': {'read_only': True},
+            'error': {'read_only': True},
             # 'created': {'read_only': True},
             # 'updated': {'read_only': True},
         }

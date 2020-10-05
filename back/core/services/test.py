@@ -29,10 +29,9 @@ def get_data(token):
     }
     response2 = requests.request("GET", url, headers=headers, params=params2)
     print('METHOD 3:', response2.text)
-    print('METHOD 3:', response2.headers)
 
     response.close()
-    # response2.close()
+    response2.close()
 
 
 req_obj = {
@@ -48,18 +47,13 @@ req_obj = {
         "refresh_token": "dT3cWh4p3QxvMf4WnG"
     }
 }
-#
-# with requests.request(**req_obj) as req:
-#     if req.status_code < 300:
-#         data = req.json()
-#         # print('JSON IS', data)
-#         access_token = data['access_token']
-#         print('access_token', access_token)
-#         get_data(access_token)
-#     else:
-#         print('ERRR', req.text)
 
-
-
-
-get_data('9LQ4qzZam_wJke8_FaXhwrJcZQwboizBUGAVGxz9mZCfNQip9l0mOm0Wy6gdmsdS7FEktplthAzz4qnftLSRPflrPm7Yu9WCztwhOgoFVULgBNdrZkbTz3OS')
+with requests.request(**req_obj) as req:
+    if req.status_code < 300:
+        data = req.json()
+        # print('JSON IS', data)
+        access_token = data['access_token']
+        print('access_token', access_token)
+        get_data(access_token)
+    else:
+        print('ERRR', req.text)
