@@ -1,7 +1,7 @@
 import base64
 import requests
 
-OAUTH_PROVIDERS = {
+AUTH_PROVIDERS = {
     'github.com': {
         'auth': 'https://github.com/login/oauth/authorize',  # client_id, redirect_uri, login
         'access': 'https://github.com/login/oauth/access_token',  # scope, state, allow_signup
@@ -31,7 +31,7 @@ class GitOAuth2:
     """ Get access token through OAuth2 (social auth) """
 
     def __init__(self, provider):
-        oauth = OAUTH_PROVIDERS[provider]
+        oauth = AUTH_PROVIDERS[provider]
         self.__url = oauth['url_access']
         self.__basic_auth = oauth["app_id"], oauth["app_secret"]
 

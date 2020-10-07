@@ -47,7 +47,7 @@ class GitHubConnect(GitProviderUtils):
 
     def __sha_get(self, link):
         req_obj = {'method': 'HEAD', 'url': link, 'headers': self._auth_header}
-        response, err = self._request(req_obj)
+        response, err = self.make_request(req_obj)
         return (None, err) if err else self.__sha_from_header(response.headers)
 
     @staticmethod
@@ -109,7 +109,7 @@ class GitLabConnect(GitProviderUtils):
     def __sha_get(self, link, as_file=False):
         method = 'HEAD' if as_file else 'GET'
         req_obj = {'method': method, 'url': link, 'headers': self._auth_header}
-        response, err = self._request(req_obj)
+        response, err = self.make_request(req_obj)
         return (None, err) if err else self.__sha_from_response(response, as_file)
 
     def __sha_from_response(self, response, as_file):
@@ -192,7 +192,7 @@ class BitBucketConnect(GitProviderUtils):
     def __sha_get(self, link):
         params = {'format': 'meta', 'access_token': self._token}
         req_obj = {'method': 'GET', 'url': link, 'params': params}
-        response, err = self._request(req_obj)
+        response, err = self.make_request(req_obj)
         return (None, err) if err else self.__sha_from_response(response)
 
     @staticmethod

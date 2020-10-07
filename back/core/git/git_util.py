@@ -121,8 +121,8 @@ class GitProviderUtils:
         return self.__url_root + self.__url_suffix_upload
 
     @staticmethod
-    def _request(request_object):
-        """ Handle connection errors """
+    def make_request(request_object):
+        """ Handle connection errors (used in git_auth) """
         err = f'Connect {request_object["url"]} error: '
         try:
             with requests.request(**request_object) as response:
@@ -136,6 +136,8 @@ class GitProviderUtils:
                         return None, 'json parse error'
                 elif code == 400:
                     return None, err + 'request params error'
+                elif code == 401:
+                    return None, err + 'bad credentials'
                 elif code == 403:
                     return None, err + 'no access'
                 elif code == 404:
@@ -154,7 +156,7 @@ class GitProviderUtils:
         return git_path, link, head
 
     def _file_upload_get_sha(self, req_obj, lambda_fn):
-        response, err = self._request(req_obj)
+        response, err = self.make_request(req_obj)
         if err:
             return None, err
         return lambda_fn(response), None
