@@ -2,7 +2,7 @@
 
 import re
 
-from core.git.git_providers import GitHubConnect, GitLabConnect, BitBucketConnect
+from core.services.git.git_providers import GitHubConnect, GitLabConnect, BitBucketConnect
 
 # TODO: remake by django.http.requests ?
 
@@ -14,7 +14,7 @@ KNOWN_PROVIDERS = {
 REPO_CHECK_KEYS = ('provider', 'owner', 'name', 'path', 'branch', 'sha', 'access')
 
 
-class GitManager:
+class GitInterface:
     """ Class to work with git repositories - GitHub, GitLab, BitBucket (file_manager and folder_manager subclass) """
 
     def __init__(self):
@@ -36,7 +36,7 @@ class GitManager:
         assert value['provider'] in KNOWN_PROVIDERS, f'Git provider {value["provider"]} not configured'
         self.__repo = value
         self.__git = KNOWN_PROVIDERS[value['provider']](value)
-        self.__url = self.__git.repo_http_url
+        self.__url = self.__git.url_repo_http
 
     @property
     def url(self):

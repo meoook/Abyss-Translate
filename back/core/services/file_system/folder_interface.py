@@ -3,23 +3,22 @@ import logging
 from django.core.exceptions import ObjectDoesNotExist
 from django.forms.models import model_to_dict
 
-from core.git.git_oauth2 import GitOAuth2
-from core.models import Folders, FolderRepo, Files
-from core.services.file_manager import LocalizeFileManager
+from core.services.git.git_auth import OAuth2Token
 
-from core.git.git_manager import GitManager
+from core.models import Folders, FolderRepo, Files
+from core.services.file_system.file_interface import LocalizeFileInterface
+
+from core.services.git.git_interface import GitInterface
 
 logger = logging.getLogger('logfile')
 
 
-class LocalizeFolderManager:
+class LocalizeGitFolderInterface:
     """ Manage project folders with GIT (have subclasses) """
-
-    # TODO: Make as FolderGitManager
 
     def __init__(self, folder_id):
         self.__id = folder_id
-        self.__git = GitManager()
+        self.__git = GitInterface()
         try:
             self.__folder = Folders.objects.get(id=self.__id)
             self.__url = self.__folder.repo_url
@@ -33,37 +32,29 @@ class LocalizeFolderManager:
         logger.info(f'Repository check access for folder id:{self.__id}')
         error_for_user = None
         repo_obj = self.__folder.folderrepo
-        if access_type not in ['basic', 'token', 'bearer', 'oauth']:  # Support access types
+        # Income data check
+        if access_type not in ['ssh', 'token', 'oauth', 'abyss']:  # Support access types
             logger.warning(f'Unknown access type:{access_type}')
             error_for_user = 'Access type error'
         else:
             if access_type == 'oauth':
-                oauth = GitOAuth2(repo_obj.provider)
-                access_value, err = oauth.refresh_token(access_value)  # Get refresh token by code
-                if err:
-                    logger.warning(f'For folder id:{repo_obj.folder_id} OAuth get access error for provider:{repo_obj.provider}')
+                access_value = OAuth2Token(repo_obj.provider, access_value)  # Get refresh token by code
+                if not access_value:
+                    logger.warning(f'For folder id:{repo_obj.folder_id} OAuth get access error')
                     error_for_user = 'OAuth access error'
+        # Update folder and repo objects
         if error_for_user:
             repo_obj.error = error_for_user
             repo_obj.save()
-        else:
+        else:  # No problems from user side (access e.t.c.)
             repo_obj.access = {'type': access_type, 'token': access_value}
-            repo_obj.save()
-            try:
-                self.__git.repo = model_to_dict(repo_obj)
-                new_sha = self.__git.sha
-            except AssertionError as err:
-                logger.warning(f'Setting repository for folder id:{self.__id} error {err}')
-                repo_obj.error = 'Access to repository error'
-                self.__folder.repo_status = False
+            repo_obj.save()  # need repo_obj with access on next step
+            if self.__folder_update_git_status(repo_obj, 'obj'):
+                repo_obj.sha = self.__git.sha
             else:
-                repo_obj.sha = new_sha
-                self.__folder.repo_status = True
+                logger.warning(f'Setting repository for folder id:{self.__id} error ')
+                repo_obj.error = 'Access error'
             repo_obj.save()
-            self.__folder.folderrepo.save()
-
-    def __check_repo_access(self, access_type, access_value):
-        pass
 
     def repo_url_changed(self):
         """ Check repository access and exist status """
@@ -75,15 +66,29 @@ class LocalizeFolderManager:
         logger.info(f'For folder id:{self.__id} changing repo status to: None - updating')
         self.__folder.repo_status = None
         self.__folder.save()
-        if not self.__url:  # Input URL empty
-            return True
-        self.__repo_url_check()  # Input URL not empty
+        if self.__url:  # Input URL not empty
+            self.__repo_url_check()
 
     def __repo_url_check(self):
         """ If URL not empty - check repository """
+        sha = self.__git.sha if self.__folder_update_git_status(self.__url, 'url') else ''
+        if self.__git.repo:
+            logger.info(f'Creating new repo obj for folder id:{self.__id}')
+            defaults = {**self.__git.repo, 'sha': sha}
+            FolderRepo.objects.update_or_create(folder_id=self.__id, defaults=defaults)
+        else:
+            logger.warning(f"Can't create repo obj from url {self.__url}")
+
+    def __folder_update_git_status(self, value, value_type='obj'):
+        """ Update repository model object status """
         repo_status = False
-        try:  # Input URL not empty
-            self.__git.url = self.__url  # Create repository object from URL
+        try:
+            # Create repository object
+            if value_type == 'url':
+                self.__git.url = value  # from URL
+            else:
+                self.__git.repo = model_to_dict(value)  # from repo model object
+            # Check repository
             if self.__git.sha:  # Repository found
                 repo_status = True
             else:  # URL not found or no access
@@ -92,14 +97,10 @@ class LocalizeFolderManager:
             logger.warning(f'Git error: {err} - changed folder id:{self.__id} repo status to: False - not found')
         else:
             logger.info(f'For folder id:{self.__id} changing folder repo status to: True - found')
+        # Update status
         self.__folder.repo_status = repo_status
         self.__folder.save()
-        if self.__git.repo:
-            logger.info(f'Creating new repo obj for folder id:{self.__id}')
-            defaults = {**self.__git.repo, 'sha': self.__git.sha if repo_status else ''}
-            FolderRepo.objects.update_or_create(folder_id=self.__id, defaults=defaults)
-        else:
-            logger.warning(f"Can't create repo obj from url {self.__url}")
+        return repo_status
 
     def update_files(self):
         """ To run by celery to update files from repo folder """
@@ -141,7 +142,7 @@ class LocalizeFolderManager:
                 else:
                     logger.info(f"For file id:{filo['id']} changing status to: True - downloaded")
                     Files.objects.filter(id=filo['id']).update(repo_status=True, repo_sha=new_file_sha, state=1)
-                    file_manager = LocalizeFileManager(filo['id'])
+                    file_manager = LocalizeFileInterface(filo['id'])
                     logger.info(f"File id:{filo['id']} start parse process")
                     if file_manager.error or not file_manager.parse():
                         logger.warning(f"File parse error id:{filo['id']} err: {file_manager.error} - retry once")

@@ -43,14 +43,6 @@ const OptionsFolder = ({ fID, prjID }) => {
     if (repoUrl !== folder.repo_url) fldrUpdate({ save_id: prjID, id: fID, name: folder.name, repo_url: repoUrl })
   }
 
-  const testStyle = folder.repo_status
-    ? { border: "1px solid green" }
-    : folder.repo_status === false
-    ? { border: "1px solid red" }
-    : folder.repo_url
-    ? { border: "1px solid yellow" }
-    : { border: "1px solid blue" }
-
   return (
     <>
       <div className='col col-4 column'>
@@ -70,14 +62,7 @@ const OptionsFolder = ({ fID, prjID }) => {
         <div className='scroll-y paginate column ml-3'>
           <label>Сылка на папку в GIT репозитории (?)</label>
           <div>
-            <input
-              type='text'
-              value={repoUrl}
-              onChange={changeGit}
-              placeholder='не указано'
-              onBlur={saveGit}
-              style={testStyle}
-            />
+            <input type='text' value={repoUrl} onChange={changeGit} placeholder='не указано' onBlur={saveGit} />
           </div>
           {Boolean(folder.repo_url) && (
             <OptionsFolderGit folderID={folder.id} prjID={prjID} repoStatus={folder.repo_status} />

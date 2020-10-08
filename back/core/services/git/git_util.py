@@ -1,23 +1,27 @@
 import os
 import requests
 
-from core.git.git_oauth2 import GitOAuth2
-
 
 class GitProviderUtils:
     """ Util class to work with git repositories (morph class for git_providers) """
 
     _commit_msg = 'Create/update translated copy {file_path} from localize'
 
-    def __init__(self, git_obj, abyss_access, root, repo, file=None, upload=None):
-        self.__token = None
-        self.__auth_header = None
+    def __init__(self, auth, git_obj, root, repo, file=None, upload=None):
         self._git = git_obj
-        self.__abyss_access = abyss_access
         self.__url_root = root
         self.__url_suffix_repo = repo
         self.__url_suffix_file = file if file else repo
         self.__url_suffix_upload = upload if upload else file
+        self.__auth = auth
+        self.__set_auth(**self._git['access']) if self._git['access'] else self.__set_auth(access_type='abyss')
+
+    def __set_auth(self, access_type, token=None):
+        """ Set token and header """
+        self._auth_token = self.__auth.get_access_token(access_type, token)
+        # if not self._auth_token:    # Not correct to use abyss if user access not correct
+        #     self._auth_token = auth.get_access_token(access_type='abyss')
+        self._auth_header = self.__auth.get_header(self._auth_token)
 
     def repo_get_sha(self):
         """ Get repository new hash with err status """
@@ -32,68 +36,9 @@ class GitProviderUtils:
         raise NotImplementedError('Method file_upload not implemented in root(Git*Connect) class')
 
     @property
-    def repo_http_url(self):
+    def url_repo_http(self):
         """ Repository object http url (not used) """
         return self._url_http_format.format(**self._git)
-
-    @property
-    def _auth_header(self):
-        """ Authorization header for selected repo or abyss access by default """
-        if not self.__auth_header:
-            self.__auth_set()
-        return self.__auth_header
-
-    def __auth_set(self):
-        access_type = None
-        access_token = None
-        if self._git['access']:
-            access_type = self._git['access']['type']
-            access_token = self.__token_get_from_type(access_type, self._git["access"]["token"])
-        if not access_token:  # If fail - Get abyss access token
-            access_type = self.__abyss_access['type']
-            access_token = self.__token_get_from_type(access_type, self.__abyss_access['token'])
-        assert access_token, "Auth get failed"
-        self.__token = access_token
-        self.__auth_header = self.__auth_header_get(access_type, access_token)
-
-    def __auth_header_get(self, access_type, access_token):
-        """ Return auth header by type """
-        if access_type == 'basic':
-            return {'Authorization': f'Basic {access_token}'}
-        elif access_type == 'token':
-            return self._auth_header_get_by_token(access_token)
-        elif access_type == 'bearer':
-            return {'Authorization': f'Bearer {access_token}'}
-        elif access_type == 'oauth':
-            return self._auth_header_get_by_oauth(access_token)
-        else:
-            return {}
-
-    @staticmethod
-    def _auth_header_get_by_token(access_token):
-        """ Return auth header by token (can be changed by provider) """
-        return {'Authorization': f'Token {access_token}'}
-
-    @staticmethod
-    def _auth_header_get_by_oauth(access_token):
-        """ Return auth header by oauth (can be changed by provider) """
-        return {'Authorization': f'Bearer {access_token}'}
-
-    @property
-    def _token(self):
-        if not self.__token:
-            self.__auth_set()
-        return self.__token
-
-    def __token_get_from_type(self, token_type, token_value):
-        if token_type in ['basic', 'token', 'bearer']:
-            return token_value
-        elif token_type == 'oauth':
-            oauth = GitOAuth2(self._git['provider'])
-            token, err = oauth.access_token(token_value)
-            if not err:
-                return token
-        return None
 
     def _url_download_file(self, file_path):
         """ URL with filename to download file """
@@ -122,7 +67,7 @@ class GitProviderUtils:
 
     @staticmethod
     def make_request(request_object):
-        """ Handle connection errors (used in git_auth) """
+        """ Handle connection errors (used in git_auth class) """
         err = f'Connect {request_object["url"]} error: '
         try:
             with requests.request(**request_object) as response:
@@ -147,12 +92,12 @@ class GitProviderUtils:
         except requests.exceptions.ConnectionError:
             return None, err + 'network error'
 
-    def _file_upload_request_values(self, path, access):
+    def _file_upload_request_values(self, path, auth_header):
         """ Util function to create some request data """
         filename = os.path.basename(path)
         git_path = f'{self._git["path"]}/{filename}' if self._git["path"] else filename
         link = self._url_upload_format.format(**self._obj_with_filename(filename))
-        head = {**access, 'Content-type': 'application/json', 'Accept': 'application/json'}
+        head = {**auth_header, 'Content-type': 'application/json', 'Accept': 'application/json'}
         return git_path, link, head
 
     def _file_upload_get_sha(self, req_obj, lambda_fn):
@@ -161,14 +106,14 @@ class GitProviderUtils:
             return None, err
         return lambda_fn(response), None
 
-    def _file_pre_download(self, link, path, old_sha, new_sha, err, add_header=None):
+    def _file_pre_download(self, link, path, old_sha, new_sha, err, headers=None):
         """ Check errors and download if checked """
         if err:
             return None, err
         if old_sha == new_sha:
             return None, None  # File hash not updated
-        head = {**self._auth_header, **add_header} if add_header else self._auth_header
-        success, err = self._file_download(path, link, head)
+        # head = headers if headers else {}
+        success, err = self._file_download(path, link, headers)
         return (None, err) if err else (new_sha, None)
 
     @staticmethod
@@ -177,7 +122,6 @@ class GitProviderUtils:
         try:
             with open(path, 'wb') as filo:
                 download_obj = {'url': link, 'headers': head}
-                print('DOWNLOAD OBJ', download_obj)
                 with requests.get(**download_obj, stream=True) as response:
                     response.raise_for_status()
                     if response.status_code != requests.codes.ok:

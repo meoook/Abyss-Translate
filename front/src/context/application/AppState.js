@@ -309,12 +309,25 @@ const AppState = ({ children }) => {
     }
   }
   // REPOSITORY
+  const repoCheck = async (save_id, folder_id) => {
+    try {
+      const res = await axios.get(`${URL}/prj/folder/${folder_id}`, { ...config, params: { save_id } })
+      if (res.data.repo_status !== null) {
+        const payload = state.folders.map((fldr) => (fldr.id !== res.data.id ? fldr : res.data))
+        dispatch({ type: PRJ_FOLDER_REFRESH, payload })
+        return true
+      }
+      return false
+    } catch (err) {
+      addMsg(connectErrMsg(err, "Информация о репозитории не получена"))
+    }
+  }
   const repoGet = async (save_id, folder_id) => {
+    dispatch({ type: REPOSITORY_REFRESH, payload: {} })
     try {
       const res = await axios.get(`${URL}/repo/${folder_id}`, { ...config, params: { save_id } })
       dispatch({ type: REPOSITORY_REFRESH, payload: res.data })
     } catch (err) {
-      dispatch({ type: REPOSITORY_REFRESH, payload: {} })
       addMsg(connectErrMsg(err, "Информация о репозитории не получена"))
     }
   }
@@ -366,6 +379,7 @@ const AppState = ({ children }) => {
         permList,
         permAdd,
         permRemove,
+        repoCheck,
         repoGet,
         repoAccess,
       }}>

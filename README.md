@@ -6,7 +6,7 @@
 
 * prod site: [localize.ru][prod] (not set)
 * pre prod: [91.225.238.193][pre prod]
-* version: 1.01.3
+* version: 1.01.8
 * author: [meok][author]
 * build: react, django, postgres, celery, redis, nginx
 

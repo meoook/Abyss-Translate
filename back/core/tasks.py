@@ -5,8 +5,8 @@ from celery.exceptions import SoftTimeLimitExceeded, MaxRetriesExceededError
 
 from core.models import Folders
 
-from core.services.file_manager import LocalizeFileManager
-from core.services.folder_manager import LocalizeFolderManager
+from core.services.file_system.file_interface import LocalizeFileInterface
+from core.services.file_system.folder_interface import LocalizeGitFolderInterface
 
 logger = logging.getLogger('logfile')
 
@@ -22,7 +22,7 @@ logger = logging.getLogger('logfile')
 def file_parse_uploaded(file_id, new=True):
     """ After file uploaded -> If possible update it from repo then get info and parse data into text to translate """
     # Git update first
-    file_manager = LocalizeFileManager(file_id)
+    file_manager = LocalizeFileInterface(file_id)
     if file_parse_uploaded.request.retries == 0:    # First try - update from repository
         logger.info(f'File id:{file_id} try update from repo')
         file_manager.update_from_repo()
@@ -47,7 +47,7 @@ def file_parse_uploaded(file_id, new=True):
 )
 def file_create_translated(file_id, lang_id):
     """ After file translated to language -> Create translated copy then create or update it in repo """
-    file_manager = LocalizeFileManager(file_id)
+    file_manager = LocalizeFileInterface(file_id)
     try:
         if not file_manager.create_translated_copy(lang_id):
             logger.warning(f'File id:{file_id} create translated copy error')
@@ -71,7 +71,7 @@ def file_create_translated(file_id, lang_id):
 def folder_update_repo_after_url_change(folder_id):
     """ After changing git url -> Update folder files from git repository folder """
     try:
-        folder_manager = LocalizeFolderManager(folder_id)
+        folder_manager = LocalizeGitFolderInterface(folder_id)
         folder_manager.repo_url_changed()
         folder_manager.update_files()
     except SoftTimeLimitExceeded:
@@ -89,7 +89,7 @@ def folder_update_repo_after_url_change(folder_id):
 def folder_repo_change_access_and_update(folder_id, access_type, access_value):
     """ After changing git access -> Update folder files from git repository folder """
     try:
-        folder_manager = LocalizeFolderManager(folder_id)
+        folder_manager = LocalizeGitFolderInterface(folder_id)
         folder_manager.change_repo_access(access_type, access_value)
         folder_manager.update_files()
     except SoftTimeLimitExceeded:
@@ -129,7 +129,7 @@ def check_all_file_repos():
     try:
         folders_with_repo = Folders.objects.filter(repo_status=True)
         for folder in folders_with_repo:
-            folder_manager = LocalizeFolderManager(folder.id)
+            folder_manager = LocalizeGitFolderInterface(folder.id)
             folder_manager.update_files()
     except SoftTimeLimitExceeded:
         logger.warning('Checking files too slow')

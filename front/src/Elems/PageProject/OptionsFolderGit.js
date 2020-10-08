@@ -5,37 +5,36 @@ import { displayStringDate } from "../componentUtils"
 
 const OptionsFolderGit = ({ folderID, prjID, repoStatus }) => {
   // Get repo information from server
-  const { repository, repoGet, repoAccess } = useContext(AppContext)
+  const { repository, repoCheck, repoGet, repoAccess } = useContext(AppContext)
   const [inToken, setInToken] = useState("")
-  // // Util
-  // const circleRepoGet = (save_id, folder_id) => {
-  //   if (!repository || repository.folder_id !== folder_id){
-  //     repoGet(save_id, folder_id)
-  //   window.setTimeout(()=>{
-  //     console.log('One more circle',repository, Boolean(repository))
-  //     if (!repository || repository.folder_id !== folder_id) circleRepoGet(save_id, folder_id)
-  //   }, 3000)}
-  // }
+  const [gitState, setGitState] = useState(0)
 
   useEffect(() => {
-    // circleRepoGet(prjID, folderID)
-    if (!repository || repository.folder !== folderID) {
-      console.log("CHECK THIS", prjID, folderID, repository)
-      console.log("CHECK THIS", repository.folder !== folderID)
-      repoGet(prjID, folderID)
+    switch (repoStatus) {
+      case true:
+        setGitState(1) // 1 - success
+        break
+      case false:
+        setGitState(-1) // -1 = fail
+        break
+      default:
+        setGitState(0) // 0 = loading
+        break
     }
-    console.log("REPO STATUS", repoStatus ? "true" : "false")
-    // eslint-disable-next-line
-  }, [repository, folderID, prjID])
+  }, [repoStatus])
 
-  if (!repository.hasOwnProperty("name")) return <Loader />
-
-  if (repository.error)
-    return (
-      <div>
-        <h1>Ошибка репозитория: {repository.error}</h1>
-      </div>
-    )
+  useEffect(() => {
+    let timer = window.setTimeout(() => {
+      repoCheck(folderID, prjID).then((success) => {
+        console.log("ONE MORE TIMER CIRCLE")
+        if (!success) timer()
+        else repoGet(prjID, folderID)
+      })
+    }, 3000)
+    return () => {
+      window.clearTimeout(timer)
+    }
+  }, [gitState])
 
   const saveTokenByEnter = (e) => {
     if (e.key === "Enter") saveToken(e)
@@ -45,8 +44,9 @@ const OptionsFolderGit = ({ folderID, prjID, repoStatus }) => {
   }
 
   const redirectToProvider = () => {
+    // FIXME: Move to Reducer
     // let [consumerKey, response_type, providerAuthUrl, scope] = [null] * 4
-    let [consumerKey, response_type, providerAuthUrl, scope] = [null, null, null, null] // FIXME: [null] * 4
+    let [consumerKey, response_type, providerAuthUrl, scope] = Array(4).fill(null)
     switch (repository.provider) {
       case "bitbucket.org":
         consumerKey = "xckDCgTDkpEAtWnfYe"
@@ -59,7 +59,7 @@ const OptionsFolderGit = ({ folderID, prjID, repoStatus }) => {
         scope = "repo"
         break
       case "gitlab.com":
-        consumerKey = ""
+        consumerKey = "56fcf0ae30f04c6d0bfa1a327274eb81a2c3bf6d64f1b5927ac0d2f47ef4ecdf"
         providerAuthUrl = "https://gitlab.com/oauth/authorize"
         break
       default:
@@ -74,6 +74,15 @@ const OptionsFolderGit = ({ folderID, prjID, repoStatus }) => {
     window.location = redirectTo
   }
 
+  if (!gitState) return <Loader />
+
+  if (!repository.hasOwnProperty("name"))
+    return (
+      <div>
+        <h1>Ошибка - репозиторий не определен</h1>
+      </div>
+    )
+
   return (
     <div>
       <div>
@@ -86,24 +95,20 @@ const OptionsFolderGit = ({ folderID, prjID, repoStatus }) => {
       </div>
       <div>
         <h1>Доступ к репозиторию</h1>
-        {repoStatus ? (
-          <div>предоставлен</div>
-        ) : (
-          <>
-            <div>Введите токен вашего репозитория или войдите с помощью</div>
-            <button className='btn' onClick={redirectToProvider}>
-              {repository.provider}
-            </button>
-            <div>Token</div>
-            <input
-              type='text'
-              value={inToken}
-              onChange={(e) => setInToken(e.target.value)}
-              onKeyPress={saveTokenByEnter}
-              onBlur={saveToken}
-            />
-          </>
-        )}
+        {gitState > 0 ? <div className='t-green'>предоставлен</div> : <div className='t-red'>{repository.error}</div>}
+        <hr />
+        <div>Введите токен вашего репозитория или войдите с помощью</div>
+        <button className='btn' onClick={redirectToProvider}>
+          {repository.provider}
+        </button>
+        <div>Token</div>
+        <input
+          type='text'
+          value={inToken}
+          onChange={(e) => setInToken(e.target.value)}
+          onKeyPress={saveTokenByEnter}
+          onBlur={saveToken}
+        />
       </div>
     </div>
   )

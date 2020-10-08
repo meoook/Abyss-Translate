@@ -2,7 +2,8 @@ import base64
 import json
 from urllib import parse
 
-from core.git.git_util import GitProviderUtils
+from core.services.git.git_auth import AuthGitHub, AuthGitLab, AuthBitBucket
+from core.services.git.git_util import GitProviderUtils
 
 
 class GitHubConnect(GitProviderUtils):
@@ -11,8 +12,8 @@ class GitHubConnect(GitProviderUtils):
         root = 'https://api.github.com/repos/{owner}/{name}'
         repo = '/contents/{path}?ref={branch}'
         file = '/contents/{path}?ref={branch}'
-        abyss_access = {'type': 'token', 'token': 'a64a7ef131c0a8823e9f4b8228b86f5c077fd6b9'}
-        super().__init__(git_obj, abyss_access, root, repo, file)
+        auth = AuthGitHub()
+        super().__init__(auth, git_obj, root, repo, file)
 
     def repo_get_sha(self):
         link = self._url_folder_format.format(**self._git)
@@ -22,8 +23,8 @@ class GitHubConnect(GitProviderUtils):
         """ Check file hash and download if updated """
         link = self._url_download_file(path)
         new_sha, err = self.__sha_get(link)
-        add_header = {'Accept': 'application/vnd.github.v3.raw'}
-        return self._file_pre_download(link, path, old_sha, new_sha, err, add_header)
+        header = {**self._auth_header, 'Accept': 'application/vnd.github.v3.raw'}
+        return self._file_pre_download(link, path, old_sha, new_sha, err, header)
 
     def file_upload(self, path, git_file_sha):
         """ Upload file to git repository (if sha set - use update method otherwise create) """
@@ -33,7 +34,7 @@ class GitHubConnect(GitProviderUtils):
         data_coded = base64.b64encode(data_binary).decode('utf-8')
         git_path, link, head = self._file_upload_request_values(path, self._auth_header)
         obj = {
-            'message': self._commit_msg.format(path=git_path),
+            'message': self._commit_msg.format(file_path=git_path),
             'content': data_coded,
             'branch': self._git['branch'],
             'sha': git_file_sha,
@@ -72,8 +73,8 @@ class GitLabConnect(GitProviderUtils):
         repo = 'commits?ref={branch}&path={path}'
         file = 'files/{path}/raw?ref={branch}'
         upload = 'files/{path}?ref={branch}'
-        abyss_access = {'type': 'token', 'token': 'ZocaYQAp9UYd18wk1Psk'}
-        super().__init__(git_obj, abyss_access, root, repo, file, upload)
+        auth = AuthGitLab()
+        super().__init__(auth, git_obj, root, repo, file, upload)
 
     def repo_get_sha(self):
         link = self._url_folder_format.format(**self._git)
@@ -83,7 +84,7 @@ class GitLabConnect(GitProviderUtils):
         """ Check file hash and download if updated """
         link = self._url_download_file(path)
         new_sha, err = self.__sha_get(link, True)
-        return self._file_pre_download(link, path, old_sha, new_sha, err)
+        return self._file_pre_download(link, path, old_sha, new_sha, err, self._auth_header)
 
     def file_upload(self, path, git_file_sha):
         """ Upload file to git repository (if sha set - use update method otherwise create) """
@@ -144,8 +145,8 @@ class BitBucketConnect(GitProviderUtils):
         repo = '/src/{branch}/{path}'
         file = '/src/{branch}/{path}'
         upload = '/src/'
-        abyss_access = {'type': 'oauth', 'token': 'dT3cWh4p3QxvMf4WnG'}  # FIXME: No credentials
-        super().__init__(git_obj, abyss_access, root, repo, file, upload)
+        auth = AuthBitBucket()
+        super().__init__(auth, git_obj, root, repo, file, upload)
 
     def repo_get_sha(self):
         link = self._url_folder_format.format(**self._git)
@@ -153,8 +154,9 @@ class BitBucketConnect(GitProviderUtils):
 
     def file_update(self, path, old_sha):
         """ Check file hash and download if updated """
-        link = self._url_download_file(path) + '?access_token=' + self._token
+        link = self._url_download_file(path) + '?access_token=' + self._auth_token
         new_sha, err = self.__sha_get(link)
+        # header = self._auth_header
         return self._file_pre_download(link, path, old_sha, new_sha, err)
 
     def file_upload(self, path, git_file_sha):
@@ -167,7 +169,7 @@ class BitBucketConnect(GitProviderUtils):
         git_path, link, _ = self._file_upload_request_values(path, self._auth_header)
         head = {'Content-Type': 'application/x-www-form-urlencoded'}
         # application/x-www-form-urlencoded
-        # ?access_token={access_token}
+        # ?token={token}
         # obj = {
         #     'message': self._commit_msg.format(file_path=git_path),
         #     'content': data_coded,
@@ -178,11 +180,10 @@ class BitBucketConnect(GitProviderUtils):
             'message': self._commit_msg.format(file_path=git_path),
             f'/{git_path}': data_coded,
             'branch': self._git['branch'],
-            'access_token': self._token,
+            'token': self._auth_token,
         }
         # req_obj = {'method': 'POST', 'url': link, 'headers': head, 'data': json.dumps(obj)}
         req_obj = {'method': 'POST', 'url': link, 'headers': head, 'data': obj}
-        print('REQ OBJECT IS', req_obj)
 
         def fn(x):  # Lambda function to find sha
             return x['commit']['hash']
@@ -190,7 +191,7 @@ class BitBucketConnect(GitProviderUtils):
         return self._file_upload_get_sha(req_obj, fn)
 
     def __sha_get(self, link):
-        params = {'format': 'meta', 'access_token': self._token}
+        params = {'format': 'meta', 'access_token': self._auth_token}
         req_obj = {'method': 'GET', 'url': link, 'params': params}
         response, err = self.make_request(req_obj)
         return (None, err) if err else self.__sha_from_response(response)

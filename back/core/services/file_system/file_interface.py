@@ -6,16 +6,16 @@ from django.core.exceptions import ObjectDoesNotExist, ValidationError
 from rest_framework import status
 
 from core.models import Files, ErrorFiles, Translates, Translated
-from core.services.file_cr_trans_copy import CreateTranslatedCopy
+from core.services.file_system.file_cr_trans_copy import CreateTranslatedCopy
 
-from core.services.file_get_info import DataGetInfo
-from core.services.file_rebuild import FileRebuild
-from core.git.git_manager import GitManager
+from core.services.file_system.file_get_info import DataGetInfo
+from core.services.file_system.file_rebuild import FileRebuild
+from core.services.git.git_interface import GitInterface
 
 logger = logging.getLogger('logfile')
 
 
-class LocalizeFileManager:
+class LocalizeFileInterface:
     """ Grouped class to manage long time tasks (& others) on file (have subclasses) """
 
     def __init__(self, file_id):
@@ -161,7 +161,7 @@ class LocalizeFileManager:
         """ Update file translated copy in repository """
         if self.__check_object('update_copy_in_repo') and self.__file.folder.repo_status:
             copy = self.__file.translated_set.get(language_id=lang_id)
-            git_manager = GitManager()
+            git_manager = GitInterface()
             try:
                 git_manager.repo = model_to_dict(self.__file.folder.folderrepo)
                 new_file_sha, err = git_manager.upload_file(copy.translate_copy.path, copy.repo_sha)
@@ -185,7 +185,7 @@ class LocalizeFileManager:
             self.__file.repo_status = False
             logger.info(f"File {self.__log_name} trying to update from repository - set status False (not found)")
             # Get list of updated files from git
-            git_manager = GitManager()
+            git_manager = GitInterface()
             try:
                 git_manager.repo = model_to_dict(self.__file.folder.folderrepo)
                 new_sha, err = git_manager.update_file(self.__file.data.path, self.__file.repo_sha)

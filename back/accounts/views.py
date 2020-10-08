@@ -1,9 +1,8 @@
 from django.db.models import Q
-from rest_framework import generics, permissions, views
+from rest_framework import generics, permissions
 from rest_framework.response import Response
 from knox.models import AuthToken
 
-from core.git.git_oauth2 import GitOAuth2
 from .serializers import UserSerializer, RegisterSerializer, LoginSerializer, UserListSerializer
 from django.contrib.auth.models import User
 

@@ -18,7 +18,7 @@ from .serializers import ProjectSerializer, FoldersSerializer, LanguagesSerializ
     TransferFileSerializer, FileMarksSerializer, PermissionsSerializer, TranslatesSerializer, FolderRepoSerializer, \
     PermsListSerializer
 from .models import Languages, Projects, Folders, FolderRepo, Files, Translated, FileMarks, ProjectPermissions
-from .services.file_manager import LocalizeFileManager
+from core.services.file_system.file_interface import LocalizeFileInterface
 from .tasks import file_parse_uploaded, file_create_translated, folder_update_repo_after_url_change, \
     folder_repo_change_access_and_update
 from .permisions import IsProjectOwnerOrReadOnly, IsProjectOwnerOrAdmin, IsProjectOwnerOrManage, \
@@ -229,7 +229,7 @@ class FileMarksView(viewsets.ModelViewSet):
         """ Create or update translates. Update translate progress. If finished - create translate file. """
         file_id = request.data.get('file_id')
         lang_id = request.data.get('lang_id')
-        file_manager = LocalizeFileManager(file_id)
+        file_manager = LocalizeFileInterface(file_id)
         if file_manager.error:
             return Response(file_manager.error, status=status.HTTP_404_NOT_FOUND)
         resp, sts = file_manager.create_mark_translate(request.user.id, **request.data)
