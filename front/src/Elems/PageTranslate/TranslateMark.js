@@ -27,7 +27,8 @@ const TranslateMark = ({ mark, langOrig, langTrans, same, setActive }) => {
   }
   const handleSelect = (event) => {
     // setActive(mark.id)
-    setActive(transObj.id)
+    if (transObj) setActive(transObj.id)
+    else setActive(null)
   }
 
   return (
