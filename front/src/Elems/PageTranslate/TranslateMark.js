@@ -6,9 +6,11 @@ const TranslateMark = ({ mark, langOrig, langTrans, same, setActive }) => {
   const { transChange } = useContext(AppContext)
   const [inputVal, setInputVal] = useState("")
   const [changed, setChanged] = useState(false)
+  const [transObj, setTransObj] = useState(null)
 
   useEffect(() => {
     const translateDisplay = mark.translates_set.find((translate) => translate.language === langTrans)
+    setTransObj(translateDisplay)
     if (translateDisplay) setInputVal(translateDisplay.text)
     else setInputVal("")
   }, [mark, langTrans])
@@ -23,11 +25,17 @@ const TranslateMark = ({ mark, langOrig, langTrans, same, setActive }) => {
     if (same) transChange(mark.id, langTrans, inputVal, mark.md5sum)
     else transChange(mark.id, langTrans, inputVal)
   }
+  const handleSelect = (event) => {
+    // setActive(mark.id)
+    setActive(transObj.id)
+  }
 
   return (
-    <div className='card-translate m-1' onClick={setActive.bind(this, mark.id)}>
+    <div className='card-translate m-1' onClick={handleSelect}>
       <div className='card-translate-head'>
-        <div>ID&nbsp;{mark.id}</div>
+        <div>
+          ID&nbsp;{mark.id} {transObj && transObj.translator && `перевел ${transObj.translator}`}
+        </div>
         <div>слов&nbsp;{mark.words}</div>
       </div>
       <>

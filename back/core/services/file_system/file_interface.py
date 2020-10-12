@@ -5,7 +5,7 @@ from django.forms.models import model_to_dict
 from django.core.exceptions import ObjectDoesNotExist, ValidationError
 from rest_framework import status
 
-from core.models import Files, ErrorFiles, Translates, Translated
+from core.models import Files, ErrorFiles, Translates, Translated, TranslatesChangeLog
 from core.services.file_system.file_cr_trans_copy import CreateTranslatedCopy
 
 from core.services.file_system.file_get_info import DataGetInfo
@@ -107,6 +107,9 @@ class LocalizeFileInterface:
             objects = [Translates(**def_obj, mark=mark) for mark in control_marks if
                        mark.id not in translates.values_list("mark", flat=True)]
             Translates.objects.bulk_create(objects)
+        # Log translate change
+        log_objects = [TranslatesChangeLog(user_id=translator_id, translate_id=x.id, text=text) for x in translates]
+        TranslatesChangeLog.objects.bulk_create(log_objects)
         # Translate for response
         return_trans = translates.get(mark_id=mark_id)
         return return_trans, status.HTTP_200_OK

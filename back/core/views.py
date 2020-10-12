@@ -16,8 +16,9 @@ from django.http import FileResponse
 
 from .serializers import ProjectSerializer, FoldersSerializer, LanguagesSerializer, FilesSerializer, \
     TransferFileSerializer, FileMarksSerializer, PermissionsSerializer, TranslatesSerializer, FolderRepoSerializer, \
-    PermsListSerializer
-from .models import Languages, Projects, Folders, FolderRepo, Files, Translated, FileMarks, ProjectPermissions
+    PermsListSerializer, TranslatesLogSerializer
+from .models import Languages, Projects, Folders, FolderRepo, Files, Translated, FileMarks, ProjectPermissions, \
+    TranslatesChangeLog
 from core.services.file_system.file_interface import LocalizeFileInterface
 from .tasks import file_parse_uploaded, file_create_translated, folder_update_repo_after_url_change, \
     folder_repo_change_access_and_update
@@ -133,12 +134,9 @@ class FolderViewSet(viewsets.ModelViewSet):
 
 
 class FolderRepoViewSet(mixins.RetrieveModelMixin,
-                        # mixins.CreateModelMixin,
                         mixins.UpdateModelMixin,
-                        # mixins.DestroyModelMixin,
                         viewsets.GenericViewSet):
     serializer_class = FolderRepoSerializer
-    # http_method_names = ['get', 'post']
     permission_classes = [IsAuthenticated, IsProjectOwnerOrManage]
     queryset = FolderRepo.objects.all()
 
@@ -214,8 +212,8 @@ class FileMarksView(viewsets.ModelViewSet):
             to_filter = queryset.filter(Q(translates__language=no_trans), ~Q(translates__text__exact=''))
             queryset = queryset.exclude(id__in=to_filter)
         if search_text:  # TODO: Validate ?
-            search_vector = SearchVector('translates__words', 'translates__id')
-            search_query = None
+            search_vector = SearchVector('translates__text', 'translates__id')
+            search_query = SearchQuery('')
             for word in search_text.split(' '):
                 search_query &= SearchQuery(word)
             search_rank = SearchRank(search_vector, search_query)
@@ -240,6 +238,20 @@ class FileMarksView(viewsets.ModelViewSet):
             file_create_translated.delay(file_id, lang_id)
         serializer = TranslatesSerializer(resp, many=False)
         return Response(serializer.data, status=sts)
+
+
+class TranslatesLogView(mixins.RetrieveModelMixin, viewsets.GenericViewSet):
+    """ To display translate change log when translate selected """
+    serializer_class = TranslatesLogSerializer
+    permission_classes = [IsAuthenticated, IsFileOwnerOrTranslator]
+    queryset = TranslatesChangeLog.objects.all()
+
+    def retrieve(self, request, *args, **kwargs):
+        """ All changes for translate (pk) """
+        file_id = self.request.query_params.get('file_id')
+        qs = self.get_queryset().filter(translate_id=kwargs['pk'], translate__mark__file__id=file_id)
+        serializer = self.get_serializer(qs, many=True)
+        return Response(serializer.data)
 
 
 class TransferFileView(viewsets.ViewSet):

@@ -2,7 +2,9 @@ from rest_framework import serializers
 from rest_framework.exceptions import APIException
 from django.contrib.auth.models import User
 
-from .models import Languages, Projects, ProjectPermissions, Folders, FolderRepo, Files, ErrorFiles, Translated, FileMarks, Translates 
+from .models import Languages, Projects, ProjectPermissions, Folders, FolderRepo, Files, ErrorFiles, Translated, \
+    FileMarks, Translates, TranslatesChangeLog
+
 
 # Extra kwargs write_only, read_only, required, default, allow_null, label
 # source -> The name of the attribute that will be used to populate the field : URLField(source='get_absolute_url')
@@ -20,11 +22,20 @@ class LanguagesSerializer(serializers.ModelSerializer):
         fields = ['id', 'name', 'short_name']
 
 
+class TranslatesLogSerializer(serializers.ModelSerializer):
+    """ TRANSLATES: Change log of translates """
+    user = serializers.SlugRelatedField(slug_field='username', read_only=True)
+
+    class Meta:
+        model = TranslatesChangeLog
+        fields = ['translate', 'text', 'user', 'created']
+
+
 class TranslatesSerializer(serializers.ModelSerializer):
     """ TRANSLATES: To display translates related to Mark (and to add new?) """
     class Meta:
         model = Translates
-        fields = ["text", "translator", "language"]
+        fields = ["id", "text", "translator", "language"]
 
 
 class FileMarksSerializer(serializers.ModelSerializer):
@@ -89,8 +100,6 @@ class FoldersSerializer(serializers.ModelSerializer):
         fields = ['id', 'position', 'name', 'repo_url', 'repo_status', 'files_amount']
         extra_kwargs = {
             'position': {'read_only': True},
-            # 'project': {'write_only': True, 'required': False},
-            # 'repo_url': {'required': False},
             'repo_status': {'read_only': True},
         }
 
@@ -106,24 +115,14 @@ class FolderRepoSerializer(serializers.ModelSerializer):
         model = FolderRepo
         # fields = '__all__'
         exclude = ['access']
-        # extra_kwargs = {
-        #     'access': {'write_only': True},     # 'required': False
-        #     'folder': {'write_only': True},
-        # }
 
 
 class PermissionsSerializer(serializers.ModelSerializer):
-    """ Manage users permissions to project (project id must be hidden) """
-    # user = serializers.SlugRelatedField(slug_field='username', read_only=True)
-    # project = serializers.SlugRelatedField(slug_field='save_id', read_only=True)
+    """ Manage users permissions to project """
 
     class Meta:
         model = ProjectPermissions
         fields = ["id", "permission"]
-        extra_kwargs = {
-            # 'user': {'source': 'user__username'},
-            # 'project': {'write_only': True},
-        }
 
 
 class PermsListSerializer(serializers.ModelSerializer):
@@ -143,7 +142,7 @@ class PermsListSerializer(serializers.ModelSerializer):
 
 
 class ProjectSerializer(serializers.ModelSerializer):
-    """ Project manager serializer (project id must be hidden) """
+    """ Project manager serializer """
     permissions_set = serializers.SerializerMethodField()
     author = serializers.SerializerMethodField()
 
@@ -158,7 +157,7 @@ class ProjectSerializer(serializers.ModelSerializer):
 
     def get_permissions_set(self, instance):
         request = self.context.get('request')
-        return instance.projectpermissions_set.filter(user=request.user).values_list("permission", flat=True)  # if request else []
+        return instance.projectpermissions_set.filter(user=request.user).values_list("permission", flat=True)
 
     def get_author(self, instance):
         return instance.owner.username

@@ -4,6 +4,9 @@ from django.core.management.base import BaseCommand
 from core.models import Projects, Folders, ProjectPermissions
 from django.contrib.auth.models import User, Permission
 
+from core.models import Files
+from core.services.file_system.file_interface import LocalizeFileInterface
+
 
 class Command(BaseCommand):
     help = 'Manager to create test objects to test UI'
@@ -19,16 +22,36 @@ class Command(BaseCommand):
         project1_props = {'owner': user, 'name': 'snow', 'icon_chars': 'P1', 'lang_orig_id': 75}
         project1 = Projects.objects.create(**project1_props)
         project1.translate_to.set([15, 18, 22])
-        Folders.objects.create(project=project1, name=self.__random_name(), position=1)
+        folder1 = Folders.objects.create(project=project1, name=self.__random_name(), position=1)
         Folders.objects.create(project=project1, name=self.__random_name(), position=2)
         self.stdout.write(f'Created project {project1.name} and two folders with owner:{name}')
+        file1 = Files.objects.create(
+            folder=folder1,
+            name='test-file.txt',
+            state=1,
+            codec='utf-8',
+            method='csv',  # csv, ue, html
+            options={'any': 'data', 'more': 'info'},
+            data='test-file.txt',
+            items=25,
+            words=348957,
+            repo_sha='',
+            repo_status=None,
+            lang_orig_id=75,
+            warning='',
+            error='',
+        )
+        file_manager = LocalizeFileInterface(file1.id)
+        file_manager.create_progress()
+        self.stdout.write(f'Test file with progress created {file1.name} in folder {folder1.name}')
 
         perms_to_create = [0, 5, 8, 9]
         for perm in perms_to_create:
             name = 'q' + str(perm)
             user = User.objects.create_user(username=name, email=f'{name}@gmail.com', password=password)
             ProjectPermissions.objects.create(user=user, project=project1, permission=perm)
-            self.stdout.write(f'Created user name: {name} password:{password} with access {perm} to project {project1.name}')
+            self.stdout.write(
+                f'Created user name: {name} password:{password} with access {perm} to project {project1.name}')
 
         project2_props = {'owner': user, 'name': 'desert', 'icon_chars': 'P2', 'lang_orig_id': 75}
         project2 = Projects.objects.create(**project2_props)
@@ -58,8 +81,9 @@ class Command(BaseCommand):
             self.stdout.write(f'Project name:{prj.name} id:{prj.id}')
         self.stdout.write(' TOTAL PERMISSIONS '.center(60, '='))
         for perm in ProjectPermissions.objects.all():
-            self.stdout.write(f'Permission: {perm.permission} for user: {perm.user.username} to project: {perm.project.name}')
-        self.stdout.write(f'{"":=<80}')    # :{filler}<{width}
+            self.stdout.write(
+                f'Permission: {perm.permission} for user: {perm.user.username} to project: {perm.project.name}')
+        self.stdout.write(f'{"":=<80}')  # :{filler}<{width}
 
     @staticmethod
     def __random_name(length=0):

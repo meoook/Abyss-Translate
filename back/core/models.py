@@ -109,7 +109,6 @@ def user_directory_path(instance, filename):
 
 class Files(models.Model):
     """" File model with auto delete. File is unique for folder. """
-    # TODO: FileStats - @property
     FILE_STATE_CHOICES = [
         (0, 'error'),        # Error while parsing
         (1, 'uploaded'),     # Is parsing

@@ -11,14 +11,14 @@
 |   ?     |    +     | Translate examples: Google                                         |
 |  1-2d   |    +     | Translate examples: translates from same file (by like)            |
 |   -     |  block?  | More translate filters or sorters (by like 70%)                    |
-|  1-2d   |  block+  | Поиск по словам из search words (pgSQL vectors)                                     |
+|         |  block+  | Поиск по фразе (pgSQL vectors)                                     |
 |   -     |  block?  | Переработка способов парсинга файлов                               |
 |   -     |  block?  | Merge check - отображение изменений                                |
 |   -     |  block+  | Context display - отображение исходника (исключены только цифры)   |
 |  1-3w   |  block+  | Переработка структуры: file - item - element - translate           |
-|  1-2d   |    +     | Последние изменениея перевода (юзерами - без merge check)          |
+| 1.01.9  | 11.10.20 | Последние изменениея перевода (юзерами - без merge check)          |
 | 1.01.8  | 08.10.20 | UI - страница переводов: Прогресс перевода для выбранного языка    |
-| 1.01.7  | 06.10.20 | Поиск по словам и ID (pgSQL vectors)                                |
+| 1.01.7  | 06.10.20 | Поиск по фразе и ID (pgSQL vectors)                                |
 | 1.01.6  | 01.10.20 | UI - OAuth2 и Token доступ к репозиторию (OAuth Callback)          |
 | 1.01.5  | 31.09.20 | Celery: Задача по изменению доступа к репозиторию (celery 5.0.0)   |
 | 1.01.4  | 30.09.20 | OAuth2 для авторизации у гит провайдеров                           |

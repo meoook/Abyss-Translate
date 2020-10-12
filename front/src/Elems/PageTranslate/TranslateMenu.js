@@ -20,6 +20,7 @@ const TranslateMenu = ({
   setLike,
   searchText,
   setSearchText,
+  langProgress,
 }) => {
   const { translates } = useContext(AppContext)
   const [original, setOriginal] = useState([])
@@ -34,10 +35,10 @@ const TranslateMenu = ({
   }, [translates, langOrig])
 
   const searchOnBlur = (e) => {
-    setSearchText(input.trim())
+    if (input.trim()) setSearchText(input.trim())
   }
   const searchKeyPress = (e) => {
-    if ((e.key = "Enter")) setSearchText(input.trim())
+    if (e.key === "Enter" && input.trim()) setSearchText(input.trim())
   }
 
   return (
@@ -63,21 +64,19 @@ const TranslateMenu = ({
           <Toggler val={noTrans} setVal={setNoTrans} />
           <label className={`mh-1${like ? " active" : ""}`}>не показывать переведенные</label>
         </div>
+        <div className='mt-1 mr-1'>
+          <input
+            type='text'
+            value={input}
+            onChange={(e) => setInput(e.target.value)}
+            onBlur={searchOnBlur}
+            onKeyPress={searchKeyPress}
+          />
+        </div>
       </div>
 
       <div className='col col-5'>
-        <div className='row'>
-          <div className='t-small'>
-            <input
-              type='text'
-              value={input}
-              onChange={(e) => setInput(e.target.value)}
-              onBlur={searchOnBlur}
-              onKeyPress={searchKeyPress}
-              className='input'
-            />
-          </div>
-        </div>
+        <div className='row'></div>
         <div className='row'>
           <div className='col col-6'>
             <div className='ml-0 t-small'>Язык оригиналов</div>
@@ -86,6 +85,11 @@ const TranslateMenu = ({
           <div className='col col-6'>
             <div className='ml-0 t-small'>Язык для переводов</div>
             <LanguageSelector selected={langTrans} setSelected={setLangTrans} langArr={translate} />
+          </div>
+        </div>
+        <div className='m-1'>
+          <div className='progress-bar '>
+            <div style={{ width: langProgress }}></div>
           </div>
         </div>
       </div>

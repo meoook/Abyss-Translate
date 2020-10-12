@@ -30,15 +30,18 @@ const FileTranslatedStatus = ({ fileObj }) => {
       {translates.map((item) => (
         <React.Fragment key={item.id}>
           {item.finished ? (
-            <div className='link pr-1' onClick={downloadFile.bind(this, item.id,
+            <div
+              className='link pr-1'
+              onClick={downloadFile.bind(
+                this,
+                item.id,
                 createFilename(fileObj.name, findLang(item.language, languages).short_name)
-              )}
-              >
+              )}>
               <IcoLang language={item.language} displayShort={true} />
             </div>
           ) : (
             <>
-                <IcoLang language={item.language} displayShort={true} />
+              <IcoLang language={item.language} displayShort={true} />
               <div className='pr-1'>{getProgress(item.items, total)}</div>
             </>
           )}

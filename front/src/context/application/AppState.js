@@ -235,18 +235,30 @@ const AppState = ({ children }) => {
       addMsg(connectErrMsg(err, "Не могу получить файл"))
     }
   }
-  const transList = async (file_id, page, size, distinct, no_trans) => {
+  const transList = async (file_id, page, size, distinct, no_trans, search_text = "") => {
     try {
-      const res = await axios.get(`${URL}/marks`, { ...config, params: { file_id, page, size, distinct, no_trans } })
+      const res = await axios.get(`${URL}/marks`, {
+        ...config,
+        params: { file_id, page, size, distinct, no_trans, search_text },
+      })
       dispatch({ type: TRANSLATE_PAGE_REFRESH, payload: res.data })
     } catch (err) {
       addMsg(connectErrMsg(err, "Не могу получить текст файла"))
     }
   }
-  const transChange = async (mark_id, lang_id, text, md5sum = "", search_text = "") => {
+  const transLog = async (file_id, translate_id) => {
+    // FIXME: Not correct way using (without reducer)
+    try {
+      const res = await axios.get(`${URL}/marks/changes/${translate_id}`, { ...config, params: { file_id } })
+      return res.data
+    } catch (err) {
+      addMsg(connectErrMsg(err, "Не могу получить историю изменений"))
+    }
+  }
+  const transChange = async (mark_id, lang_id, text, md5sum = "") => {
     const file_id = state.translates.id
     try {
-      const res = await axios.post(`${URL}/marks/`, { file_id, mark_id, lang_id, text, md5sum, search_text }, config)
+      const res = await axios.post(`${URL}/marks/`, { file_id, mark_id, lang_id, text, md5sum }, config)
       const payload = state.translates.results.map((transItem) => {
         if (md5sum) {
           if (transItem.md5sum !== md5sum) return transItem
@@ -374,6 +386,7 @@ const AppState = ({ children }) => {
         downloadFile,
         transFileInfo,
         transList,
+        transLog,
         transChange,
         usersList,
         permList,

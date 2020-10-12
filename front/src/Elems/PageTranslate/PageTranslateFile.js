@@ -9,6 +9,9 @@ import { DisplayImage } from "../images"
 // import TranslateVariants from "./TranslateVariants"
 import VariantGoogle from "./VarinatGoogle"
 import VariantServer from "./VariantServer"
+import MarkChangeLog from "./MarkChangeLog"
+
+const getProgress = (count, totalCount) => `${Math.round((count / totalCount) * 100)}%`
 
 const PageTranslateFile = (props) => {
   // STATE
@@ -23,6 +26,7 @@ const PageTranslateFile = (props) => {
   const [noTrans, setNoTrans] = useState(0)
   const [langOrig, setLangOrig] = useState(null)
   const [langTrans, setLangTrans] = useState(null)
+  const [transProgress, setTransProgress] = useState(0)
   const [activeMark, setActiveMark] = useState(null)
   const [searchText, setSearchText] = useState("")
 
@@ -32,11 +36,18 @@ const PageTranslateFile = (props) => {
   }, [id])
 
   useEffect(() => {
-    if (!translates.lang_orig) return
+    if (!translates.lang_orig) return // translates not loaded
     if (!langOrig) setLangOrig(translates.lang_orig)
-    if (!langTrans && translates.translated_set.length) setLangTrans(translates.translated_set[0].language)
+    if (!langTrans) setLangTrans(translates.translated_set[0].language)
     setLoading(false)
   }, [translates, langOrig, langTrans])
+
+  useEffect(() => {
+    if (langTrans) {
+      const selectedTransObj = translates.translated_set.find((item) => item.language === langTrans)
+      if (selectedTransObj) setTransProgress(getProgress(selectedTransObj.items, translates.items))
+    } else setTransProgress(0)
+  }, [langTrans])
 
   const fixPageNumber = (p, s, count) => (p * s > count ? Math.ceil(count / s) : p)
 
@@ -48,6 +59,11 @@ const PageTranslateFile = (props) => {
     transList(id, fixedNumber, pageSize, same, noTrans).then(() => {
       setLoading(false)
     })
+  }
+  const changeSearch = (searchText) => {
+    transList(id, page, size, !noSame, noTrans, searchText)
+
+    setSearchText(searchText)
   }
   const changeSame = () => {
     transList(id, page, size, !noSame, noTrans, searchText)
@@ -98,7 +114,8 @@ const PageTranslateFile = (props) => {
             noTrans={noTrans}
             setNoTrans={changeNoTrans}
             searchText={searchText}
-            setSearchText={setSearchText}
+            setSearchText={changeSearch}
+            langProgress={transProgress}
           />
           <div className='expl row'>
             <div className='col col-7 column'>
@@ -131,21 +148,7 @@ const PageTranslateFile = (props) => {
               <div className='scroll-y ml-3'>
                 <VariantGoogle markID={activeMark} />
                 <VariantServer markID={activeMark} />
-                {activeMark ? (
-                  <>
-                    <h3 className='mt-3'>
-                      <span>Последние изменения</span>
-                      <span className='color-error t-vsmall'>&nbsp;(в стадии разработки)</span>
-                    </h3>
-                    <hr />
-                    <div>
-                      <span className='color-white mr-0'>10.01.20 meok</span>
-                      <span>On what i changed text</span>
-                    </div>
-                  </>
-                ) : (
-                  <></>
-                )}
+                {Boolean(activeMark) && <MarkChangeLog mark={activeMark} fileID={id} />}
               </div>
             </div>
           </div>
