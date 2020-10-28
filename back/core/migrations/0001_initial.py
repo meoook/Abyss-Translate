@@ -12,7 +12,7 @@ from django.conf.global_settings import LANGUAGES
 
 
 def get_languages(apps, schema_editor):
-    languages = apps.get_model('core', 'Languages')
+    languages = apps.get_model('core', 'Language')
     for language in LANGUAGES:
         language_to_add = languages(name=language[1], short_name=language[0])
         if language[0] in ('en', 'ru', 'de', 'es'):
@@ -31,7 +31,7 @@ class Migration(migrations.Migration):
     operations = [
         BtreeGinExtension(),
         migrations.CreateModel(
-            name='Languages',
+            name='Language',
             fields=[
                 ('id', models.AutoField(auto_created=True, primary_key=True, serialize=False, verbose_name='ID')),
                 ('name', models.CharField(max_length=50)),
@@ -45,13 +45,13 @@ class Migration(migrations.Migration):
             name='ErrorFiles',
             fields=[
                 ('id', models.AutoField(auto_created=True, primary_key=True, serialize=False, verbose_name='ID')),
-                # ('data', models.FileField(max_length=255, storage=django.core.files.storage.FileSystemStorage(base_url='/errors/', location='C:\\Projects\\Abyss-Translate\\back\\users\\errors'), upload_to='%Y/%m/%d/')),
-                ('data', models.FileField(max_length=255, storage=django.core.files.storage.FileSystemStorage(base_url='/errors/', location='/usr/src/back/users/errors'), upload_to='%Y/%m/%d/')),
+                ('data', models.FileField(max_length=255, storage=django.core.files.storage.FileSystemStorage(base_url='/errors/', location='C:\\Project\\Abyss-Translate\\back\\users\\errors'), upload_to='%Y/%m/%d/')),
+                # ('data', models.FileField(max_length=255, storage=django.core.files.storage.FileSystemStorage(base_url='/errors/', location='/usr/src/back/users/errors'), upload_to='%Y/%m/%d/')),
                 ('error', models.CharField(max_length=255)),
             ],
         ),
         migrations.CreateModel(
-            name='FileMarks',
+            name='FileMark',
             fields=[
                 ('id', models.AutoField(auto_created=True, primary_key=True, serialize=False, verbose_name='ID')),
                 ('mark_number', models.PositiveIntegerField()),
@@ -64,7 +64,7 @@ class Migration(migrations.Migration):
             ],
         ),
         migrations.CreateModel(
-            name='Files',
+            name='File',
             fields=[
                 ('id', models.AutoField(auto_created=True, primary_key=True, serialize=False, verbose_name='ID')),
                 ('name', models.CharField(max_length=50)),
@@ -72,8 +72,8 @@ class Migration(migrations.Migration):
                 ('codec', models.CharField(blank=True, max_length=20)),
                 ('method', models.CharField(blank=True, max_length=10)),
                 ('options', models.JSONField(null=True)),
-                # ('data', models.FileField(max_length=255, storage=django.core.files.storage.FileSystemStorage(base_url='/users/', location='C:\\Projects\\Abyss-Translate\\back\\users'), upload_to=core.models.user_directory_path)),
-                ('data', models.FileField(max_length=255, storage=django.core.files.storage.FileSystemStorage(base_url='/users/', location='/usr/src/back/users'), upload_to=core.models.user_directory_path)),
+                ('data', models.FileField(max_length=255, storage=django.core.files.storage.FileSystemStorage(base_url='/users/', location='C:\\Project\\Abyss-Translate\\back\\users'), upload_to=core.models.user_directory_path)),
+                # ('data', models.FileField(max_length=255, storage=django.core.files.storage.FileSystemStorage(base_url='/users/', location='/usr/src/back/users'), upload_to=core.models.user_directory_path)),
                 ('created', models.DateTimeField(auto_now_add=True)),
                 ('updated', models.DateTimeField(auto_now=True)),
                 ('items', models.PositiveIntegerField(null=True)),
@@ -85,7 +85,7 @@ class Migration(migrations.Migration):
             ],
         ),
         migrations.CreateModel(
-            name='Folders',
+            name='Folder',
             fields=[
                 ('id', models.AutoField(auto_created=True, primary_key=True, serialize=False, verbose_name='ID')),
                 ('position', models.PositiveIntegerField()),
@@ -95,7 +95,7 @@ class Migration(migrations.Migration):
             ],
         ),
         migrations.CreateModel(
-            name='Translates',
+            name='Translate',
             fields=[
                 ('id', models.AutoField(auto_created=True, primary_key=True, serialize=False, verbose_name='ID')),
                 ('text', models.TextField()),
@@ -124,7 +124,7 @@ class Migration(migrations.Migration):
             ],
         ),
         migrations.CreateModel(
-            name='TranslatesChangeLog',
+            name='TranslateChangeLog',
             fields=[
                 ('id', models.AutoField(auto_created=True, primary_key=True, serialize=False, verbose_name='ID')),
                 ('text', models.TextField(blank=True)),
@@ -140,15 +140,15 @@ class Migration(migrations.Migration):
                 ('items', models.PositiveIntegerField(default=0)),
                 ('finished', models.BooleanField(default=False)),
                 ('checked', models.BooleanField(default=False)),
-                # ('translate_copy', models.FileField(blank=True, max_length=255, storage=django.core.files.storage.FileSystemStorage(base_url='/users/', location='C:\\Projects\\Abyss-Translate\\back\\users'), upload_to='')),
-                ('translate_copy', models.FileField(blank=True, max_length=255, storage=django.core.files.storage.FileSystemStorage( base_url='/users/', location='/usr/src/back/users'), upload_to='')),
+                ('translate_copy', models.FileField(blank=True, max_length=255, storage=django.core.files.storage.FileSystemStorage(base_url='/users/', location='C:\\Project\\Abyss-Translate\\back\\users'), upload_to='')),
+                # ('translate_copy', models.FileField(blank=True, max_length=255, storage=django.core.files.storage.FileSystemStorage( base_url='/users/', location='/usr/src/back/users'), upload_to='')),
                 ('repo_sha', models.CharField(blank=True, max_length=40)),
                 ('file', models.ForeignKey(on_delete=django.db.models.deletion.CASCADE, to='core.files')),
                 ('language', models.ForeignKey(on_delete=django.db.models.deletion.DO_NOTHING, to='core.languages')),
             ],
         ),
         migrations.CreateModel(
-            name='Projects',
+            name='Project',
             fields=[
                 ('id', models.AutoField(auto_created=True, primary_key=True, serialize=False, verbose_name='ID')),
                 ('save_id', models.UUIDField(default=uuid.uuid4, editable=False, unique=True)),
@@ -157,14 +157,14 @@ class Migration(migrations.Migration):
                 ('created', models.DateTimeField(auto_now_add=True)),
                 ('lang_orig', models.ForeignKey(on_delete=django.db.models.deletion.DO_NOTHING, related_name='projects', to='core.languages')),
                 ('owner', models.ForeignKey(on_delete=django.db.models.deletion.CASCADE, to=settings.AUTH_USER_MODEL)),
-                ('translate_to', models.ManyToManyField(related_name='projects_m', to='core.Languages')),
+                ('translate_to', models.ManyToManyField(related_name='projects_m', to='core.Language')),
             ],
             options={
                 'permissions': [('creator', 'Can create projects and invite'), ('admin', 'Can manage projects where invited'), ('translator', 'Can translate files from projects where invited')],
             },
         ),
         migrations.CreateModel(
-            name='ProjectPermissions',
+            name='ProjectPermission',
             fields=[
                 ('id', models.AutoField(auto_created=True, primary_key=True, serialize=False, verbose_name='ID')),
                 ('permission', models.SmallIntegerField(choices=[(0, 'tranlate'), (5, 'invite translator'), (8, 'manage'), (9, 'admin')])),

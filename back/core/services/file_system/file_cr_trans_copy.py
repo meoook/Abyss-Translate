@@ -3,7 +3,7 @@ import re
 import logging
 from django.core.exceptions import ObjectDoesNotExist
 
-from core.models import Translates, Languages
+from core.models import Translate, Language
 from core.services.utils import csv_validate_text, filename_from_path
 
 logger = logging.getLogger('django')
@@ -18,8 +18,8 @@ class CreateTranslatedCopy:
     def __init__(self, file_obj, language_to):
         self.copy_name = None
         try:
-            lang_cr = Languages.objects.get(id=language_to)
-            translates = Translates.objects.select_related('mark').filter(mark__file=file_obj)
+            lang_cr = Language.objects.get(id=language_to)
+            translates = Translate.objects.select_related('mark').filter(mark__file=file_obj)
         except ObjectDoesNotExist:
             logger.error(f'Language not found {language_to}')
         else:

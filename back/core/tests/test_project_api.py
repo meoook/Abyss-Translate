@@ -4,7 +4,7 @@ from rest_framework.utils import json
 from rest_framework.test import APITestCase
 
 from django.contrib.auth.models import User, Permission
-from core.models import Languages, Projects, ProjectPermissions
+from core.models import Language, Project, ProjectPermission
 from core.serializers import ProjectSerializer
 
 
@@ -16,11 +16,11 @@ class ProjectsApiTestCase(APITestCase):
         self.user1 = User.objects.create_user(username='a', email='a@a.ru', password='123')
         self.user1.user_permissions.add(creator)
         self.user2 = User.objects.create_user(username='b', email='b@b.ru', password='123')
-        self.lang1 = Languages.objects.get(name='Russian')
-        self.lang2 = Languages.objects.get(name='English')
-        self.prj1 = Projects.objects.create(name='Project1', icon_chars='P1', owner=self.user1, lang_orig=self.lang1)
+        self.lang1 = Language.objects.get(name='Russian')
+        self.lang2 = Language.objects.get(name='English')
+        self.prj1 = Project.objects.create(name='Project1', icon_chars='P1', owner=self.user1, lang_orig=self.lang1)
         self.prj1.translate_to.set([self.lang2])
-        self.prj2 = Projects.objects.create(name='Project2', icon_chars='P2', owner=self.user1, lang_orig=self.lang1)
+        self.prj2 = Project.objects.create(name='Project2', icon_chars='P2', owner=self.user1, lang_orig=self.lang1)
         self.prj2.translate_to.set([self.lang2])
 
         self.mock_prj = {
@@ -35,8 +35,8 @@ class ProjectsApiTestCase(APITestCase):
         """ Check setup data """
         self.assertEqual('/api/prj/', self.url)
         self.assertEqual(2, User.objects.count())
-        self.assertEqual(2, Projects.objects.count())
-        self.assertEqual(96, Languages.objects.count())
+        self.assertEqual(2, Project.objects.count())
+        self.assertEqual(96, Language.objects.count())
         self.assertEqual(2, self.user1.projects_set.count())
         self.assertEqual(0, self.user2.projects_set.count())
         self.assertEqual(1, User.objects.with_perm('core.creator').count())
@@ -77,22 +77,22 @@ class ProjectsApiTestCase(APITestCase):
         self.assertEqual(status.HTTP_200_OK, response.status_code)
         self.assertEqual(0, len(response.data))
 
-        ProjectPermissions.objects.create(user=self.user2, project=self.prj1, permission=0)
+        ProjectPermission.objects.create(user=self.user2, project=self.prj1, permission=0)
         response = self.client.get(self.url)
         self.assertEqual(status.HTTP_200_OK, response.status_code)
         self.assertEqual(1, len(response.data))
         self.assertEqual(str(self.prj1.save_id),  response.data[0]['save_id'])
         self.assertEqual([0],  response.data[0]['permissions_set'])
 
-        ProjectPermissions.objects.create(user=self.user2, project=self.prj1, permission=5)
-        ProjectPermissions.objects.create(user=self.user2, project=self.prj1, permission=8)
-        ProjectPermissions.objects.create(user=self.user2, project=self.prj1, permission=9)
+        ProjectPermission.objects.create(user=self.user2, project=self.prj1, permission=5)
+        ProjectPermission.objects.create(user=self.user2, project=self.prj1, permission=8)
+        ProjectPermission.objects.create(user=self.user2, project=self.prj1, permission=9)
         response = self.client.get(self.url)
         self.assertEqual(status.HTTP_200_OK, response.status_code)
         self.assertEqual(1, len(response.data))
         self.assertEqual([0, 5, 8, 9], response.data[0].get('permissions_set'))
 
-        test_perm = ProjectPermissions.objects.create(user=self.user2, project=self.prj2, permission=0)
+        test_perm = ProjectPermission.objects.create(user=self.user2, project=self.prj2, permission=0)
         response = self.client.get(self.url)
         self.assertEqual(status.HTTP_200_OK, response.status_code)
         self.assertEqual(2, len(response.data))
@@ -100,7 +100,7 @@ class ProjectsApiTestCase(APITestCase):
         self.assertEqual([0], response.data[1].get('permissions_set'))
 
         test_perm.delete()
-        test_perm = ProjectPermissions.objects.create(user=self.user2, project=self.prj2, permission=5)
+        test_perm = ProjectPermission.objects.create(user=self.user2, project=self.prj2, permission=5)
         response = self.client.get(self.url)
         self.assertEqual(status.HTTP_200_OK, response.status_code)
         self.assertEqual(2, len(response.data))
@@ -108,7 +108,7 @@ class ProjectsApiTestCase(APITestCase):
         self.assertEqual([5], response.data[1].get('permissions_set'))
 
         test_perm.delete()
-        test_perm = ProjectPermissions.objects.create(user=self.user2, project=self.prj2, permission=8)
+        test_perm = ProjectPermission.objects.create(user=self.user2, project=self.prj2, permission=8)
         response = self.client.get(self.url)
         self.assertEqual(status.HTTP_200_OK, response.status_code)
         self.assertEqual(2, len(response.data))
@@ -116,7 +116,7 @@ class ProjectsApiTestCase(APITestCase):
         self.assertEqual([8], response.data[1].get('permissions_set'))
 
         test_perm.delete()
-        ProjectPermissions.objects.create(user=self.user2, project=self.prj2, permission=9)
+        ProjectPermission.objects.create(user=self.user2, project=self.prj2, permission=9)
         response = self.client.get(self.url)
         self.assertEqual(status.HTTP_200_OK, response.status_code)
         self.assertEqual(2, len(response.data))

@@ -2,7 +2,7 @@ django==3.1.2
 djangorestframework==3.12.1
 django-rest-knox==4.1.0
 django-cors-headers==3.5.0
-celery==5.0.0
+celery==5.0.1
 redis==3.5.3
 # psycopg2==2.8.6
 psycopg2-binary==2.8.6
@@ -10,3 +10,4 @@ chardet==3.0.4
 langdetect==1.0.8
 requests==2.24.0
 gunicorn==20.0.4
+polib==1.1.0

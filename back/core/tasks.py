@@ -3,7 +3,7 @@ import logging
 from celery import shared_task
 from celery.exceptions import SoftTimeLimitExceeded, MaxRetriesExceededError
 
-from core.models import Folders
+from core.models import Folder
 
 from core.services.file_system.file_interface import LocalizeFileInterface
 from core.services.file_system.folder_interface import LocalizeGitFolderInterface
@@ -127,7 +127,7 @@ def check_all_file_repos():
     # GET ALL FOLDERS
     logger.info('Update all files in folders where repo status is ok')
     try:
-        folders_with_repo = Folders.objects.filter(repo_status=True)
+        folders_with_repo = Folder.objects.filter(repo_status=True)
         for folder in folders_with_repo:
             folder_manager = LocalizeGitFolderInterface(folder.id)
             folder_manager.update_files()

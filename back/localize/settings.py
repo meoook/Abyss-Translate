@@ -6,10 +6,12 @@ BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 
 SECRET_KEY = os.environ.get("SECRET_KEY", "NO_KEY_WARNING")
 DEBUG = os.environ.get("DEBUG", True)
-ALLOWED_HOSTS = os.environ.get("DJANGO_ALLOWED_HOSTS", "*").split(" ")
+# ALLOWED_HOSTS = os.environ.get("DJANGO_ALLOWED_HOSTS", "*").split(" ")
+ALLOWED_HOSTS = ['192.168.1.20', '127.0.0.1', '*']
 
 # Application definition
 MY_APPS = [
+    'django.contrib.postgres',
     'corsheaders',
     'rest_framework',
     'knox',
@@ -63,7 +65,7 @@ DATABASES = {
         "NAME": os.environ.get("SQL_DATABASE", "postgres"),
         "USER": os.environ.get("SQL_USER", "postgres"),
         "PASSWORD": os.environ.get("SQL_PASSWORD", "xaxaxue"),
-        "HOST": os.environ.get("SQL_HOST", "postgres"),
+        "HOST": os.environ.get("SQL_HOST", "127.0.0.1"),
         "PORT": os.environ.get("SQL_PORT", "5432"),
         "TEST": {'NAME': 'test_postgres'},
     }
@@ -89,7 +91,7 @@ USE_L10N = False
 USE_TZ = True
 DEFAULT_CHARSET = 'utf-8'
 
-# Files Storage
+# File Storage
 MEDIA_ROOT = os.path.join(BASE_DIR, 'users')
 STATIC_URL = '/source/'
 # STATIC_ROOT = os.path.join(BASE_DIR, 'static')
@@ -163,103 +165,103 @@ CELERY_IGNORE_RESULT = True
 # CELERYD_TIME_LIMIT = 60
 
 # Logging
-LOGGING = {
-    'version': 1,
-    'disable_existing_loggers': False,
-    'formatters': {
-        'sql': {
-            'format': '[SQL {module} {duration:f}] {sql}',
-            'style': '{',
-            'datefmt': '%d/%b/%Y %H:%M:%S',
-        },
-        'file': {
-            'format': '[{asctime} {levelname}/{module}] {message}',
-            'style': '{',
-            'datefmt': '%d/%m/%Y %H:%M:%S',
-        },
-        'full': {
-            'format': '[{asctime} {levelname}/{name} in {module}] {message}',
-            'style': '{',
-            'datefmt': '%d/%b/%Y %H:%M:%S',
-        },
-        'simple': {
-            'format': '[{levelname:.4} {module}] {message}',
-            'style': '{',
-            'datefmt': '%d.%m.%Y %H:%M:%S',
-        },
-    },
-    'filters': {
-        'require_debug_true': {
-            '()': 'django.utils.log.RequireDebugTrue',
-        },
-        'require_debug_false': {
-            '()': 'django.utils.log.RequireDebugFalse',
-        },
-    },
-    'handlers': {
-        'sql': {
-            'level': 'DEBUG',
-            'filters': ['require_debug_true'],
-            'class': 'logging.StreamHandler',
-            'formatter': 'sql',
-        },
-        'debug': {
-            'level': 'INFO',
-            'filters': ['require_debug_true'],
-            'class': 'logging.StreamHandler',
-            'formatter': 'simple',
-        },
-        'console': {
-            'level': os.getenv('DJANGO_LOG_LEVEL', 'INFO'),
-            'filters': ['require_debug_false'],
-            'class': 'logging.StreamHandler',
-            'formatter': 'full',
-        },
-        'file': {
-            'level': 'WARNING',
-            'filters': ['require_debug_false'],
-            'class': 'logging.FileHandler',
-            'filename': os.path.join(BASE_DIR, 'logs', 'log.log'),
-            'formatter': 'file',
-        },
-        'mail_admins': {
-            'level': 'ERROR',
-            'filters': ['require_debug_false'],
-            'class': 'django.utils.log.AdminEmailHandler',
-            'email_backend': 'django.core.mail.backends.filebased.EmailBackend',
-            'include_html': True,
-        },
-    },
-    'loggers': {
-        'django': {
-            'handlers': ['console', 'file', 'debug'],
-            'level': 'DEBUG',
-            'propagate': True,
-        },
-        'django.request': {
-            'handlers': ['console', 'file', 'debug'],
-            'level': 'INFO',
-            'propagate': False,
-        },
-        'django.server': {
-            'handlers': ['console', 'file', 'debug'],
-            'level': 'ERROR',
-            'propagate': False,
-        },
-        'django.db.backends': {
-            'handlers': ['sql'],
-            'level': 'WARNING',   # set DEBUG for debug sql queries :)
-            'propagate': False,
-        },
-        'logfile': {
-            'handlers': ['file'],
-            'level': 'INFO',    # When to log in file
-            'propagate': True,
-        },
-        'django.mail': {
-            'handlers': ['mail_admins'],
-            'level': 'ERROR',   # When to send mails
-            'propagate': True,
-        },
-    },
-}
+# LOGGING = {
+#     'version': 1,
+#     'disable_existing_loggers': False,
+#     'formatters': {
+#         'sql': {
+#             'format': '[SQL {module} {duration:f}] {sql}',
+#             'style': '{',
+#             'datefmt': '%d/%b/%Y %H:%M:%S',
+#         },
+#         'file': {
+#             'format': '[{asctime} {levelname}/{module}] {message}',
+#             'style': '{',
+#             'datefmt': '%d/%m/%Y %H:%M:%S',
+#         },
+#         'full': {
+#             'format': '[{asctime} {levelname}/{name} in {module}] {message}',
+#             'style': '{',
+#             'datefmt': '%d/%b/%Y %H:%M:%S',
+#         },
+#         'simple': {
+#             'format': '[{levelname:.4} {module}] {message}',
+#             'style': '{',
+#             'datefmt': '%d.%m.%Y %H:%M:%S',
+#         },
+#     },
+#     'filters': {
+#         'require_debug_true': {
+#             '()': 'django.utils.log.RequireDebugTrue',
+#         },
+#         'require_debug_false': {
+#             '()': 'django.utils.log.RequireDebugFalse',
+#         },
+#     },
+#     'handlers': {
+#         'sql': {
+#             'level': 'DEBUG',
+#             'filters': ['require_debug_true'],
+#             'class': 'logging.StreamHandler',
+#             'formatter': 'sql',
+#         },
+#         'debug': {
+#             'level': 'INFO',
+#             'filters': ['require_debug_true'],
+#             'class': 'logging.StreamHandler',
+#             'formatter': 'simple',
+#         },
+#         'console': {
+#             'level': os.getenv('DJANGO_LOG_LEVEL', 'INFO'),
+#             'filters': ['require_debug_false'],
+#             'class': 'logging.StreamHandler',
+#             'formatter': 'full',
+#         },
+#         'file': {
+#             'level': 'WARNING',
+#             'filters': ['require_debug_false'],
+#             'class': 'logging.FileHandler',
+#             'filename': os.path.join(BASE_DIR, 'logs', 'log.log'),
+#             'formatter': 'file',
+#         },
+#         'mail_admins': {
+#             'level': 'ERROR',
+#             'filters': ['require_debug_false'],
+#             'class': 'django.utils.log.AdminEmailHandler',
+#             'email_backend': 'django.core.mail.backends.filebased.EmailBackend',
+#             'include_html': True,
+#         },
+#     },
+#     'loggers': {
+#         'django': {
+#             'handlers': ['console', 'file', 'debug'],
+#             'level': 'DEBUG',
+#             'propagate': True,
+#         },
+#         'django.request': {
+#             'handlers': ['console', 'file', 'debug'],
+#             'level': 'INFO',
+#             'propagate': False,
+#         },
+#         'django.server': {
+#             'handlers': ['console', 'file', 'debug'],
+#             'level': 'ERROR',
+#             'propagate': False,
+#         },
+#         'django.db.backends': {
+#             'handlers': ['sql'],
+#             'level': 'WARNING',   # set DEBUG for debug sql queries :)
+#             'propagate': False,
+#         },
+#         'logfile': {
+#             'handlers': ['file'],
+#             'level': 'INFO',    # When to log in file
+#             'propagate': True,
+#         },
+#         'django.mail': {
+#             'handlers': ['mail_admins'],
+#             'level': 'ERROR',   # When to send mails
+#             'propagate': True,
+#         },
+#     },
+# }

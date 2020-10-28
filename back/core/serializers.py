@@ -2,8 +2,8 @@ from rest_framework import serializers
 from rest_framework.exceptions import APIException
 from django.contrib.auth.models import User
 
-from .models import Languages, Projects, ProjectPermissions, Folders, FolderRepo, Files, ErrorFiles, Translated, \
-    FileMarks, Translates, TranslatesChangeLog
+from .models import Language, Project, ProjectPermission, Folder, FolderRepo, File, ErrorFiles, Translated, \
+    FileMark, Translate, TranslateChangeLog
 
 
 # Extra kwargs write_only, read_only, required, default, allow_null, label
@@ -16,9 +16,9 @@ from .models import Languages, Projects, ProjectPermissions, Folders, FolderRepo
 
 
 class LanguagesSerializer(serializers.ModelSerializer):
-    """ To display all Languages on login """
+    """ To display all Language on login """
     class Meta:
-        model = Languages
+        model = Language
         fields = ['id', 'name', 'short_name']
 
 
@@ -27,23 +27,23 @@ class TranslatesLogSerializer(serializers.ModelSerializer):
     user = serializers.SlugRelatedField(slug_field='username', read_only=True)
 
     class Meta:
-        model = TranslatesChangeLog
+        model = TranslateChangeLog
         fields = ['translate', 'text', 'user', 'created']
 
 
 class TranslatesSerializer(serializers.ModelSerializer):
     """ TRANSLATES: To display translates related to Mark (and to add new?) """
     class Meta:
-        model = Translates
+        model = Translate
         fields = ["id", "text", "translator", "language"]
 
 
 class FileMarksSerializer(serializers.ModelSerializer):
-    """ TRANSLATES: FileMarks manager. To select languages for translate. """
+    """ TRANSLATES: FileMark manager. To select languages for translate. """
     translates_set = TranslatesSerializer(many=True, read_only=True)
 
     class Meta:
-        model = FileMarks
+        model = FileMark
         fields = ['id', 'md5sum', 'words', 'translates_set']
         extra_kwargs = {
             'md5sum': {'read_only': True},
@@ -55,7 +55,7 @@ class TransferFileSerializer(serializers.ModelSerializer):
     """ UPLOAD: On upload file serializer """
 
     class Meta:
-        model = Files
+        model = File
         fields = ['id', 'name', 'folder', 'lang_orig', 'data']
         extra_kwargs = {
             'folder': {'write_only': True},
@@ -75,7 +75,7 @@ class FilesSerializer(serializers.ModelSerializer):
     translated_set = TranslatedSerializer(many=True, read_only=True)
 
     class Meta:
-        model = Files
+        model = File
         exclude = ['data', 'folder', 'codec', 'options']
         extra_kwargs = {
             'state': {'read_only': True, 'source': 'get_state_display'},
@@ -96,7 +96,7 @@ class FoldersSerializer(serializers.ModelSerializer):
     files_amount = serializers.SerializerMethodField()
 
     class Meta:
-        model = Folders
+        model = Folder
         fields = ['id', 'position', 'name', 'repo_url', 'repo_status', 'files_amount']
         extra_kwargs = {
             'position': {'read_only': True},
@@ -121,7 +121,7 @@ class PermissionsSerializer(serializers.ModelSerializer):
     """ Manage users permissions to project """
 
     class Meta:
-        model = ProjectPermissions
+        model = ProjectPermission
         fields = ["id", "permission"]
 
 
@@ -147,7 +147,7 @@ class ProjectSerializer(serializers.ModelSerializer):
     author = serializers.SerializerMethodField()
 
     class Meta:
-        model = Projects
+        model = Project
         exclude = ['id', 'owner']
         extra_kwargs = {
             'translate_to': {'required': False},

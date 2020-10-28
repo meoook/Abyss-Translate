@@ -17,8 +17,8 @@ from django.http import FileResponse
 from .serializers import ProjectSerializer, FoldersSerializer, LanguagesSerializer, FilesSerializer, \
     TransferFileSerializer, FileMarksSerializer, PermissionsSerializer, TranslatesSerializer, FolderRepoSerializer, \
     PermsListSerializer, TranslatesLogSerializer
-from .models import Languages, Projects, Folders, FolderRepo, Files, Translated, FileMarks, ProjectPermissions, \
-    TranslatesChangeLog
+from .models import Language, Project, Folder, FolderRepo, File, Translated, FileMark, ProjectPermission, \
+    TranslateChangeLog
 from core.services.file_system.file_interface import LocalizeFileInterface
 from .tasks import file_parse_uploaded, file_create_translated, folder_update_repo_after_url_change, \
     folder_repo_change_access_and_update
@@ -44,7 +44,7 @@ class LanguageViewSet(viewsets.ModelViewSet):
     """ Display all languages on login """
     serializer_class = LanguagesSerializer
     http_method_names = ['get']
-    queryset = Languages.objects.filter(active=True)
+    queryset = Language.objects.filter(active=True)
 
 
 class ProjectViewSet(viewsets.ModelViewSet):
@@ -53,7 +53,7 @@ class ProjectViewSet(viewsets.ModelViewSet):
     lookup_field = 'save_id'
     permission_classes = [IsAuthenticated, IsProjectOwnerOrReadOnly]
     # ordering = ['-created']
-    queryset = Projects.objects.all()
+    queryset = Project.objects.all()
 
     def get_queryset(self):
         """ Get projects that user have permissions """
@@ -74,7 +74,7 @@ class ProjectPermsViewSet(viewsets.ModelViewSet):
     serializer_class = PermissionsSerializer
     http_method_names = ['get', 'post', 'delete']
     permission_classes = [IsAuthenticated, IsProjectOwnerOrAdmin]
-    queryset = ProjectPermissions.objects.all()
+    queryset = ProjectPermission.objects.all()
 
     def list(self, request, *args, **kwargs):
         save_id = self.request.query_params.get('save_id')
@@ -84,7 +84,7 @@ class ProjectPermsViewSet(viewsets.ModelViewSet):
 
     def perform_create(self, serializer):
         # TODO: Check perms if 5 - can create 0, if 9 can create other
-        project = get_object_or_404(Projects, save_id=self.request.data.get('save_id'))
+        project = get_object_or_404(Project, save_id=self.request.data.get('save_id'))
         user = get_object_or_404(User, username=self.request.data.get('username'))
         serializer.save(project=project, user=user)
 
@@ -94,7 +94,7 @@ class FolderViewSet(viewsets.ModelViewSet):
     serializer_class = FoldersSerializer
     # http_method_names = ['get', 'post', 'put', 'delete']
     permission_classes = [IsAuthenticated, IsProjectOwnerOrManage]
-    queryset = Folders.objects.all()
+    queryset = Folder.objects.all()
 
     def list(self, request, *args, **kwargs):
         save_id = request.query_params.get('save_id')
@@ -103,13 +103,13 @@ class FolderViewSet(viewsets.ModelViewSet):
         return Response(serializer.data, status=status.HTTP_200_OK)
 
     def perform_create(self, serializer):
-        project = Projects.objects.get(save_id=self.request.data.get('save_id'))  # Project exist check in perms
+        project = Project.objects.get(save_id=self.request.data.get('save_id'))  # Project exist check in perms
         position = self.get_queryset().aggregate(m=Max('position')).get('m') or 0
         serializer.save(project=project, position=position + 1)
 
     # def create(self, request, *args, **kwargs):
     #     """ Increment position. ID is hidden from users - using save_id """
-    #     project = Projects.objects.get(save_id=request.data.get('save_id'))   # Project exist check in perms
+    #     project = Project.objects.get(save_id=request.data.get('save_id'))   # Project exist check in perms
     #     position = self.get_queryset().aggregate(m=Max('position')).get('m') or 0
     #     serializer = self.get_serializer(data={**request.data, 'project': project.id})
     #     serializer.is_valid(raise_exception=True)
@@ -161,7 +161,7 @@ class FileViewSet(viewsets.ModelViewSet):
     ordering_fields = ['name', 'created', 'state']
     ordering = ['state', '-created']
     pagination_class = DefaultSetPagination
-    queryset = Files.objects.all()
+    queryset = File.objects.all()
 
     # def get_serializer_class(self):
     #     if self.request.user.has_perm('core.translator'):
@@ -192,10 +192,10 @@ class FileMarksView(viewsets.ModelViewSet):
     http_method_names = ['get', 'post']
     permission_classes = [IsAuthenticated, IsFileOwnerOrTranslator]
     pagination_class = DefaultSetPagination
-    queryset = FileMarks.objects.all()
+    queryset = FileMark.objects.all()
 
     def list(self, request, *args, **kwargs):
-        """ Translates with pagination """
+        """ Translate with pagination """
         file_id = request.query_params.get('file_id')
         distinct = request.query_params.get('distinct')
         no_trans = request.query_params.get('no_trans')  # exclude marks that have translates to no_trans lang
@@ -244,7 +244,7 @@ class TranslatesLogView(mixins.RetrieveModelMixin, viewsets.GenericViewSet):
     """ To display translate change log when translate selected """
     serializer_class = TranslatesLogSerializer
     permission_classes = [IsAuthenticated, IsFileOwnerOrTranslator]
-    queryset = TranslatesChangeLog.objects.all()
+    queryset = TranslateChangeLog.objects.all()
 
     def retrieve(self, request, *args, **kwargs):
         """ All changes for translate (pk) """
@@ -279,7 +279,7 @@ class TransferFileView(viewsets.ViewSet):
     def create(self, request):
         """ Create file git_obj and related translated progress after file download (uploaded by user) """
         folder_id = request.data.get('folder_id')
-        folder = Folders.objects.select_related('project__lang_orig').get(id=folder_id)
+        folder = Folder.objects.select_related('project__lang_orig').get(id=folder_id)
         # Create file object
         lang_orig_id = folder.project.lang_orig.id
         serializer = TransferFileSerializer(data={

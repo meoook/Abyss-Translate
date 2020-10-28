@@ -29,8 +29,8 @@ import django.contrib.postgres.search as pg_search
 # post_save.connect(create_user_profile, sender=settings.AUTH_USER_MODEL)
 
 
-class Languages(models.Model):
-    """ Languages loaded on start. Need to set active -> True to display it on API """
+class Language(models.Model):
+    """ Language loaded on start. Need to set active -> True to display it on API """
     name = models.CharField(max_length=50, null=False)
     short_name = models.CharField(max_length=10, null=False)
     active = models.BooleanField(default=False)
@@ -40,15 +40,15 @@ class Languages(models.Model):
         return self.name
 
 
-class Projects(models.Model):
+class Project(models.Model):
     """ Set up default languages and namespace. Folder created by ID. """
     save_id = models.UUIDField(unique=True, default=uuid.uuid4, editable=False)
     owner = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE)
     name = models.CharField(max_length=50)
     icon_chars = models.CharField(max_length=2)
     created = models.DateTimeField(auto_now_add=True)
-    lang_orig = models.ForeignKey(Languages, on_delete=models.DO_NOTHING, related_name='projects')
-    translate_to = models.ManyToManyField(Languages, related_name='projects_m')
+    lang_orig = models.ForeignKey(Language, on_delete=models.DO_NOTHING, related_name='projects')
+    translate_to = models.ManyToManyField(Language, related_name='projects_m')
 
     class Meta:
         unique_together = ['owner', 'name']
@@ -59,7 +59,7 @@ class Projects(models.Model):
         ]
 
 
-class ProjectPermissions(models.Model):
+class ProjectPermission(models.Model):
     """ Permissions for project """
     PROJECT_PERMISSION_CHOICES = [
         (0, 'tranlate'),            # Can translate files in project
@@ -68,16 +68,16 @@ class ProjectPermissions(models.Model):
         (9, 'admin'),               # Can change permissions to other admins (change permission 5, 8)
     ]
     user = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE)
-    project = models.ForeignKey(Projects, on_delete=models.CASCADE)
+    project = models.ForeignKey(Project, on_delete=models.CASCADE)
     permission = models.SmallIntegerField(choices=PROJECT_PERMISSION_CHOICES)
 
     class Meta:
         unique_together = ['user', 'project', 'permission']
 
 
-class Folders(models.Model):
+class Folder(models.Model):
     """" Folder model with auto delete. Folder created by ID. """
-    project = models.ForeignKey(Projects, on_delete=models.CASCADE)
+    project = models.ForeignKey(Project, on_delete=models.CASCADE)
     position = models.PositiveIntegerField()
     name = models.CharField(max_length=50)
     repo_url = models.URLField(blank=True)
@@ -89,7 +89,7 @@ class Folders(models.Model):
 
 class FolderRepo(models.Model):
     """ Version control repository manager details """
-    folder = models.OneToOneField(Folders, on_delete=models.CASCADE, primary_key=True)
+    folder = models.OneToOneField(Folder, on_delete=models.CASCADE, primary_key=True)
     provider = models.CharField(max_length=100)
     owner = models.CharField(max_length=100)
     name = models.CharField(max_length=100)
@@ -107,28 +107,22 @@ def user_directory_path(instance, filename):
     return '{}/{}/{}/{}'.format(folder.project.owner, folder.project.id, folder.id, filename)
 
 
-class Files(models.Model):
+class File(models.Model):
     """" File model with auto delete. File is unique for folder. """
-    FILE_STATE_CHOICES = [
-        (0, 'error'),        # Error while parsing
-        (1, 'uploaded'),     # Is parsing
-        (2, 'parsed'),       # Ready to translate
-    ]
 
-    folder = models.ForeignKey(Folders, on_delete=models.CASCADE)
+    folder = models.ForeignKey(Folder, on_delete=models.CASCADE)
     name = models.CharField(max_length=50)
-    state = models.SmallIntegerField(choices=FILE_STATE_CHOICES, default=1)
     codec = models.CharField(max_length=20, blank=True)
-    method = models.CharField(max_length=10, blank=True)  # csv, ue, html
-    options = models.JSONField(null=True)     # csv delimiter and fields, quotes. Mb some info about PO files.
+    method = models.CharField(max_length=10, blank=True)    # csv, ue, html
+    options = models.JSONField(null=True)           # csv delimiter and fields, quotes. Mb some info about PO files.
     data = models.FileField(upload_to=user_directory_path, max_length=255, storage=settings.STORAGE_ROOT)
     created = models.DateTimeField(auto_now_add=True)
-    updated = models.DateTimeField(auto_now=True)   # File updated
-    items = models.PositiveIntegerField(null=True)  # FileMarks count
-    words = models.PositiveIntegerField(null=True)  # Total words count
-    repo_sha = models.CharField(max_length=40, blank=True)     # Repository hash for this version of file
-    repo_status = models.BooleanField(null=True)    # Null - no repo for related Folder
-    lang_orig = models.ForeignKey(Languages, on_delete=models.DO_NOTHING)
+    updated = models.DateTimeField(auto_now=True)           # File updated
+    items = models.PositiveIntegerField(null=True)          # FileMark count
+    words = models.PositiveIntegerField(null=True)          # Total words count
+    repo_sha = models.CharField(max_length=40, blank=True)  # Repository hash for this version of file
+    repo_status = models.BooleanField(null=True)            # Null - no repo for related Folder
+    lang_orig = models.ForeignKey(Language, on_delete=models.DO_NOTHING)
     warning = models.CharField(max_length=255, blank=True)  # To handle warnings (language or other checks errors)
     error = models.CharField(max_length=255, blank=True)    # Parsing or save on disk problems
 
@@ -138,8 +132,8 @@ class Files(models.Model):
 
 class Translated(models.Model):
     """ File translate progress and language copy """
-    file = models.ForeignKey(Files, on_delete=models.CASCADE)
-    language = models.ForeignKey(Languages, on_delete=models.DO_NOTHING)
+    file = models.ForeignKey(File, on_delete=models.CASCADE)
+    language = models.ForeignKey(Language, on_delete=models.DO_NOTHING)
     items = models.PositiveIntegerField(default=0)  # To count total progress
     finished = models.BooleanField(default=False)   # All items have translations
     checked = models.BooleanField(default=False)    # Translations checked by admin?
@@ -156,44 +150,54 @@ class ErrorFiles(models.Model):
     error = models.CharField(max_length=255)
 
 
-class FileMarks(models.Model):
+class FileMark(models.Model):
     """ Mark targets where translate must be placed in file (based on method). """
-    file = models.ForeignKey(Files, on_delete=models.CASCADE)
-    mark_number = models.PositiveIntegerField()
-    col_number = models.PositiveIntegerField(null=True)  # Col for CSV
-    options = models.JSONField(null=True)                # Key for UE method, position for html,
-    md5sum = models.CharField(max_length=32)             # Check same values
-    md5sum_clear = models.CharField(max_length=32)       # Help translate - MD5 without special chars or digits
-    words = models.PositiveIntegerField()                # The words more then 2 letter count
-    text_binary = models.BinaryField()                   # To replace when creating file
-    # deleted = models.BooleanField(default=False)       # If this mark not found in new version of file
+    file = models.ForeignKey(File, on_delete=models.CASCADE)
+    fid = models.CharField(max_length=100, db_index=True)    # fid for UE and CSV method, position:tag for html
+    words = models.PositiveIntegerField()                    # Words amount in all items for mark
+    search_words = models.TextField()                        # Words to find mark
+    context = models.TextField()                             # File context for translator help
+    deleted = models.BooleanField(default=False)             # If this mark not found in new version of file
 
     class Meta:
-        unique_together = ['file', 'mark_number', 'col_number']
+        unique_together = ['file', 'fid']
 
 
-class Translates(models.Model):
-    """ Translates """
+class MarkItem(models.Model):
+    """ Each mark can have several items inside (like cols:csv or variants:ue) """
+    mark = models.ForeignKey(FileMark, on_delete=models.CASCADE)
+    item_number = models.PositiveIntegerField()          # Col for CSV
+    md5sum = models.CharField(max_length=32)             # Check same values
+    md5sum_clear = models.CharField(max_length=32)       # Help translate - MD5 without special chars or digits
+    words = models.PositiveIntegerField()                # Words amount in item (less then 2 letters - no count)
+
+    class Meta:
+        unique_together = ['mark', 'item_number']
+
+
+class Translate(models.Model):
+    """ Translate to language for mark item """
     translator = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.SET_NULL, null=True)
-    mark = models.ForeignKey(FileMarks, on_delete=models.CASCADE)
-    language = models.ForeignKey(Languages, on_delete=models.DO_NOTHING)
+    mark = models.ForeignKey(FileMark, on_delete=models.CASCADE)
+    language = models.ForeignKey(Language, on_delete=models.DO_NOTHING)
     text = models.TextField()  # db_index=True
     # words = pg_search.SearchVectorField(null=True)
     created = models.DateTimeField(auto_now_add=True)
     updated = models.DateTimeField(auto_now=True)
     checked = models.BooleanField(default=False)
     checker = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.SET_NULL, null=True, related_name='checker')
+    warning = models.CharField(max_length=255, blank=True)  # No errors means - text translated
 
     class Meta:
         unique_together = ['mark', 'language']
-        indexes = [GinIndex(fields=['text'], name='core_transl_text_gintrgm')]
+        indexes = [GinIndex(fields=['text'], name='core_transl_text_gin')]
         # indexes = [BTreeIndex(fields=['text'], opclasses=("text_ops", ), name='core_transl_text_gintrgm')]
 
 
-class TranslatesChangeLog(models.Model):
-    """ Translates log """
+class TranslateChangeLog(models.Model):
+    """ Translate log """
     user = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.DO_NOTHING)
-    translate = models.ForeignKey(Translates, on_delete=models.CASCADE)
+    translate = models.ForeignKey(Translate, on_delete=models.CASCADE)
     text = models.TextField(blank=True)
     created = models.DateTimeField(auto_now_add=True)
 
@@ -211,7 +215,7 @@ def auto_delete_file_on_delete(sender, instance, **kwargs):
         print("Error: trigger auto_delete_file_on_delete - input wrong instance")
         return
     if os.path.isfile(inst_obj.path):
-        print('Delete file -> onDelete Files object', inst_obj.path)
+        print('Delete file -> onDelete File object', inst_obj.path)
         # os.remove(instance.file.path)
         inst_obj.delete(save=False)
 
@@ -222,7 +226,7 @@ def auto_delete_folder_on_delete(sender, instance, **kwargs):
     path_to_delete = '{}/{}/{}/'.format(instance.project.owner.username, instance.project.id, instance.id)
     folder = os.path.join(settings.MEDIA_ROOT, path_to_delete)
     if os.path.isdir(folder):
-        print('Delete folder -> onDelete Folders object', folder)
+        print('Delete folder -> onDelete Folder object', folder)
         settings.STORAGE_ROOT.delete(path_to_delete)
 
 
@@ -231,11 +235,11 @@ def auto_delete_project_on_delete(sender, instance, **kwargs):
     path_to_delete = '{}/{}/'.format(instance.owner.username, instance.id)
     folder = os.path.join(settings.MEDIA_ROOT, path_to_delete)
     if os.path.isdir(folder):
-        print('Delete project folder -> onDelete Projects object', folder)
+        print('Delete project folder -> onDelete Project object', folder)
         settings.STORAGE_ROOT.delete(path_to_delete)
 
 
-post_delete.connect(auto_delete_file_on_delete, sender=Files)
+post_delete.connect(auto_delete_file_on_delete, sender=File)
 post_delete.connect(auto_delete_file_on_delete, sender=Translated)
-post_delete.connect(auto_delete_folder_on_delete, sender=Folders)
-post_delete.connect(auto_delete_project_on_delete, sender=Projects)
+post_delete.connect(auto_delete_folder_on_delete, sender=Folder)
+post_delete.connect(auto_delete_project_on_delete, sender=Project)

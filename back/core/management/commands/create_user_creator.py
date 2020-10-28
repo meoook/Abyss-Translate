@@ -3,7 +3,7 @@ from django.core.management.base import BaseCommand
 
 from django.contrib.auth.models import User, Permission
 
-from core.models import Projects, Folders
+from core.models import Project, Folder
 
 # TODO: Create user by username and email - send email with password to this user
 
@@ -41,10 +41,10 @@ class Command(BaseCommand):
             'icon_chars': 'Pr',
             'lang_orig_id': 75,
         }
-        project = Projects.objects.create(**project_props)
+        project = Project.objects.create(**project_props)
         project.translate_to.set([15, 18, 22])
-        Folders.objects.create(project=project, name='Folder1', position=1)
-        Folders.objects.create(project=project, name='Folder2', position=2)
+        Folder.objects.create(project=project, name='Folder1', position=1)
+        Folder.objects.create(project=project, name='Folder2', position=2)
     
     @staticmethod
     def __random_name(length=0):

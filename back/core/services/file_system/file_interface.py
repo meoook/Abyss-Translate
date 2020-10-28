@@ -5,7 +5,7 @@ from django.forms.models import model_to_dict
 from django.core.exceptions import ObjectDoesNotExist, ValidationError
 from rest_framework import status
 
-from core.models import Files, ErrorFiles, Translates, Translated, TranslatesChangeLog
+from core.models import File, ErrorFiles, Translate, Translated, TranslateChangeLog
 from core.services.file_system.file_cr_trans_copy import CreateTranslatedCopy
 
 from core.services.file_system.file_get_info import DataGetInfo
@@ -23,7 +23,7 @@ class LocalizeFileInterface:
         self.__file = None
         self.error = "File object not set"  # Error don't reset for each function. Get it only when func return False
         try:
-            self.__file = Files.objects.select_related('lang_orig').get(id=file_id)
+            self.__file = File.objects.select_related('lang_orig').get(id=file_id)
         except ObjectDoesNotExist:
             self.error = f"File not found ID: {file_id}"
             logger.warning(self.error)
@@ -94,22 +94,22 @@ class LocalizeFileInterface:
         # Get or create translate(s)
         if md5sum:  # multi update
             # Check if translates exist with same md5
-            translates = Translates.objects.filter(mark__file=self.__file, language=lang_id, mark__md5sum=md5sum)
+            translates = Translate.objects.filter(mark__file=self.__file, language=lang_id, mark__md5sum=md5sum)
             control_marks = self.__file.filemarks_set.filter(md5sum=md5sum)
         else:
-            translates = Translates.objects.filter(mark__file=self.__file, language=lang_id, mark__id=mark_id)
+            translates = Translate.objects.filter(mark__file=self.__file, language=lang_id, mark__id=mark_id)
             control_marks = self.__file.filemarks_set.filter(id=mark_id)
         # TODO: check text language and other
         translates.update(text=text)
         # Add new translates if mark(marks for md5) have no translates
         if translates.count() != control_marks.count():
             def_obj = {"translator_id": translator_id, "language_id": lang_id, "text": text}
-            objects = [Translates(**def_obj, mark=mark) for mark in control_marks if
+            objects = [Translate(**def_obj, mark=mark) for mark in control_marks if
                        mark.id not in translates.values_list("mark", flat=True)]
-            Translates.objects.bulk_create(objects)
+            Translate.objects.bulk_create(objects)
         # Log translate change
-        log_objects = [TranslatesChangeLog(user_id=translator_id, translate_id=x.id, text=text) for x in translates]
-        TranslatesChangeLog.objects.bulk_create(log_objects)
+        log_objects = [TranslateChangeLog(user_id=translator_id, translate_id=x.id, text=text) for x in translates]
+        TranslateChangeLog.objects.bulk_create(log_objects)
         # Translate for response
         return_trans = translates.get(mark_id=mark_id)
         return return_trans, status.HTTP_200_OK

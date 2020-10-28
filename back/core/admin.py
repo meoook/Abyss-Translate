@@ -2,11 +2,11 @@
 from django.contrib import admin
 from django.utils.safestring import mark_safe
 
-from .models import Languages, Files, Folders, FileMarks, Translates, FolderRepo
+from .models import Language, File, Folder, FileMark, Translate, FolderRepo
 
 
 class MarkInline(admin.TabularInline):
-    model = FileMarks
+    model = FileMark
     extra = 0
 
     fields = 'id', 'mark_number', 'col_number', 'md5sum', 'md5sum_clear', 'words'
@@ -17,7 +17,7 @@ class MarkInline(admin.TabularInline):
     #     return get_tabular_photo_preview(obj.image)
 
 
-@admin.register(Files)
+@admin.register(File)
 class FilesAdmin(admin.ModelAdmin):
     prepopulated_fields = {'method': ('name',)}
     list_display = ['id', 'name', 'state', 'method', 'items', 'words', 'lang_orig', 'translated_set', 'created', 'updated', 'repo_status', 'repo_sha', 'get_thumb']
@@ -42,22 +42,22 @@ class FilesAdmin(admin.ModelAdmin):
     get_thumb.short_description = u'Тут что то будет'
 
 
-@admin.register(FileMarks)
+@admin.register(FileMark)
 class FileMarksAdmin(admin.ModelAdmin):
     list_display = ['id', 'file', 'mark_number', 'col_number']
 
 
-@admin.register(Translates)
+@admin.register(Translate)
 class TranslatesAdmin(admin.ModelAdmin):
     list_display = ['id', 'mark_id', 'text']
 
 
-@admin.register(Languages)
+@admin.register(Language)
 class LanguagesAdmin(admin.ModelAdmin):
     list_display = ['id', 'name', 'short_name', 'active']
 
 
-@admin.register(Folders)
+@admin.register(Folder)
 class FolderAdmin(admin.ModelAdmin):
     list_display = ['id', 'name', 'repo_url', 'repo_status']
 
@@ -76,7 +76,7 @@ class FolderRepoAdmin(admin.ModelAdmin):
 #     active = forms.BooleanField(label='Active', widget=forms.CheckboxInput)
 
 #     class Meta:
-#         model = Languages
+#         model = Language
 #         fields = ('name', 'short_name', 'active')
 
 #     def save(self, commit=True):
@@ -98,7 +98,7 @@ class FolderRepoAdmin(admin.ModelAdmin):
 #     active = forms.BooleanField(label='Active', widget=forms.CheckboxInput)
 
 #     class Meta:
-#         model = Languages
+#         model = Language
 #         fields = ('name', 'short_name', 'active')
 
 #     def clean_password(self):
@@ -108,7 +108,7 @@ class FolderRepoAdmin(admin.ModelAdmin):
 #         return self.initial["password"]
 
 
-# @admin.register(Languages)
+# @admin.register(Language)
 # class LanguagesAdmin(admin.ModelAdmin):
 #     # The forms to add and change language instances
 #     form = LanguageChangeForm

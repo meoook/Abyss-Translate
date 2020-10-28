@@ -5,7 +5,7 @@ from django.forms.models import model_to_dict
 
 from core.services.git.git_auth import OAuth2Token
 
-from core.models import Folders, FolderRepo, Files
+from core.models import Folder, FolderRepo, File
 from core.services.file_system.file_interface import LocalizeFileInterface
 
 from core.services.git.git_interface import GitInterface
@@ -20,7 +20,7 @@ class LocalizeGitFolderInterface:
         self.__id = folder_id
         self.__git = GitInterface()
         try:
-            self.__folder = Folders.objects.get(id=self.__id)
+            self.__folder = Folder.objects.get(id=self.__id)
             self.__url = self.__folder.repo_url
         except ObjectDoesNotExist:
             logger.warning(f'Folder not found id:{self.__id}')
@@ -141,7 +141,7 @@ class LocalizeGitFolderInterface:
                     logger.info(f"Error update file id:{filo['id']} from repository {err}")
                 else:
                     logger.info(f"For file id:{filo['id']} changing status to: True - downloaded")
-                    Files.objects.filter(id=filo['id']).update(repo_status=True, repo_sha=new_file_sha, state=1)
+                    File.objects.filter(id=filo['id']).update(repo_status=True, repo_sha=new_file_sha, state=1)
                     file_manager = LocalizeFileInterface(filo['id'])
                     logger.info(f"File id:{filo['id']} start parse process")
                     if file_manager.error or not file_manager.parse():

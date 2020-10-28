@@ -1,6 +1,6 @@
 from rest_framework import permissions
 
-from core.models import Folders
+from core.models import Folder
 
 
 class IsProjectOwnerOrReadOnly(permissions.BasePermission):
@@ -41,7 +41,7 @@ class IsProjectOwnerOrManage(permissions.BasePermission):
         return True
 
     def has_object_permission(self, request, view, obj):
-        obj_id = obj.pk if isinstance(obj, Folders) else obj.folder_id
+        obj_id = obj.pk if isinstance(obj, Folder) else obj.folder_id
         if request.user.has_perm('core.creator'):
             return request.user.projects_set.filter(folders__id=obj_id).exists()
         return request.user.projectpermissions_set.filter(project__folders__id=obj_id, permission=8).exists()

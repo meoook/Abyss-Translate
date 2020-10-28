@@ -2,7 +2,7 @@ import re
 
 from django.db.models import Sum, Count
 
-from core.models import FileMarks, Translates
+from core.models import FileMark, Translate
 from core.services.utils import get_md5, count_words, csv_validate_text
 
 
@@ -22,7 +22,7 @@ class FileRebuild:
 
     def __start_build(self, file_id, method, file_path, codec, lang_orig_id, options):
         # Get file marks if file was before
-        for x in FileMarks.objects.filter(file_id=file_id):
+        for x in FileMark.objects.filter(file_id=file_id):
             self.__marks_to_check[x.id] = {
                 'mark_number': x.mark_number,
                 'col_number': x.col_number,
@@ -44,7 +44,7 @@ class FileRebuild:
                 return False
         self.__build_marks(file_id, lang_orig_id, rebuild)
         # Get file stats
-        stats = FileMarks.objects.filter(file_id=file_id).aggregate(items_count=Count('id'), total_words=Sum('words'))
+        stats = FileMark.objects.filter(file_id=file_id).aggregate(items_count=Count('id'), total_words=Sum('words'))
         self.stats['words'] = stats['total_words']
         self.stats['items'] = stats['items_count']
         return True
@@ -129,14 +129,14 @@ class FileRebuild:
         """ Create/update/delete marks after file parse """
         # Delete/Update mark
         if rebuild:
-            FileMarks.objects.filter(id__in=self.__marks_to_check.keys()).delete()
+            FileMark.objects.filter(id__in=self.__marks_to_check.keys()).delete()
             for mark_item in sorted(self.__marks_to_update, key=lambda m: m['new_number'], reverse=True):
                 # TODO: sort by col
-                FileMarks.objects.filter(id=mark_item['id'])\
+                FileMark.objects.filter(id=mark_item['id'])\
                     .update(mark_number=mark_item['new_number'], col_number=mark_item['col_number'])
         # Create new mark and original translate
         for mark_item in self.__marks_to_add:
-            mark = FileMarks(
+            mark = FileMark(
                 file_id=file_id,
                 mark_number=mark_item['mark_number'],
                 col_number=mark_item['col_number'],
@@ -147,7 +147,7 @@ class FileRebuild:
                 text_binary=mark_item['text_binary']
             )
             mark.save()
-            translate = Translates(
+            translate = Translate(
                 mark=mark,
                 language_id=lang_orig_id,
                 text=mark_item['text']
