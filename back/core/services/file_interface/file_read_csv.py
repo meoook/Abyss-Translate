@@ -1,3 +1,4 @@
+from core.services.file_interface.file_copy import CopyContextControl
 from core.services.file_interface.id_finder import UniqueIDLookUp
 from core.services.file_interface.parser_utils import ParserUtils
 from core.services.file_interface.quote_finder import TextQuoteFinder
@@ -5,7 +6,7 @@ from core.services.file_interface.quote_finder import TextQuoteFinder
 
 class LocalizeCSVReader:
     """ Generator class: Read csv file and yield FileMark object to insert in DB """
-    def __init__(self, decoded_data, data_codec, scan_options):
+    def __init__(self, decoded_data, data_codec, scan_options, copy_path=''):
         assert isinstance(decoded_data, str), "Data must be type - string"
         assert isinstance(data_codec, str), "Codec must be type - string"
         self.__data = decoded_data.splitlines()
@@ -15,13 +16,24 @@ class LocalizeCSVReader:
         # File results
         self.__file_items = 0
         self.__file_words = 0
+        # If copy path set - create CCC object to control it
+        self.__copy = CopyContextControl(copy_path, data_codec) if copy_path else None
+
+    @property
+    def stats(self):
+        return self.__file_items, self.__file_words
 
     def __iter__(self):
         return self
 
     def __next__(self):
         if self.__row_index > self.__max_index:
+            if self.__copy:  # handle copy control
+                self.__copy.add_data('')  # To finish file
             raise StopIteration
+        if self.__copy:  # handle copy control
+            self.__copy.add_data(self.__data[self.__row_index])
+
         self.__row_parser.data = self.__data[self.__row_index]
         self.__row_index += 1
         if not self.__row_parser.data['words']:
@@ -33,9 +45,11 @@ class LocalizeCSVReader:
         else:
             return {**self.__row_parser.data, 'fid': self.__row_index}
 
-    def put_data_in_row(self, values):
+    def change_item_content_and_save(self, values: list):
         """ Create row filled with values - to create translation file """
-        return self.__row_parser.fill_row_with_items(values)
+        if self.__copy:  # handle copy control
+            to_add = self.__row_parser.fill_row_with_items(values)
+            self.__copy.replace_and_save(to_add)
 
 
 class _MarkDataFromRow(ParserUtils):

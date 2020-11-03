@@ -42,23 +42,12 @@ class TextQuoteFinder:
         """ Set new value to check quotes """
         if isinstance(value, str) and len(value) > 3:
             self.__values_count += 1
-            if not self.__l1:   # first round
-                self.__quotes_set(value)
+            if not self.__l1:   # Set quotes on first round
+                [self.__l1, self.__l2, self.__l3, self.__l4] = value[:4]
+                [self.__r4, self.__r3, self.__r2, self.__r1] = value[-4::1]
             else:
                 self.__quotes_check_left(value)
                 self.__quotes_check_right(value)
-
-    def __quotes_set(self, value):
-        """ Set quotes on first round """
-        self.__l1 = value[0]
-        self.__l2 = value[1]
-        self.__l3 = value[2]
-        self.__l4 = value[3]
-
-        self.__r1 = value[-1]
-        self.__r2 = value[-2]
-        self.__r3 = value[-3]
-        self.__r4 = value[-4]
 
     def __quotes_check_left(self, value):
         if self.__left == 4:

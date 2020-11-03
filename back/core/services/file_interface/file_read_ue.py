@@ -1,4 +1,6 @@
 import re
+
+from core.services.file_interface.file_copy import CopyContextControl
 from core.services.file_interface.parser_utils import ParserUtils
 
 # FIXME: make class more friendly
@@ -32,22 +34,31 @@ def unescape(st):
 
 class LocalizeUEReader:
     """ Generator class: Read csv file and yield FileMark object to insert in DB """
-    def __init__(self, decoded_data, data_codec, scan_options):
+    def __init__(self, decoded_data, data_codec, scan_options, copy_path=''):
         assert isinstance(decoded_data, str), "Data must be type - string"
         assert isinstance(data_codec, str), "Codec must be type - string"
         self.__data = decoded_data.splitlines()
+        # self.__data = decoded_data.split('\n')  # Don't use splitlines - cos it cuts \r
         self.__parser = _MarkDataFromUE(data_codec, scan_options)  # Codec needed for md5
         self.__row_index = scan_options['top_rows']
         self.__max_index = len(self.__data) - 1
         # File results
         self.__file_items = 0
         self.__file_words = 0
+        # If copy path set - create CCC object to control it
+        self.__copy = CopyContextControl(copy_path, data_codec) if copy_path else None
+
+    @property
+    def stats(self):
+        return self.__file_items, self.__file_words
 
     def __iter__(self):
         return self
 
     def __next__(self):
         if self.__row_index > self.__max_index:
+            if self.__copy:  # handle copy control
+                self.__copy.add_data('')  # To finish file
             raise StopIteration
         self.__parser.data = self.__next_entry()
         if not self.__parser.data['words']:
@@ -74,11 +85,15 @@ class LocalizeUEReader:
                     po_entry.append(row)  # Append first empty row too
                 else:
                     entry_not_finished = False
+        if self.__copy:  # handle copy control
+            self.__copy.add_data('\n'.join(po_entry))
         return po_entry
 
-    def put_data_in_row(self, values):
+    def change_item_content_and_save(self, values: list):
         """ Create row filled with values - to create translation file """
-        return self.__parser.fill_entry_with_items(values)
+        if self.__copy:  # handle copy control
+            to_add = self.__parser.fill_entry_with_items(values)
+            self.__copy.add_data('\n'.join(to_add))
 
 
 class _MarkDataFromUE(ParserUtils):
@@ -108,7 +123,7 @@ class _MarkDataFromUE(ParserUtils):
                     if item["item_number"] == msg_id_idx:
                         to_append = orig_row_value.replace(finder.group(1), item['text'])
             updated_items.append(to_append)
-        return '\n'.join(updated_items)
+        return updated_items
 
     @property
     def data(self):
@@ -284,5 +299,3 @@ class _PoEntryParser:
     @staticmethod
     def __unquote_and_unescape(value):
         return unescape(value[1:-1]) if value.startswith('"') else unescape(value)
-
-

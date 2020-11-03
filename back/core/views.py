@@ -292,7 +292,7 @@ class TransferFileView(viewsets.ViewSet):
             serializer.save()
             file_id = serializer.data.get('id')  # TODO: check this method
             # Run celery parse delay task
-            logger.info(f'File object created ID: {file_id}. Sending parse task to celery.')
+            logger.info(f'File object created ID: {file_id}. Sending parse task to Celery.')
             file_parse_uploaded.delay(file_id)
             return Response(serializer.data, status=status.HTTP_201_CREATED)
         logger.warning(f'Error creating file object: {serializer.errors}')

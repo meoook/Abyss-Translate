@@ -153,11 +153,10 @@ class ErrorFiles(models.Model):
 class FileMark(models.Model):
     """ Mark targets where translate must be placed in file (based on method). """
     file = models.ForeignKey(File, on_delete=models.CASCADE)
-    fid = models.CharField(max_length=100, db_index=True)    # fid for UE and CSV method, position:tag for html
+    fid = models.CharField(max_length=255, db_index=True)    # fid for UE and CSV method, position:tag for html
     words = models.PositiveIntegerField()                    # Words amount in all items for mark
     search_words = models.TextField()                        # Words to find mark
     context = models.TextField()                             # File context for translator help
-    deleted = models.BooleanField(default=False)             # If this mark not found in new version of file
 
     class Meta:
         unique_together = ['file', 'fid']
@@ -178,7 +177,7 @@ class MarkItem(models.Model):
 class Translate(models.Model):
     """ Translate to language for mark item """
     translator = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.SET_NULL, null=True)
-    mark = models.ForeignKey(FileMark, on_delete=models.CASCADE)
+    item = models.ForeignKey(MarkItem, on_delete=models.CASCADE)
     language = models.ForeignKey(Language, on_delete=models.DO_NOTHING)
     text = models.TextField()  # db_index=True
     # words = pg_search.SearchVectorField(null=True)

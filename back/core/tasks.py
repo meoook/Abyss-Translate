@@ -8,7 +8,7 @@ from core.models import Folder
 from core.services.file_system.file_interface import LocalizeFileInterface
 from core.services.file_system.folder_interface import LocalizeGitFolderInterface
 
-logger = logging.getLogger('logfile')
+logger = logging.getLogger('django')
 
 
 @shared_task(
