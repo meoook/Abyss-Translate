@@ -1,4 +1,4 @@
-from core.models import MarkItem, Translate, FileMark
+from core.models import Translate, FileMark
 
 
 class FileItemsFinder:
@@ -17,6 +17,7 @@ class FileItemsFinder:
 
     @property
     def unused_fid(self):
+        """ If value True - it means it been taken in find_by_fid method """
         return [key for key, value in self.__marks_to_check.items() if not self.__marks_to_check[key]]
 
     def find_by_fid(self, fid):

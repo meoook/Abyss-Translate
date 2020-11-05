@@ -165,7 +165,7 @@ class FileMark(models.Model):
 class MarkItem(models.Model):
     """ Each mark can have several items inside (like cols:csv or variants:ue) """
     mark = models.ForeignKey(FileMark, on_delete=models.CASCADE)
-    item_number = models.PositiveIntegerField()          # Col for CSV
+    item_number = models.PositiveIntegerField()          # Col for CSV and msgstr[INDEX] for UE
     md5sum = models.CharField(max_length=32)             # Check same values
     md5sum_clear = models.CharField(max_length=32)       # Help translate - MD5 without special chars or digits
     words = models.PositiveIntegerField()                # Words amount in item (less then 2 letters - no count)

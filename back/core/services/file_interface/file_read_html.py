@@ -69,12 +69,12 @@ class LocalizeHtmlReader(ParserUtils):
             'context': seeker_data['context'],
         }
 
-    def change_item_content_and_save(self, value: dict):
+    def change_item_content_and_save(self, values: list):
         """ Return context from start of file or previous tag with replaced context of current tag """
         # if not values[0]['text']:    # DEBUG - to check final tree
         #     [print(tree_item) for tree_item in self.__html_parser.tree]  # Print tag tree
         if self.__copy:  # handle copy control
-            to_add = self.__html_parser.change_item_content_and_save(value['text'])
+            to_add = self.__html_parser.change_item_content_and_save(values[0]['text'])
             self.__copy.replace_and_save(to_add)  # To finish file
 
 

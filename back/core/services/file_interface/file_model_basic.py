@@ -3,17 +3,18 @@ import logging
 from django.core.exceptions import ObjectDoesNotExist
 from django.db.models import Q
 
+from core.services.file_interface.file_find_item import FileItemsFinder
 from core.services.file_interface.file_read_csv import LocalizeCSVReader
 from core.services.file_interface.file_read_html import LocalizeHtmlReader
 from core.services.file_interface.file_read_ue import LocalizeUEReader
 
-from core.models import TranslateChangeLog, Translate, File, Translated, MarkItem
+from core.models import TranslateChangeLog, Translate, File, Translated, MarkItem, FileMark
 
 logger = logging.getLogger('django')
 
 
 class FileModelBasicApi:
-    """ Api with file model and utils """
+    """ Api with file model and sub models(file-mark-item-translate-log) """
     def __init__(self, file_id):
         """ Get file object from database to do other actions """
         # Object flags and params
@@ -28,6 +29,15 @@ class FileModelBasicApi:
         else:
             self._lang_orig = self._file.lang_orig
             self._log_name = f'{self._file.name}(id:{self._file.id})'
+            self._fid_lookup_exist = self._fid_lookup_formula_exist
+
+    @property
+    def _fid_lookup_formula_exist(self):
+        """ If no formula - don't check by fID when parsing file """
+        if self._file.method in ['csv', 'ue']:
+            if not self._file.options['fid_lookup']:
+                return False
+        return True
 
     @staticmethod
     def __log_translate(tr_id, text, user=None):
@@ -36,16 +46,17 @@ class FileModelBasicApi:
     def __translate_change(self, trans_obj, text, user=None):
         """ Change text in translate and log by this user (no user = system) """
         trans_obj.update(text=text)
+        TranslateChangeLog.objects.create(user_id=user, translate_id=trans_obj.id, text=text)
         self.__log_translate(trans_obj.id, text, user)
 
-    def _tr_change_by_user(self, tr_id, text, user):
-        """ By id can be changed only by user """
-        try:
-            translate = Translate.objects.get(id=tr_id)
-        except ObjectDoesNotExist:
-            self._handle_err("Translate not found ID: " + tr_id)
-            return False
-        self.__translate_change(translate, text, user)
+    # def _tr_change_by_user(self, tr_id, text, user):
+    #     """ By id can be changed only by user """
+    #     try:
+    #         translate = Translate.objects.get(id=tr_id)
+    #     except ObjectDoesNotExist:
+    #         self._handle_err("Translate not found ID: " + tr_id)
+    #         return False
+    #     self.__translate_change(translate, text, user)
 
     def _tr_change_by_parser(self, fid, item_number, lang_id, text):
         """ Same as _change_translate but find translate by fid, number and language """
@@ -61,13 +72,60 @@ class FileModelBasicApi:
         tr = Translate.objects.create(item_id=item_id, language_id=lang_id, text=text, warning=warning)
         self.__log_translate(tr.pk, text)
 
-    def _add_mark(self, item):
-        """ item taken from parsers and have const structure """
-        pass
+    def _file_build_translates(self, info_obj, lang_id):
+        """ Update, delete, insert translates while parsing file for selected language """
+        is_original = self._lang_orig.id == lang_id  # Bonus methods to original file
+        reader = self._get_reader(info_obj)
+        finder = FileItemsFinder(self._file.id, self._fid_lookup_exist, is_original)
 
-    def _change_file(self, file_id, kwargs):
-        """ change file with new field: value """
-        pass
+        for file_mark in reader:
+            if self._fid_lookup_exist:
+                if finder.find_by_fid(file_mark['fid']):
+                    for item in file_mark['items']:
+                        self._tr_change_by_parser(file_mark['fid'], item['item_number'], lang_id, item['text'])
+                    continue
+            if is_original:
+                mark = FileMark(
+                    file_id=self._file.id,
+                    fid=file_mark['fid'],
+                    words=file_mark['words'],
+                    search_words=file_mark['search_words'],
+                    context=file_mark['context'],
+                )
+                mark.save()  # Create mark
+                for mark_item in file_mark['items']:
+                    item_obj = MarkItem(**mark_item, mark=mark)
+                    item_obj.save()  # Create mark items
+                    # Prepare translates
+                    translates_with_text = finder.find_by_md5(mark_item['md5sum'])
+                    # Crate translate and empty translates for other language (with logging)
+                    for lang_to_tr in self._file.folder.project.translate_to.values_list('id', flat=True):
+                        if lang_to_tr == lang_id:
+                            self._tr_create_by_parser(item_obj.pk, lang_to_tr, mark_item['text'], mark_item['warning'])
+                        elif lang_to_tr in translates_with_text.keys():
+                            self._tr_create_by_parser(
+                                item_id=item_obj.pk,
+                                lang_id=lang_to_tr,
+                                text=translates_with_text[lang_to_tr]['text'],
+                                warning=f"Translate taken from id:{translates_with_text[lang_to_tr]['item_id']}"
+                            )
+                        else:
+                            self._tr_create_by_parser(item_obj.pk, lang_to_tr, '', '')
+                else:
+                    self._handle_err("Can't fill translates without fID formula - {}")
+        if is_original:
+            # Delete unused marks
+            logger.info(f"File {self._log_name} delete unused marks")
+            self._file.markitem_set.filter(fid__in=finder.unused_fid).delete()
+            # Save results
+            self._file.state = 2
+            self._file.items, self._file.words = reader.stats
+            self._file.save()
+            logger.info(f"File {self._log_name} build as original success - refreshing progress")
+            self._file_progress_refresh_all()
+        else:
+            logger.info(f"File {self._log_name} build as copy success - refreshing progress for {lang_id}")
+            self._file_progress_refresh(lang_id)
 
     def _file_progress_create(self):
         """ create progress for new file """
@@ -75,7 +133,7 @@ class FileModelBasicApi:
         objects_to_create = [Translated(file_id=self._file.id, language_id=lang_id) for lang_id in translate_to_ids]
         Translated.objects.bulk_create(objects_to_create)
 
-    def __file_progress_refresh(self, lang_id):
+    def _file_progress_refresh(self, lang_id):
         """ Refresh file progress for language """
         try:
             progress = self._file.translated_set.get(language=lang_id)
@@ -95,7 +153,7 @@ class FileModelBasicApi:
     def _file_progress_refresh_all(self):
         """ Refresh file progress for all languages """
         for lang in self._file.translated_set.all():
-            self.__file_progress_refresh(lang.id)
+            self._file_progress_refresh(lang.id)
 
     def _handle_err(self, err_msg, lvl=0):
         msg = err_msg.format(self._log_name) if self._log_name else err_msg
@@ -108,12 +166,12 @@ class FileModelBasicApi:
         raise AssertionError(msg)
 
     @staticmethod
-    def _get_reader(info_obj):
-        reader_params = [info_obj.data, info_obj.codec, info_obj.options]
+    def _get_reader(info_obj, copy_path=''):
+        reader_params = [info_obj['data'], info_obj['codec'], info_obj['options']]
         assert info_obj.method not in ['csv', 'html', 'ue'], "Unknown method to read file"
         if info_obj.method == 'csv':
-            return LocalizeCSVReader(*reader_params)
+            return LocalizeCSVReader(*reader_params, copy_path=copy_path)
         elif info_obj.method == 'html':
-            return LocalizeHtmlReader(*reader_params)
+            return LocalizeHtmlReader(*reader_params, copy_path=copy_path)
         elif info_obj.method == 'ue':
-            return LocalizeUEReader(*reader_params)
+            return LocalizeUEReader(*reader_params, copy_path=copy_path)

@@ -1,9 +1,8 @@
 from rest_framework import serializers
-from rest_framework.exceptions import APIException
 from django.contrib.auth.models import User
 
 from .models import Language, Project, ProjectPermission, Folder, FolderRepo, File, ErrorFiles, Translated, \
-    FileMark, Translate, TranslateChangeLog
+    FileMark, Translate, TranslateChangeLog, MarkItem
 
 
 # Extra kwargs write_only, read_only, required, default, allow_null, label
@@ -32,19 +31,33 @@ class TranslatesLogSerializer(serializers.ModelSerializer):
 
 
 class TranslatesSerializer(serializers.ModelSerializer):
-    """ TRANSLATES: To display translates related to Mark (and to add new?) """
+    """ TRANSLATES: To display Translates related to Item and Detail """
+    translator = serializers.SlugRelatedField(slug_field='username', read_only=True)
+    # user = serializers.PrimaryKeyRelatedField(read_only=True, default=serializers.CurrentUserDefault())
+
     class Meta:
         model = Translate
-        fields = ["id", "text", "translator", "language"]
+        # fields = ['id', 'text', 'translator', 'language', 'warning']
+        fields = '__all__'
+        read_only_fields = '__all__'
+
+
+class ItemsSerializer(serializers.ModelSerializer):
+    """ TRANSLATES: To display Items related to Mark """
+    translates_set = TranslatesSerializer(many=True, read_only=True)
+
+    class Meta:
+        model = MarkItem
+        fields = ["id", "item_number", "words", "translates_set"]
 
 
 class FileMarksSerializer(serializers.ModelSerializer):
     """ TRANSLATES: FileMark manager. To select languages for translate. """
-    translates_set = TranslatesSerializer(many=True, read_only=True)
+    items_set = ItemsSerializer(many=True, read_only=True)
 
     class Meta:
         model = FileMark
-        fields = ['id', 'md5sum', 'words', 'translates_set']
+        fields = ['id', 'md5sum', 'words', 'items_set']
         extra_kwargs = {
             'md5sum': {'read_only': True},
             'words': {'read_only': True},
@@ -64,7 +77,7 @@ class TransferFileSerializer(serializers.ModelSerializer):
 
 
 class TranslatedSerializer(serializers.ModelSerializer):
-    """ To display file translate progress to other langs """
+    """ To display file translate progress to other languages """
     class Meta:
         model = Translated
         exclude = ['translate_copy']
@@ -82,12 +95,10 @@ class FilesSerializer(serializers.ModelSerializer):
             'method': {'read_only': True},
             'items': {'read_only': True},
             'words': {'read_only': True},
+            'repo_sha': {'read_only': True},
             'repo_status': {'read_only': True},
             'warning': {'read_only': True},
-            'repo_sha': {'read_only': True},
             'error': {'read_only': True},
-            # 'created': {'read_only': True},
-            # 'updated': {'read_only': True},
         }
 
 
@@ -109,7 +120,6 @@ class FoldersSerializer(serializers.ModelSerializer):
 
 class FolderRepoSerializer(serializers.ModelSerializer):
     """ To manage repository options and access """
-    # permission_set = serializers.ListField(child=serializers.CharField(), source='get_permission', read_only=True)
 
     class Meta:
         model = FolderRepo

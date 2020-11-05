@@ -60,12 +60,12 @@ class LocalizeUEReader:
             if self.__copy:  # handle copy control
                 self.__copy.add_data('')  # To finish file
             raise StopIteration
-        self.__parser.data = self.__next_entry()
+        self.__parser.data = self.__next_entry()  # Copy control here
         if not self.__parser.data['words']:
             self.__next__()
         self.__file_items += len(self.__parser.data['items'])
         self.__file_words += self.__parser.data['words']
-        self.__row_index += 1
+        self.__row_index += 1   # TODO: Check if need be upper then __next__()
         return self.__parser.data if self.__parser.data['fid'] else {**self.__parser.data, 'fid': self.__row_index}
 
     def __next_entry(self):

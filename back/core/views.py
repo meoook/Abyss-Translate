@@ -156,8 +156,8 @@ class FileViewSet(viewsets.ModelViewSet):
     serializer_class = FilesSerializer
     http_method_names = ['get', 'put', 'delete']
     permission_classes = [IsAuthenticated, IsFileOwnerOrHaveAccess]
-    filter_backends = [filters.SearchFilter, filters.OrderingFilter]
-    search_fields = ['name']
+    # filter_backends = [filters.SearchFilter, filters.OrderingFilter]
+    # search_fields = ['name']
     ordering_fields = ['name', 'created', 'state']
     ordering = ['state', '-created']
     pagination_class = DefaultSetPagination
@@ -197,22 +197,15 @@ class FileMarksView(viewsets.ModelViewSet):
     def list(self, request, *args, **kwargs):
         """ Translate with pagination """
         file_id = request.query_params.get('file_id')
-        distinct = request.query_params.get('distinct')
         no_trans = request.query_params.get('no_trans')  # exclude marks that have translates to no_trans lang
         search_text = request.query_params.get('search_text')  # filter by text
-        # FIXME: mb other issue to save order
-        # Entry.objects.order_by(Coalesce('summary', 'headline').desc())
-        if distinct == 'true':
-            qs_to_list = list(self.get_queryset().filter(file_id=file_id).values('md5sum', 'id').distinct('md5sum'))
-            unique_md5_id_arr = [x['id'] for x in qs_to_list]
-            queryset = self.get_queryset().filter(pk__in=unique_md5_id_arr).order_by('mark_number', 'col_number')
-        else:
-            queryset = self.get_queryset().filter(file_id=file_id).order_by('mark_number', 'col_number')
+        queryset = self.get_queryset().filter(file_id=file_id).order_by('item_number', 'col_number')
         if no_trans and int(no_trans) > 0:
-            to_filter = queryset.filter(Q(translates__language=no_trans), ~Q(translates__text__exact=''))
+            to_filter = queryset.filter(Q(item__translate__language=no_trans), ~Q(item__translate__text__exact=''))
             queryset = queryset.exclude(id__in=to_filter)
         if search_text:  # TODO: Validate ?
-            search_vector = SearchVector('translates__text', 'translates__id')
+            # TODO: remove item__translate__text from search vector add ID what needed
+            search_vector = SearchVector('search_words', 'item__translate__text', 'translate__id')
             search_query = SearchQuery('')
             for word in search_text.split(' '):
                 search_query &= SearchQuery(word)
@@ -266,7 +259,7 @@ class TransferFileView(viewsets.ViewSet):
             progress = Translated.objects.select_related('language', 'file').get(id=pk)
         except ObjectDoesNotExist:
             return Response({'err': 'File not found'}, status=status.HTTP_404_NOT_FOUND)
-        if progress.finished:
+        if progress.finished:   # TODO: remove this check (copy can be untranslated) - if progress path
             file_path = progress.translate_copy.path
             if os.path.exists(file_path):
                 # TODO: StreamingHttpResponse

@@ -16,7 +16,8 @@
 | 2.01.0  |  block+  | Поиск по фразе (pgSQL vectors)                                     |
 | 2.01.0  |  block?  | Merge check - отображение изменений                                |
 | 2.01.0  |  block?  | Переработка способов парсинга файлов                               |
-| 2.01.0  |  block+  | Переработка структуры: file - item - element - translate           |
+| 2.01.0  |  block+  | Переработка структуры: file - mark - item - translate - log        |
+| !!!!!!  |  !!!!!!  | Celery - fix periodic tasks                                        |
 | 1.02.4  | 03.11.20 | Система Copy Context Control - для сохранения копий                |
 | 1.02.3  | 02.11.20 | Система Merge по UID и MD5                                         |
 | 1.02.2  | 30.10.20 | HTML reader - UID из дерева тэгов (DOM)                            |
