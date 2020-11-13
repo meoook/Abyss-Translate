@@ -9,7 +9,6 @@ const MarkChangeLog = ({ mark, fileID }) => {
   useEffect(() => {
     transLog(fileID, mark).then((data) => {
       setLogMsgs(data)
-      console.log(data)
     })
   }, [mark, fileID, transLog])
 

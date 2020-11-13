@@ -7,7 +7,7 @@ import FileTranslatedStatus from "../AppComponents/FileTranslatedStatus"
 import { Link } from "react-router-dom"
 import { textCutByLen } from "../componentUtils"
 
-const FileListByAccess = ({ trOnly, fldrID, prjID }) => {
+const FileListByAccess = ({ trOnly, fldrID, prjID, onOptClick = null }) => {
   const [loading, setLoading] = useState(true)
   const { explorer, explList } = useContext(AppContext)
   const [fileList, setFileList] = useState([])
@@ -55,8 +55,8 @@ const FileListByAccess = ({ trOnly, fldrID, prjID }) => {
       <div className={`table-head${!trOnly ? " ml-3" : ""}`}>
         <div className='col col-3'>Название</div>
         <div className='col col-2'>Позиций</div>
-        <div className='col col-2'>Слов</div>
-        <div className='col col-3'>Прогресс перевода</div>
+        <div className='col col-1'>Слов</div>
+        <div className='col col-4'>Прогресс перевода</div>
         <div className='col col-2'>GIT статус</div>
       </div>
       <div className={`scroll-y paginate column m-1${!trOnly ? " ml-3" : ""}`}>
@@ -67,7 +67,7 @@ const FileListByAccess = ({ trOnly, fldrID, prjID }) => {
         ) : (
           <>
             {fileList.map((item) => (
-              <FileItem file={item} key={item.id} />
+              <FileItem file={item} key={item.id} writeAccess={true} onOptClick={onOptClick} />
             ))}
             <Paginator page={page} size={size} total={explorer.count} refresh={refreshPage} />
           </>
@@ -79,7 +79,62 @@ const FileListByAccess = ({ trOnly, fldrID, prjID }) => {
 
 export default FileListByAccess
 
-const NoFilesInfo = (perms) => {
+const FileItem = ({ file, onOptClick = null }) => {
+  // If onOptClick not set - it means no access
+  return (
+    <div className='table-line m-0'>
+      <div className='col col-3'>
+        {file.state === "uploaded" || file.state === "error" ? (
+          file.name
+        ) : (
+          <Link to={`/translates/${file.id}`}>
+            <span>{textCutByLen(file.name, 25)}</span>
+          </Link>
+        )}
+      </div>
+      {file.error ? (
+        <div className='col col-8 row center'>
+          <div className='color-error'>ошибка обработка файла: {file.error}</div>
+        </div>
+      ) : file.warning ? (
+        <div className='col col-8 row center'>
+          <div className='color-error'>Предупреждение: {file.warning}</div>
+        </div>
+      ) : !Boolean(file.method) ? (
+        <div className='col col-8 row center'>
+          <div>в обработке</div>
+          <div className='loader-dots'>...</div>
+        </div>
+      ) : (
+        <>
+          <div className='col col-2'>{file.items}</div>
+          <div className='col col-1'>{file.words}</div>
+          <div className='col col-5'>
+            <FileTranslatedStatus fileObj={file} />
+          </div>
+        </>
+      )}
+      <div className='col col-1'>
+        <div className='row justify'>
+          <div>{file.repo_status ? "Ok" : "X"}</div>
+          {Boolean(onOptClick) && <MoreButton filoID={file.id} onOptClick={onOptClick} />}
+        </div>
+      </div>
+    </div>
+  )
+}
+
+const MoreButton = ({ filoID, onOptClick }) => {
+  return (
+    <div className='link' onClick={onOptClick.bind(this, filoID)}>
+      <i>
+        <IcoGet name='more' />
+      </i>
+    </div>
+  )
+}
+
+const NoFilesInfo = (props) => {
   return (
     <div className='card card-info right'>
       <div className='card-info-attantion'>
@@ -95,7 +150,7 @@ const NoFilesInfo = (perms) => {
   )
 }
 
-const NoFilesList = (perms) => {
+const NoFilesList = (props) => {
   return (
     <div className='card card-info'>
       <div className='card-info-attantion'>
@@ -103,40 +158,6 @@ const NoFilesList = (perms) => {
       </div>
       <h4>Список файлов пуст</h4>
       <div>Владелец игры должен загрузить файлы, после чего они будут отображаться в списке</div>
-    </div>
-  )
-}
-const FileItem = ({ file }) => {
-  return (
-    <div className='table-line m-0'>
-      <div className='col col-3'>
-        {file.state === "uploaded" || file.state === "error" ? (
-          file.name
-        ) : (
-          <Link to={`/translates/${file.id}`}>
-            <span>{textCutByLen(file.name, 25)}</span>
-          </Link>
-        )}
-      </div>
-      {file.state === "uploaded" ? (
-        <div className='col col-8 row center'>
-          <div>в обработке</div>
-          <div className='loader-dots'>...</div>
-        </div>
-      ) : file.state === "error" ? (
-        <div className='col col-8 row center'>
-          <div className='color-error'>ошибка обработка файла</div>
-        </div>
-      ) : (
-        <>
-          <div className='col col-2'>{file.items}</div>
-          <div className='col col-2'>{file.words}</div>
-          <div className='col col-4'>
-            <FileTranslatedStatus fileObj={file} />
-          </div>
-        </>
-      )}
-      <div className='col col-1'>{file.repo_status ? "Ok" : "X"}</div>
     </div>
   )
 }

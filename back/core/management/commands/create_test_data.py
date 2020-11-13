@@ -28,7 +28,6 @@ class Command(BaseCommand):
         file1 = File.objects.create(
             folder=folder1,
             name='test-file.txt',
-            state=1,
             codec='utf-8',
             method='csv',  # csv, ue, html
             options={'any': 'data', 'more': 'info'},
@@ -47,7 +46,7 @@ class Command(BaseCommand):
 
         perms_to_create = [0, 5, 8, 9]
         for perm in perms_to_create:
-            name = 'q' + str(perm)
+            name = 'limited' + str(perm)
             user = User.objects.create_user(username=name, email=f'{name}@gmail.com', password=password)
             ProjectPermission.objects.create(user=user, project=project1, permission=perm)
             self.stdout.write(
@@ -58,7 +57,7 @@ class Command(BaseCommand):
         project2.translate_to.set([18, 22])
         self.stdout.write(f'Created second project {project2.name} with owner:{name}')
 
-        name = 'q1'
+        name = 'fullstack'
         user = User.objects.create_user(username=name, email=f'{name}@gmail.com', password=password)
         ProjectPermission.objects.create(user=user, project=project1, permission=0)
         ProjectPermission.objects.create(user=user, project=project1, permission=5)
@@ -66,7 +65,7 @@ class Command(BaseCommand):
         ProjectPermission.objects.create(user=user, project=project1, permission=9)
         self.stdout.write(f'Created user name: {name} password: {password} with full access to P1')
 
-        name = 'q2'
+        name = 'mixed'
         user = User.objects.create_user(username=name, email=f'{name}@gmail.com', password=password)
         ProjectPermission.objects.create(user=user, project=project1, permission=0)
         ProjectPermission.objects.create(user=user, project=project2, permission=5)

@@ -276,7 +276,7 @@ img {
       }
     }
     &.selected {
-      cursor: unset;
+      // cursor: unset;
       background-color: rgba($main, 0.25);
       color: $texth;
       svg {

@@ -91,7 +91,7 @@ class FilesSerializer(serializers.ModelSerializer):
         model = File
         exclude = ['data', 'folder', 'codec', 'options']
         extra_kwargs = {
-            'state': {'read_only': True, 'source': 'get_state_display'},
+            # 'state': {'read_only': True, 'source': 'get_state_display'},
             'method': {'read_only': True},
             'items': {'read_only': True},
             'words': {'read_only': True},
@@ -114,8 +114,9 @@ class FoldersSerializer(serializers.ModelSerializer):
             'repo_status': {'read_only': True},
         }
 
-    def get_files_amount(self, instance):
-        return instance.files_set.count()
+    @staticmethod
+    def get_files_amount(instance):
+        return instance.file_set.count()
 
 
 class FolderRepoSerializer(serializers.ModelSerializer):
@@ -146,7 +147,7 @@ class PermsListSerializer(serializers.ModelSerializer):
 
     def get_prj_perms(self, instance):
         save_id = self.context.get('save_id')
-        qs = instance.projectpermissions_set.filter(project__save_id=save_id)
+        qs = instance.projectpermission_set.filter(project__save_id=save_id)
         serializer = PermissionsSerializer(qs, many=True)
         return serializer.data
 
@@ -167,7 +168,8 @@ class ProjectSerializer(serializers.ModelSerializer):
 
     def get_permissions_set(self, instance):
         request = self.context.get('request')
-        return instance.projectpermissions_set.filter(user=request.user).values_list("permission", flat=True)
+        return instance.projectpermission_set.filter(user=request.user).values_list("permission", flat=True)
 
-    def get_author(self, instance):
+    @staticmethod
+    def get_author(instance):
         return instance.owner.username

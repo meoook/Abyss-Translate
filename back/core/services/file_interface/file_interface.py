@@ -1,5 +1,6 @@
 import logging
 
+from django.conf import settings
 from django.forms.models import model_to_dict
 from django.core.exceptions import ValidationError
 from rest_framework import status
@@ -21,15 +22,41 @@ class FileModelAPI(FileModelBasicApi):
         """ Get file object from database to do other actions """
         super().__init__(file_id)
         # Object flags and params
-        self.__structure_changed = False  # Flag to check if file structure have changed
+        self.__structure_changed = False   # Flag to check if file structure have changed  FIXME - not used
         self.__fid_lookup_changed = False  # Flag to check if file fID formula changed
 
-    def refresh_file(self):
-        """ When new(updated) file in IO -> Return true - if no errors while getting info """
+    def file_new(self):
+        """ When new file -> update from repo -> get info -> parse -> cr progress """
+        try:
+            self.__update_from_repo()
+            if self.__refresh_file():
+                self._file_progress_create()
+            else:
+                self._save_error()
+        except AssertionError:
+            logger.warning('Error loading file xxx')
+
+    def file_refresh(self, lang_id, tmp_data):  # TODO: Optimize - no need to save! data in file for translated copy
+        is_original = lang_id == self._lang_orig.id
+        print(lang_id, type(lang_id), self._lang_orig.id, type(self._lang_orig.id), lang_id == self._lang_orig.id)
+        if is_original:  # Replace original file
+            # FIXME - if file linked with repo - disable upload
+            self._file.data = tmp_data
+            self._file.save()
+            self.__refresh_file()  # Run rebuild
+            self._file_progress_up_or_cr()  # Create(if no 'translated_set') or update file progress
+        else:  # Write new file to disk
+            # If file left in error storage - it's an error :) -> copy deleted after finish
+            tmp_file = settings.STORAGE_ERRORS.save(f'{self._file.id}_{lang_id}.txt', tmp_data)
+            self.__load_translates_from_copy(lang_id, tmp_file)  # Run rebuild language translates
+            settings.STORAGE_ERRORS.delete(tmp_file)
+            self._file_progress_refresh(lang_id)
+
+    def __refresh_file(self):
+        """ Rebuild translates for original language """
         info = FileScanner(self._file.data.path, self._lang_orig.short_name)
         if info.error:
             self._handle_err("File {} get info error:" + info.error)
-            self._file.state = 0
             self._file.error = info.error
             self._file.save()
             return False
@@ -44,33 +71,32 @@ class FileModelAPI(FileModelBasicApi):
                 self._file_build_translates(info, self._lang_orig.id)
             except AssertionError as err:
                 self._handle_err("File {} build marks error: " + str(err))
-                self._file.state = 0
                 self._file.error = err
                 self._file.save()
                 return False
-            logger.info(f"File {self._log_name} rebuild success")
             return True
 
-    def load_translates_from_copy(self, copy_path, lang_id):
-        """ Add new translates to existing mark items for selected language """
+    def __load_translates_from_copy(self, copy_path, lang_id):  # FIXME: use data for copy - no need to save file
+        """ Add new translates from user upload """
         info = FileScanner(copy_path, lang_id)
         if not info.error:
             self._file_build_translates(info_obj=info, lang_id=lang_id)
         else:
+            print(info.error)
             self._handle_err("Error while getting translate copy for file {}")
 
     def create_translated_copy(self, lang_to_id):
         """ Create translation copy of the file """
         info = FileScanner(self._file.data.path)
-        copy_path = ''   # TODO: copy path creator
+        copy_path = ''  # TODO: copy path creator
         reader = self._get_reader(info, copy_path)
 
         # TODO - get all translates and find from there when parse (pre-done)
         tr_items = {}
-        for translate_item in Translate.objects.filter(item__mark__file__id=self._file.id, language_id=lang_to_id)\
+        for translate_item in Translate.objects.filter(item__mark__file__id=self._file.id, language_id=lang_to_id) \
                 .values('item__mark__fid', 'item__item_number', 'text'):
             if translate_item['item__mark__file_id'] in tr_items.keys():
-                translate_item['item__mark__file_id']\
+                translate_item['item__mark__file_id'] \
                     .append({'item_number': translate_item['item__item_number'], 'text': translate_item['text']})
             else:
                 translate_item['item__mark__file_id'] = [
@@ -79,11 +105,11 @@ class FileModelAPI(FileModelBasicApi):
         for file_mark in reader:
             if file_mark['fid'] in tr_items:
                 reader.change_item_content_and_save(file_mark['fid'])
-        reader.change_item_content_and_save([{'item_number': 0, 'text': ''}])   # To save - left/unsaved data
+        reader.change_item_content_and_save([{'item_number': 0, 'text': ''}])  # To save - left/unsaved data
         # Update model as finished
         progress = self._file.translated_set.get(language_id=lang_to_id)
         progress.translate_copy = copy_path
-        progress.finished = True    # TODO: remove it - because copy can be created not finished
+        progress.finished = True  # TODO: remove it - because copy can be created not finished
         progress.save()
         return True
 
@@ -108,7 +134,8 @@ class FileModelAPI(FileModelBasicApi):
         # == Get or create translate(s) ==
         if md5sum:  # multi update
             # Check if translates exist with same md5
-            translates = Translate.objects.filter(item__mark__file=self._file, language=lang_id, item__mark__md5sum=md5sum)
+            translates = Translate.objects.filter(item__mark__file=self._file, language=lang_id,
+                                                  item__mark__md5sum=md5sum)
             control_marks = self._file.filemarks_set.filter(md5sum=md5sum)
         else:
             translates = Translate.objects.filter(item__mark__file=self._file, language=lang_id, item__mark__id=mark_id)
@@ -150,7 +177,7 @@ class FileModelAPI(FileModelBasicApi):
             logger.info(f"Folder repository not found for file {self._log_name}")
         return False
 
-    def update_from_repo(self):
+    def __update_from_repo(self):
         """ Update file from git repository """
         if self._file.folder.repo_status:
             self._file.repo_status = False
@@ -175,14 +202,3 @@ class FileModelAPI(FileModelBasicApi):
             self._file.save()
         else:
             logger.info(f"Folder repository not found for file {self._log_name}")
-
-    def save_error(self, msg):
-        """ Save error file to analyze  """
-        try:
-            error_file = ErrorFiles(error=msg, data=self._file.data)
-            error_file.save()
-        except ValidationError:
-            logger.error(f"Can't save error file for {self._log_name} ")
-            return False
-        logger.info(f'For file {self._log_name} created error file {error_file.pk}')
-        return error_file.pk

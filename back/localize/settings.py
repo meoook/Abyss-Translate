@@ -4,10 +4,20 @@ from django.core.files.storage import FileSystemStorage
 # Build paths inside the project like this: os.path.join(BASE_DIR, ...)
 BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 
+# !!! CHANGE THIS SETTINGS IN PRODUCTION !!!
 SECRET_KEY = os.environ.get("SECRET_KEY", "NO_KEY_WARNING")
 DEBUG = os.environ.get("DEBUG", True)
-# ALLOWED_HOSTS = os.environ.get("DJANGO_ALLOWED_HOSTS", "*").split(" ")
-ALLOWED_HOSTS = ['192.168.1.20', '127.0.0.1', '*']
+ALLOWED_HOSTS = ['*']
+CORS_ORIGIN_ALLOW_ALL = True
+
+# ALLOWED_HOSTS = os.environ.get("DJANGO_ALLOWED_HOSTS").split(" ")
+# CORS_ORIGIN_WHITELIST = os.environ.get("DJANGO_ALLOWED_HOSTS").split(" ")
+# CORS_ORIGIN_WHITELIST = [
+#     'http://localhost:3000',
+#     'http://127.0.0.1:3000',
+#     'http://192.168.1.20:3000',
+#     'http://91.225.238.193:3000',
+# ]
 
 # Application definition
 MY_APPS = [
@@ -126,16 +136,15 @@ REST_FRAMEWORK = {
 # If this is used then `CORS_ORIGIN_WHITELIST` will not have any effect
 # CORS_ALLOW_CREDENTIALS = True
 # If this is used, then not need to use `CORS_ORIGIN_ALLOW_ALL = True`
-CORS_ORIGIN_WHITELIST = [
-    'http://localhost:3000',
-    'http://127.0.0.1:3000',
-    'http://192.168.1.20:3000',
-    'http://91.225.238.193:3000',
-]
+# CORS_ORIGIN_ALLOW_ALL = True
+# CORS_ORIGIN_WHITELIST = [
+#     'http://localhost:3000',
+#     'http://127.0.0.1:3000',
+#     'http://192.168.1.20:3000',
+#     'http://91.225.238.193:3000',
+# ]
 # CORS_ORIGIN_REGEX_WHITELIST = [
-#     'http://localhost',
-#     'http://127.0.0.1',
-#     r'http://.+:3000',
+#     'http://127.0.0.1:*',
 #     'http://91.225.238.193:3000',
 # ]
 # CORS_ALLOW_METHODS = [

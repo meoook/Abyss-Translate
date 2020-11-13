@@ -1,11 +1,23 @@
-import React from "react"
+import React, { useEffect } from "react"
 
-const Dropzone = ({ addFiles, disabled }) => {
+const Dropzone = ({ addFiles, disabled, isSolo = false }) => {
+  useEffect(() => {
+    if (!isSolo) {
+      console.log(`SOLO IS ${isSolo} set multy`)
+      fileSelector.setAttribute("multiple", "multiple")
+    } else {
+      fileSelector.removeAttribute("multiple")
+    }
+  }, [isSolo])
+
   const onFileAdded = (event) => {
     if (disabled) return
     addFiles([...event.target.files])
     event.target.value = "" // Reset input file
   }
+  const fileSelector = document.createElement("input")
+  fileSelector.setAttribute("type", "file")
+  fileSelector.addEventListener("change", onFileAdded)
 
   const onFileDropped = (event) => {
     event.preventDefault()
@@ -15,11 +27,6 @@ const Dropzone = ({ addFiles, disabled }) => {
     addFiles([...event.dataTransfer.files])
     event.target.value = "" // Reset input file
   }
-
-  const fileSelector = document.createElement("input")
-  fileSelector.setAttribute("type", "file")
-  fileSelector.addEventListener("change", onFileAdded)
-  fileSelector.setAttribute("multiple", "multiple")
 
   const openFileDialog = (event) => {
     if (disabled) return
@@ -48,7 +55,7 @@ const Dropzone = ({ addFiles, disabled }) => {
       onDrop={onFileDropped}
       style={{ backgroundImage: "url(/add_circle_out.svg)" }} // is it ok ?
     >
-      Нажми или перетащи файлы в область для добавления
+      Нажми или перетащи файл{!isSolo ? "ы" : ""} в область для добавления
     </div>
   )
 }

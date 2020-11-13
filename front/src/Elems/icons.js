@@ -16,6 +16,7 @@ import { ReactComponent as SvgWork } from "../IMG/work.svg"
 import { ReactComponent as SvgWorkOut } from "../IMG/work_out.svg"
 import { ReactComponent as SvgArrows } from "../IMG/arrows.svg"
 import { ReactComponent as SvgSettings } from "../IMG/settings.svg"
+import { ReactComponent as SvgMore } from "../IMG/more.svg"
 // Lang icons
 import { ReactComponent as SvgWorld } from "../IMG/lang/world.svg"
 import { ReactComponent as SvgRussian } from "../IMG/lang/russian.svg"
@@ -53,6 +54,8 @@ export const IcoGet = ({ name }) => {
       return <SvgAttantion />
     case "settings":
       return <SvgSettings />
+    case "more":
+      return <SvgMore />
     case "apartment":
       return <SvgApartment />
     case "cloudin":

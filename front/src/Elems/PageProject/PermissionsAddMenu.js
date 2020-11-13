@@ -9,14 +9,14 @@ const PermissionsAddMenu = ({ accName, prjID }) => {
   const [perms, setPerms] = useState([])
   const [options, setOptions] = useState([])
 
-  const LEN_TO_SEARCH = 3
+  const LEN_TO_SEARCH = 2
 
   useEffect(() => {
     if (!accName && !input) {
       setName("")
       setInput("")
     } else {
-      const username = input ? input : accName
+      const username = accName ? accName : input
       setName(username)
       setInput(username)
       const userPerms = permissions.find((item) => item.username === username)

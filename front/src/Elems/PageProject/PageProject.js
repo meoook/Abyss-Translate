@@ -108,7 +108,7 @@ export const PageProject = (props) => {
             </div>
           )}
           {menuSelected === "blank" && <Loader />}
-          {menuSelected === "files" && <ProjectExplorer projectID={id} trOnly={trOnly} />}
+          {menuSelected === "files" && <ProjectExplorer projectID={id} readOnly={!permissions.includes(8)} />}
           {menuSelected === "access" && <ProjectPermissions prjID={id} />}
           {menuSelected === "owner" && <OptionsProject prjObj={project} />}
         </div>

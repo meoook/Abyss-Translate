@@ -18,6 +18,8 @@ import {
   TRANSLATE_CHANGE,
   PRJ_PERMISSION_LIST,
   PRJ_PERMISSION_REFRESH,
+  FOLDER_FILE_REFRESH,
+  FOLDER_FILE_REMOVE,
 } from "../actionTypes"
 
 import { getNextId, nullState } from "../utils"
@@ -47,6 +49,8 @@ const handlers = {
     ...state,
     folders: state.folders.filter((fldr) => fldr.id !== payload),
   }),
+  [FOLDER_FILE_REFRESH]: (state, { payload }) => ({ ...state, explorer: { ...state.explorer, results: payload } }),
+  [FOLDER_FILE_REMOVE]: (state, { payload }) => ({ ...state, explorer: { ...state.explorer, results: payload } }),
   [EXPLORER_REFRESH]: (state, { payload }) => ({ ...state, explorer: payload }),
   [REPOSITORY_REFRESH]: (state, { payload }) => ({ ...state, repository: payload }),
   [TRANSLATE_FILE_INFO]: (state, { payload }) => ({ ...state, translates: payload }),

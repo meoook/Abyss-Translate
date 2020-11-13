@@ -4,6 +4,7 @@ from celery import shared_task
 from celery.exceptions import SoftTimeLimitExceeded, MaxRetriesExceededError
 
 from core.models import Folder
+from core.services.file_interface.file_interface import FileModelAPI
 
 from core.services.file_system.file_interface import LocalizeFileInterface
 from core.services.file_system.folder_interface import LocalizeGitFolderInterface
@@ -11,30 +12,43 @@ from core.services.file_system.folder_interface import LocalizeGitFolderInterfac
 logger = logging.getLogger('django')
 
 
-@shared_task(
-    name="T1: Update file from repo then parse it",
-    max_retries=2,
-    # soft_time_limit=5,
-    # time_limit=20,
-    # rate_limit='2/h',
-    ignore_result=True
-)
-def file_parse_uploaded(file_id, new=True):
-    """ After file uploaded -> If possible update it from repo then get info and parse data into text to translate """
-    # Git update first
-    file_manager = LocalizeFileInterface(file_id)
-    if file_parse_uploaded.request.retries == 0:    # First try - update from repository
-        logger.info(f'File id:{file_id} try update from repo')
-        file_manager.update_from_repo()
-    try:
-        if not file_manager.parse():
-            logger.warning(f'File id:{file_id} parse error: {file_manager.error}')
-            file_parse_uploaded.retry()
-    except MaxRetriesExceededError:
-        err_file_id, err_msg = file_manager.save_error()
-        logger.error(f'File id:{file_id} parse retries limit. Created error file (id:{err_file_id}) saved: {err_msg}')
-    if new:
-        file_manager.create_progress()
+# @shared_task(
+#     name="T1: Update file from repo then parse it",
+#     max_retries=2,
+#     # soft_time_limit=5,
+#     # time_limit=20,
+#     # rate_limit='2/h',
+#     ignore_result=True
+# )
+# def file_parse_uploaded(file_id, new=True):
+#     """ After file uploaded -> If possible update it from repo then get info and parse data into text to translate """
+#     # Git update first
+#     file_manager = FileModelAPI(file_id)
+#     if file_parse_uploaded.request.retries == 0:    # First try - update from repository
+#         logger.info(f'File id:{file_id} try update from repo and parse')
+#         file_manager.update_from_repo()
+#     try:
+#         if not file_manager.parse():
+#             logger.warning(f'File id:{file_id} parse error: {file_manager.error}')
+#             file_parse_uploaded.retry()
+#     except MaxRetriesExceededError:
+#         err_file_id, err_msg = file_manager.save_error()
+#         logger.error(f'File id:{file_id} parse retries limit. Created error file (id:{err_file_id}) saved: {err_msg}')
+#     if new:
+#         file_manager.create_progress()
+
+def file_uploaded_new(file_id):
+    """ After file uploaded -> If possible update it from repo then get info and build new translates """
+    file_manager = FileModelAPI(file_id)
+    logger.info(f'File id:{file_id} try update from repo and parse')
+    file_manager.file_new()
+
+
+def file_uploaded_refresh(file_id, lang_id, tmp_data):
+    """ After copy or new original uploaded -> Get info and rebuild translates for language """
+    file_manager = FileModelAPI(file_id)
+    logger.info(f'File id:{file_id} try update from repo and parse')
+    file_manager.file_refresh(lang_id, tmp_data)
 
 
 @shared_task(

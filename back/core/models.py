@@ -188,14 +188,14 @@ class Translate(models.Model):
     warning = models.CharField(max_length=255, blank=True)  # No errors means - text translated
 
     class Meta:
-        unique_together = ['mark', 'language']
+        unique_together = ['item', 'language']
         indexes = [GinIndex(fields=['text'], name='core_transl_text_gin')]
         # indexes = [BTreeIndex(fields=['text'], opclasses=("text_ops", ), name='core_transl_text_gintrgm')]
 
 
 class TranslateChangeLog(models.Model):
     """ Translate log """
-    user = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.DO_NOTHING)
+    user = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.DO_NOTHING, null=True)
     translate = models.ForeignKey(Translate, on_delete=models.CASCADE)
     text = models.TextField(blank=True)
     created = models.DateTimeField(auto_now_add=True)
@@ -203,7 +203,7 @@ class TranslateChangeLog(models.Model):
 
 def auto_delete_file_on_delete(sender, instance, **kwargs):
     """ TRIGGER: Deletes file from filesystem when corresponding `File` or `Translated` object is deleted. """
-    if sender._meta.model_name == 'files':
+    if sender._meta.model_name == 'file':
         inst_obj = instance.data
     elif sender._meta.model_name == 'translated':
         if instance.finished and instance.translate_copy:

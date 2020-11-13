@@ -2,7 +2,7 @@ from core.models import Translate, FileMark
 
 
 class FileItemsFinder:
-    """ Find mark id or item id by fid or md5 """
+    """ Find mark id or item id by fid or md5 in current DB state """
 
     def __init__(self, file_id, fid_lookup_exist, is_original_lang=True):
         assert isinstance(file_id, int), f"File id must be int but {type(file_id)}"
@@ -18,7 +18,7 @@ class FileItemsFinder:
     @property
     def unused_fid(self):
         """ If value True - it means it been taken in find_by_fid method """
-        return [key for key, value in self.__marks_to_check.items() if not self.__marks_to_check[key]]
+        return [key for key, value in self.__marks_to_check.items() if not self.__marks_to_check[key]]  # ..[key] bool
 
     def find_by_fid(self, fid):
         if self.__formula_exist:
@@ -28,6 +28,7 @@ class FileItemsFinder:
         return False
 
     def find_by_md5(self, md5):
+        """ Return [{lang_id : text}, ...] list of dicts """
         if self.__is_original and md5 in self.__items_to_check.keys():
             return self.__items_to_check[md5]
         return {}
@@ -36,12 +37,12 @@ class FileItemsFinder:
         """ Prepare data - get file translates to selected language """
         if self.__formula_exist:  # No need to check exist status -> [fid:number] - unique
             for mark_obj in FileMark.objects.filter(file_id=file_id).values('id', 'fid'):
-                self.__marks_to_check[mark_obj.fid] = False  # Mark was not taken
+                self.__marks_to_check[mark_obj['fid']] = False  # flag - Mark was not taken
         if self.__is_original:  # For original language we can find texts by md5
             fields = ('item_id', 'text', 'language_id', 'item__md5sum', 'item__md5sum_clear')
             for tr_obj in Translate.objects.filter(item__mark__file_id=file_id).values(*fields):
-                self.__add_item(tr_obj.item__md5sum, tr_obj.item_id, tr_obj.language_id, tr_obj.text)
-                self.__add_item(tr_obj.item__md5sum_clear, tr_obj.item_id, tr_obj.language_id, tr_obj.text)
+                self.__add_item(tr_obj['item__md5sum'], tr_obj['item_id'], tr_obj['language_id'], tr_obj['text'])
+                self.__add_item(tr_obj['item__md5sum_clear'], tr_obj['item_id'], tr_obj['language_id'], tr_obj['text'])
 
     def __add_item(self, md5, item_id, lang_id, text):
         """ Taken flag needed to check if to create new object or no """

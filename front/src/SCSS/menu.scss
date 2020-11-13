@@ -127,11 +127,13 @@
     }
     .menu-container {
       align-items: center;
+      max-width: $menu-close;
     }
     .menu-logo {
       margin-left: 0;
+      margin-bottom: $indent * 2;
       width: 20px;
-      transition: all 1s;
+      transition: transform 1s;
       transform: scale(2);
     }
     .menu-item {

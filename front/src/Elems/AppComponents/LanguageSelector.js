@@ -17,7 +17,7 @@ const LanguageSelector = ({ selected, setSelected, langArr = [] }) => {
   }, [])
 
   useEffect(() => {
-    setChoices(languages.filter((item) => langArr.includes(item.id) && item.id !== selected))
+    if (langArr) setChoices(languages.filter((item) => langArr.includes(item.id) && item.id !== selected))
     // eslint-disable-next-line
   }, [languages, langArr, selected])
 
@@ -39,16 +39,18 @@ const LanguageSelector = ({ selected, setSelected, langArr = [] }) => {
 
         {choices.length > 0 && <div className='custom-select-arrow'></div>}
       </div>
-      <div className='custom-options'>
-        {choices.map((lang) => (
-          <div key={lang.id} className='custom-option' onClick={setSelected.bind(this, lang.id)}>
-            <span>
-              <IcoLang language={lang.id} displayShort={true} />
-            </span>
-            <span>&nbsp;</span>
-          </div>
-        ))}
-      </div>
+      {Boolean(choices) && (
+        <div className='custom-options'>
+          {choices.map((lang) => (
+            <div key={lang.id} className='custom-option' onClick={setSelected.bind(this, lang.id)}>
+              <span>
+                <IcoLang language={lang.id} displayShort={true} />
+              </span>
+              <span>&nbsp;</span>
+            </div>
+          ))}
+        </div>
+      )}
     </div>
   )
 }

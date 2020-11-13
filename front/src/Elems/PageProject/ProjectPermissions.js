@@ -11,7 +11,6 @@ const ProjectPermissions = ({ prjID }) => {
   useEffect(() => {
     if (prjID) {
       setLoading(true)
-      setAccName(null)
       permList(prjID).then(() => {
         setLoading(false)
       })
@@ -36,7 +35,7 @@ const ProjectPermissions = ({ prjID }) => {
             <h3 className='m-2 mh-3'>&nbsp;Права никому не выданы</h3>
           ) : (
             <div>
-              {permissions.map((item) => (
+              {permissions.sort(compare).map((item) => (
                 <PermissionItem key={item.username} perm={item} setAcc={setAccName} />
               ))}
             </div>
@@ -63,4 +62,13 @@ const PermissionItem = ({ perm, setAcc }) => {
       <div className='col col-2'>{perm.prj_perms.find((item) => item.permission === 9) && "x"}</div>
     </div>
   )
+}
+
+function compare(a, b) {
+  const usernameA = a.username.toUpperCase()
+  const usernameB = b.username.toUpperCase()
+
+  if (usernameA > usernameB) return 1
+  else if (usernameA < usernameB) return -1
+  return 0
 }

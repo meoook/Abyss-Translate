@@ -34,6 +34,7 @@ const OptionsFolderGit = ({ folderID, prjID, repoStatus }) => {
     return () => {
       window.clearTimeout(timer)
     }
+    // eslint-disable-next-line
   }, [gitState])
 
   const saveTokenByEnter = (e) => {

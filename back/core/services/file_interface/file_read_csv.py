@@ -107,7 +107,8 @@ class _MarkDataFromRow(ParserUtils):
 
         for col_n, col_value in enumerate(self.__current_row_items, start=1):
             if col_n in self.__fields:
-                clean_text = self._clean_text(col_value)
+                text = self.__get_unquote_text(col_value)
+                clean_text = self._clean_text(text)
                 item_words = self._count_words(clean_text)
                 if item_words > 0:
                     self.__words_amount += item_words
@@ -117,7 +118,7 @@ class _MarkDataFromRow(ParserUtils):
                         'md5sum': self._get_md5(col_value.encode(self.__codec)),
                         'md5sum_clear': self._get_md5(clean_text.encode(self.__codec)),
                         'words': item_words,
-                        'text': self.__get_unquote_text(col_value),
+                        'text': text,
                         'warning': None,
                     })
         if self.__words_amount:

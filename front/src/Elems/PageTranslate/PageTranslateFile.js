@@ -47,6 +47,7 @@ const PageTranslateFile = (props) => {
       const selectedTransObj = translates.translated_set.find((item) => item.language === langTrans)
       if (selectedTransObj) setTransProgress(getProgress(selectedTransObj.items, translates.items))
     } else setTransProgress(0)
+    // eslint-disable-next-line
   }, [langTrans])
 
   const fixPageNumber = (p, s, count) => (p * s > count ? Math.ceil(count / s) : p)

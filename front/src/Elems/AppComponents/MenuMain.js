@@ -23,8 +23,8 @@ export const MenuMain = ({ closed, changeOpen }) => {
         <NavLink to='/ru' className='menu-logo'>
           <IcoGet name='logofull' />
         </NavLink>
-        {closed ? <hr /> : <div className='menu-title'>Меню</div>}
         <div>
+          {closed ? <hr /> : <div className='menu-title'>Меню</div>}
           <NavLink to='/translates' className='menu-item'>
             <i>
               <IcoGet name='language' />

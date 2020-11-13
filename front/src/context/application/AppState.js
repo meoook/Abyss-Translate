@@ -22,6 +22,8 @@ import {
   PRJ_FOLDER_REMOVE,
   PRJ_PERMISSION_LIST,
   PRJ_PERMISSION_REFRESH,
+  FOLDER_FILE_REMOVE,
+  FOLDER_FILE_REFRESH,
 } from "../actionTypes"
 
 import { nullState, connectErrMsg } from "../utils"
@@ -179,7 +181,45 @@ const AppState = ({ children }) => {
       addMsg(connectErrMsg(err, "Не могу удалить папку"))
     }
   }
+  // FILES
+  const fileUpdate = async (fileObj) => {
+    try {
+      const res = await axios.put(`${URL}/file/${fileObj.id}/`, fileObj, config)
+      const payload = state.explorer.results.map((file) => (file.id !== res.data.id ? file : res.data))
+      dispatch({ type: FOLDER_FILE_REFRESH, payload })
+    } catch (err) {
+      addMsg(connectErrMsg(err, "Не могу изменить файл"))
+    }
+  }
+  const fileRemove = async (file_id) => {
+    try {
+      await axios.delete(`${URL}/file/${file_id}/`, config)
+      const payload = state.explorer.results.filter((file) => file.id !== file_id)
+      dispatch({ type: FOLDER_FILE_REMOVE, payload: payload })
+    } catch (err) {
+      addMsg(connectErrMsg(err, "Не могу удалить файл"))
+    }
+  }
   // UPLOAD & DOWNLOAD FILE
+  const uploadLangFile = async (folderID, fileID, langID, file, setProgress) => {
+    let formData = new FormData()
+    formData.append("folder_id", folderID)
+    formData.append("file_id", fileID)
+    formData.append("lang_id", langID)
+    // formData.append("name", file.name)
+    formData.append("data", file)
+    try {
+      await axios.post(`${URL}/transfer/`, formData, {
+        headers: { ...config.headers },
+        onUploadProgress: (progressEvent) => {
+          setProgress(Math.round((progressEvent.loaded / progressEvent.total) * 100))
+        },
+      })
+    } catch (err) {
+      addMsg(connectErrMsg(err, `Не удалось загрузить файл ${file.name}`))
+      // throw new Error(`Не удалось загрузить файл ${file.name}`)
+    }
+  }
   const uploadFile = async (folderID, file, setProgress) => {
     let formData = new FormData()
     formData.append("data", file)
@@ -212,7 +252,7 @@ const AppState = ({ children }) => {
       addMsg(connectErrMsg(err, "Не могу скачать файл"))
     }
   }
-  // PROJECTS: File explorer TODO: DELETE file or rename
+  // PROJECTS: File explorer
   const explList = async (save_id, folder_id, page, size) => {
     if (!save_id && !folder_id) dispatch({ type: EXPLORER_REFRESH, payload: {} })
     else {
@@ -230,7 +270,7 @@ const AppState = ({ children }) => {
     try {
       const res = await axios.get(`${URL}/file/${fID}`, config)
       dispatch({ type: TRANSLATE_FILE_INFO, payload: res.data })
-      await transList(fID, page, size, same, noTrans) // FIXME: REMAKE
+      // await transList(fID, page, size, same, noTrans) // FIXME: REMAKE
     } catch (err) {
       addMsg(connectErrMsg(err, "Не могу получить файл"))
     }
@@ -381,8 +421,11 @@ const AppState = ({ children }) => {
         fldrAdd,
         fldrRemove,
         fldrUpdate,
+        fileUpdate,
+        fileRemove,
         explList,
         uploadFile,
+        uploadLangFile,
         downloadFile,
         transFileInfo,
         transList,

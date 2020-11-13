@@ -30,10 +30,6 @@ const ExplorerFolders = ({ setOpt, fldrID, setFldrID, prjID }) => {
     // eslint-disable-next-line
   }, [prjID])
 
-  const selectFolder = (folderID) => {
-    setOpt(null)
-    setFldrID(folderID)
-  }
   // HANDLERS
   const folderAddByName = (name) => {
     name = name.trim()
@@ -63,7 +59,7 @@ const ExplorerFolders = ({ setOpt, fldrID, setFldrID, prjID }) => {
             .map((folder) => (
               <div key={folder.id} draggable={true} className='column box-folder'>
                 <button
-                  onClick={selectFolder.bind(this, folder.id)}
+                  onClick={setFldrID.bind(this, folder.id)}
                   className={`btn-f folder m-0${fldrID === folder.id ? " selected" : ""}`}>
                   <i>
                     <IcoGet name='folder' />

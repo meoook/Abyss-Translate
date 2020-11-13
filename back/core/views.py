@@ -20,8 +20,8 @@ from .serializers import ProjectSerializer, FoldersSerializer, LanguagesSerializ
 from .models import Language, Project, Folder, FolderRepo, File, Translated, FileMark, ProjectPermission, \
     TranslateChangeLog
 from core.services.file_system.file_interface import LocalizeFileInterface
-from .tasks import file_parse_uploaded, file_create_translated, folder_update_repo_after_url_change, \
-    folder_repo_change_access_and_update
+from .tasks import file_uploaded_new, file_create_translated, folder_update_repo_after_url_change, \
+    folder_repo_change_access_and_update, file_uploaded_refresh
 from .permisions import IsProjectOwnerOrReadOnly, IsProjectOwnerOrAdmin, IsProjectOwnerOrManage, \
     IsFileOwnerOrHaveAccess, IsFileOwnerOrTranslator, IsFileOwnerOrManager
 
@@ -58,8 +58,8 @@ class ProjectViewSet(viewsets.ModelViewSet):
     def get_queryset(self):
         """ Get projects that user have permissions """
         if self.request.user.has_perm('core.creator'):
-            return self.request.user.projects_set.all()
-        return self.queryset.filter(projectpermissions__user=self.request.user).distinct()
+            return self.request.user.project_set.all()
+        return self.queryset.filter(projectpermission__user=self.request.user).distinct()
 
     def perform_create(self, serializer):
         serializer.save(owner=self.request.user)
@@ -78,7 +78,7 @@ class ProjectPermsViewSet(viewsets.ModelViewSet):
 
     def list(self, request, *args, **kwargs):
         save_id = self.request.query_params.get('save_id')
-        qs = User.objects.filter(projectpermissions__project__save_id=save_id).distinct()
+        qs = User.objects.filter(projectpermission__project__save_id=save_id).distinct()
         serializer = PermsListSerializer(qs, many=True, context={'save_id': save_id})
         return Response(serializer.data, status=status.HTTP_200_OK)
 
@@ -158,8 +158,8 @@ class FileViewSet(viewsets.ModelViewSet):
     permission_classes = [IsAuthenticated, IsFileOwnerOrHaveAccess]
     # filter_backends = [filters.SearchFilter, filters.OrderingFilter]
     # search_fields = ['name']
-    ordering_fields = ['name', 'created', 'state']
-    ordering = ['state', '-created']
+    # ordering_fields = ['error', 'warning', 'created']
+    # ordering = ['-error', '-warning', '-created']
     pagination_class = DefaultSetPagination
     queryset = File.objects.all()
 
@@ -175,10 +175,10 @@ class FileViewSet(viewsets.ModelViewSet):
             qs = self.get_queryset().filter(folder_id=folder_id)
         elif folder_id:
             qs = self.get_queryset().filter(folder_id=folder_id)
-        else:
+        else:  # For translator only - files with translates
             save_id = request.query_params.get('save_id')
-            qs = self.get_queryset().filter(folder__project__save_id=save_id, state=2)
-        page = self.paginate_queryset(qs.order_by('state', '-created'))  # TODO: Ordering filter
+            qs = self.get_queryset().filter(folder__project__save_id=save_id, error__exact="")
+        page = self.paginate_queryset(qs.order_by('-error', '-warning', '-created'))  # TODO: Ordering filter
         serializer = self.get_serializer(page, many=True)
         return self.get_paginated_response(data=serializer.data)
 
@@ -270,23 +270,39 @@ class TransferFileView(viewsets.ViewSet):
                         status=status.HTTP_204_NO_CONTENT)
 
     def create(self, request):
-        """ Create file git_obj and related translated progress after file download (uploaded by user) """
+        """
+        Upload file from user UI and run full 'build translates' progress:
+            Original language -> rebuild
+            Other language -> renew translate for selected language
+        """
         folder_id = request.data.get('folder_id')
-        folder = Folder.objects.select_related('project__lang_orig').get(id=folder_id)
-        # Create file object
-        lang_orig_id = folder.project.lang_orig.id
-        serializer = TransferFileSerializer(data={
-            'name': request.data.get('name'),
-            'folder': folder_id,
-            'lang_orig': lang_orig_id,
-            'data': request.data.get('data'),
-        })
-        if serializer.is_valid():
-            serializer.save()
-            file_id = serializer.data.get('id')  # TODO: check this method
-            # Run celery parse delay task
-            logger.info(f'File object created ID: {file_id}. Sending parse task to Celery.')
-            file_parse_uploaded.delay(file_id)
-            return Response(serializer.data, status=status.HTTP_201_CREATED)
-        logger.warning(f'Error creating file object: {serializer.errors}')
-        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+        file_id = request.data.get('file_id')
+        lang_id = request.data.get('lang_id')
+        data = request.data.get('data')
+
+        if not data:    # TODO: mb allow to create - to update from repo...
+            return Response({'err': 'file is empty'}, status=status.HTTP_400_BAD_REQUEST)
+
+        if not file_id:   # File is new
+            folder = Folder.objects.select_related('project__lang_orig').get(id=folder_id)
+            # Create file object
+            lang_orig_id = folder.project.lang_orig.id
+            serializer = TransferFileSerializer(data={
+                'name': request.data.get('name'),
+                'folder': folder_id,
+                'lang_orig': lang_orig_id,  # TODO: Can set by user
+                'data': data,
+            })
+            if serializer.is_valid():
+                serializer.save()
+                file_id = serializer.data.get('id')  # TODO: check this method
+                # Run celery parse delay task
+                logger.info(f'File object created ID: {file_id}. Sending parse task to Celery.')
+                file_uploaded_new(file_id)   # .delay(file_id)
+                return Response(serializer.data, status=status.HTTP_201_CREATED)
+            logger.warning(f'Error creating file object: {serializer.errors}')
+            return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+        elif lang_id:   # Update translates for file
+            logger.info(f'File:{file_id} uploaded to build translates for language:{lang_id}. Sending task to Celery.')
+            file_uploaded_refresh(file_id, int(lang_id), data)
+            return Response({'ok': 'file build for language'}, status=status.HTTP_200_OK)

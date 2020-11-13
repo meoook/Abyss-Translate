@@ -9,8 +9,8 @@ class MarkInline(admin.TabularInline):
     model = FileMark
     extra = 0
 
-    fields = 'id', 'mark_number', 'col_number', 'md5sum', 'md5sum_clear', 'words'
-    read_only_fields = 'mark_number', 'col_number', 'md5sum', 'md5sum_clear', 'words'
+    fields = 'id', 'fid', 'search_words'
+    read_only_fields = 'fid', 'search_words'
     # template = 'admin/sortable_tabular_inline.html'
 
     # def preview(self, obj):
@@ -20,15 +20,15 @@ class MarkInline(admin.TabularInline):
 @admin.register(File)
 class FilesAdmin(admin.ModelAdmin):
     prepopulated_fields = {'method': ('name',)}
-    list_display = ['id', 'name', 'state', 'method', 'items', 'words', 'lang_orig', 'translated_set', 'created', 'updated', 'repo_status', 'repo_sha', 'get_thumb']
+    list_display = ['id', 'name', 'method', 'items', 'words', 'lang_orig', 'translated_set', 'created', 'updated', 'repo_status', 'repo_sha', 'get_thumb']
     list_display_links = ['name']
-    list_filter = ['state', 'repo_status', 'method']
-    read_only_fields = ['state', 'method', 'items', 'words', 'created', 'updated', 'repo_status', 'repo_sha']
+    list_filter = ['repo_status', 'method']
+    read_only_fields = ['method', 'items', 'words', 'created', 'updated', 'repo_status', 'repo_sha']
     list_editable = ['lang_orig']
     search_fields = ['name']
 
     fieldsets = (
-        (None, {'fields': ('id', 'name', 'state', 'method', 'items', 'words')}),
+        (None, {'fields': ('id', 'name', 'method', 'items', 'words')}),
         (None, {'fields': ('lang_orig', 'translated_set')}),
         (None, {'classes': ('collapse',), 'fields': ('repo_status', 'repo_sha'), }),
     )
@@ -44,12 +44,12 @@ class FilesAdmin(admin.ModelAdmin):
 
 @admin.register(FileMark)
 class FileMarksAdmin(admin.ModelAdmin):
-    list_display = ['id', 'file', 'mark_number', 'col_number']
+    list_display = ['id', 'file', 'fid']
 
 
 @admin.register(Translate)
 class TranslatesAdmin(admin.ModelAdmin):
-    list_display = ['id', 'mark_id', 'text']
+    list_display = ['id', 'item_id', 'text']
 
 
 @admin.register(Language)
