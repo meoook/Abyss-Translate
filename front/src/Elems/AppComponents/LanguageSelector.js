@@ -31,28 +31,42 @@ const LanguageSelector = ({ selected, setSelected, langArr = [] }) => {
   }
 
   return (
-    <div className={`custom-select${open ? " open" : ""}`}>
-      <div className='custom-select-trigger' onClick={handleTrigger}>
+    <div className={`lang-select${open ? " open" : ""}`}>
+      <div className='lang-select-trigger' onClick={handleTrigger}>
         <span>
           <IcoLang language={selected} displayFull={true} className='bd' />
         </span>
 
-        {choices.length > 0 && <div className='custom-select-arrow'></div>}
+        {choices.length > 0 && <div className='lang-select-arrow'></div>}
       </div>
       {Boolean(choices) && (
-        <div className='custom-options'>
-          {choices.map((lang) => (
-            <div key={lang.id} className='custom-option' onClick={setSelected.bind(this, lang.id)}>
-              <span>
-                <IcoLang language={lang.id} displayShort={true} />
-              </span>
-              <span>&nbsp;</span>
-            </div>
-          ))}
-        </div>
+        <LanguageSelectorDropdown setSelected={setSelected} loseFocus={handleLooseFocus} choices={choices} />
       )}
     </div>
   )
 }
 
 export default LanguageSelector
+
+const LanguageSelectorDropdown = ({ choices, setSelected, loseFocus }) => {
+  useEffect(() => {
+    window.addEventListener("click", loseFocus)
+    return () => {
+      window.removeEventListener("click", loseFocus)
+    }
+    // eslint-disable-next-line
+  }, [])
+
+  return (
+    <div className='lang-select-options'>
+      {choices.map((lang) => (
+        <div key={lang.id} className='lang-select-option' onClick={setSelected.bind(this, lang.id)}>
+          <span>
+            <IcoLang language={lang.id} displayShort={true} />
+          </span>
+          <span>&nbsp;</span>
+        </div>
+      ))}
+    </div>
+  )
+}

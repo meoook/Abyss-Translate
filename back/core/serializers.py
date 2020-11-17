@@ -39,27 +39,32 @@ class TranslatesSerializer(serializers.ModelSerializer):
         model = Translate
         # fields = ['id', 'text', 'translator', 'language', 'warning']
         fields = '__all__'
-        read_only_fields = '__all__'
+        read_only_fields = ['__all__']
 
 
 class ItemsSerializer(serializers.ModelSerializer):
     """ TRANSLATES: To display Items related to Mark """
-    translates_set = TranslatesSerializer(many=True, read_only=True)
+    translate_set = TranslatesSerializer(many=True, read_only=True)
 
     class Meta:
         model = MarkItem
-        fields = ["id", "item_number", "words", "translates_set"]
+        fields = ["item_number", "words", "md5sum", "translate_set"]
+        extra_kwargs = {
+            'md5sum': {'read_only': True},
+            'words': {'read_only': True},
+        }
 
 
 class FileMarksSerializer(serializers.ModelSerializer):
     """ TRANSLATES: FileMark manager. To select languages for translate. """
-    items_set = ItemsSerializer(many=True, read_only=True)
+    markitem_set = ItemsSerializer(many=True, read_only=True)
 
     class Meta:
         model = FileMark
-        fields = ['id', 'md5sum', 'words', 'items_set']
+        fields = ['id', 'fid', 'context', 'words', 'markitem_set']
         extra_kwargs = {
-            'md5sum': {'read_only': True},
+            'fid': {'read_only': True},  # FIXME: mb no need
+            'context': {'read_only': True},
             'words': {'read_only': True},
         }
 

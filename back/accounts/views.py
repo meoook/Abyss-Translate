@@ -6,6 +6,9 @@ from knox.models import AuthToken
 from .serializers import UserSerializer, RegisterSerializer, LoginSerializer, UserListSerializer
 from django.contrib.auth.models import User
 
+# cllient id - xZIGmCwMrCEjyL9hnl1fhXGD1aCDtIzNvqmnsvcK
+# client secret - TSJqn5pofwZ8jAPoXVXVAHxA20wc1wWv7hZwjaje6OIqw38dXcoq0WPGY3fjyya4SkFp3OGlto2lAL2fn8gPaAo22YVHpEKlKCN8gskd5BEdKwyUvHr7yD62jXA7w5Oh
+
 
 class RegisterAPI(generics.GenericAPIView):
     """ Register API """  # TODO: Turn off - users can be registered only from abyss

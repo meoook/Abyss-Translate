@@ -102,9 +102,12 @@ class FolderRepo(models.Model):
 
 
 def user_directory_path(instance, filename):
-    """ File will be uploaded to users/<username>/<prj_id>/<folder_id>/<filename> """
+    """ File will be uploaded to users/<user_id>/<prj_id>/<folder_id>/<file_id>.<orig_ext> """
+    # TODO: Fix extension
+    name, ext = os.path.splitext(filename)
+    name = f'{instance.pk}{ext}'
     folder = instance.folder
-    return '{}/{}/{}/{}'.format(folder.project.owner, folder.project.id, folder.id, filename)
+    return '{}/{}/{}/{}'.format(folder.project.owner.id, folder.project.id, folder.id, name)
 
 
 class File(models.Model):
@@ -213,10 +216,13 @@ def auto_delete_file_on_delete(sender, instance, **kwargs):
     else:
         print("Error: trigger auto_delete_file_on_delete - input wrong instance")
         return
-    if os.path.isfile(inst_obj.path):
-        print('Delete file -> onDelete File object', inst_obj.path)
-        # os.remove(instance.file.path)
-        inst_obj.delete(save=False)
+    try:
+        if os.path.isfile(inst_obj.path):
+            print('Delete file -> onDelete File object', inst_obj.path)
+            # os.remove(instance.file.path)
+            inst_obj.delete(save=False)
+    except ValueError:
+        pass
 
 
 # TODO: for prj and folder -> one function

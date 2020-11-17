@@ -37,18 +37,19 @@ logger = logging.getLogger('django')
 #     if new:
 #         file_manager.create_progress()
 
-def file_uploaded_new(file_id):
+def file_uploaded_new(file_id, original_lang_id, file_path):
     """ After file uploaded -> If possible update it from repo then get info and build new translates """
     file_manager = FileModelAPI(file_id)
     logger.info(f'File id:{file_id} try update from repo and parse')
-    file_manager.file_new()
+    file_manager.file_new(original_lang_id, file_path)
 
 
-def file_uploaded_refresh(file_id, lang_id, tmp_data):
+def file_uploaded_refresh(file_id, lang_id, tmp_path, is_original):
     """ After copy or new original uploaded -> Get info and rebuild translates for language """
     file_manager = FileModelAPI(file_id)
-    logger.info(f'File id:{file_id} try update from repo and parse')
-    file_manager.file_refresh(lang_id, tmp_data)
+    _settings_to_msg = f'language:{lang_id} as {"original" if is_original else "translates"}'
+    logger.info(f'File id:{file_id} loaded new data for {_settings_to_msg}')
+    file_manager.file_refresh(tmp_path, lang_id, is_original)
 
 
 @shared_task(

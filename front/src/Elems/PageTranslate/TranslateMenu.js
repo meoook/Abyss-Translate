@@ -4,6 +4,7 @@ import AppContext from "../../context/application/appContext"
 
 import LanguageSelector from "../AppComponents/LanguageSelector"
 import Toggler from "../AppComponents/Toggler"
+import { IcoGet } from "../icons"
 
 const TranslateMenu = ({
   langOrig,
@@ -12,14 +13,9 @@ const TranslateMenu = ({
   setLangTrans,
   same,
   setSame,
-  noSame,
-  setNoSame,
   noTrans,
   setNoTrans,
-  like,
-  setLike,
-  searchText,
-  setSearchText,
+  startSearch,
   langProgress,
 }) => {
   const { translates } = useContext(AppContext)
@@ -35,34 +31,32 @@ const TranslateMenu = ({
   }, [translates, langOrig])
 
   const searchOnBlur = (e) => {
-    if (input.trim()) setSearchText(input.trim())
+    if (input.trim()) startSearch(input.trim())
   }
   const searchKeyPress = (e) => {
-    if (e.key === "Enter" && input.trim()) setSearchText(input.trim())
+    if (e.key === "Enter" && input.trim()) startSearch(input.trim())
   }
 
   return (
     <div className='box row mb-2'>
-      <div className='col col-3'>
+      <div className='col col-3 column justify'>
         <div className='row center mb-2'>
           <input type='checkbox' checked={same} onChange={setSame.bind(this, !same)} />
           <label className={`mh-1${same ? " active" : ""}`}>изменять одинаковые</label>
         </div>
-        <div className='row center'>
-          <input type='checkbox' checked={like} onChange={setLike.bind(this, !like)} disabled />
-          <label className={`mh-1${like ? " active" : ""}`}>
-            <s>изменять похожие</s>
-          </label>
+        <div className='row center t-right' style={{ justifyContent: "flex-end" }}>
+          <div>Поиск по словам или ID</div>
+          <div>
+            <i className='big'>
+              <IcoGet name='search' />
+            </i>
+          </div>
         </div>
       </div>
-      <div className='col col-4'>
-        <div className='row center mb-2'>
-          <Toggler val={noSame} setVal={setNoSame} />
-          <label className={`mh-1${noSame ? " active" : ""}`}>не показывать одинаковые</label>
-        </div>
+      <div className='col col-4 column justify'>
         <div className='row center'>
           <Toggler val={noTrans} setVal={setNoTrans} />
-          <label className={`mh-1${like ? " active" : ""}`}>не показывать переведенные</label>
+          <label className={`mh-1${noTrans ? " active" : ""}`}>не показывать переведенные</label>
         </div>
         <div className='mt-1 mr-1'>
           <input
@@ -74,8 +68,7 @@ const TranslateMenu = ({
           />
         </div>
       </div>
-
-      <div className='col col-5'>
+      <div className='col col-5 column justify'>
         <div className='row'></div>
         <div className='row'>
           <div className='col col-6'>
@@ -87,7 +80,7 @@ const TranslateMenu = ({
             <LanguageSelector selected={langTrans} setSelected={setLangTrans} langArr={translate} />
           </div>
         </div>
-        <div className='m-1'>
+        <div className='mt-1'>
           <div className='progress-bar '>
             <div style={{ width: langProgress }}></div>
           </div>

@@ -98,7 +98,7 @@ const FileItem = ({ file, onOptClick = null }) => {
         </div>
       ) : file.warning ? (
         <div className='col col-8 row center'>
-          <div className='color-error'>Предупреждение: {file.warning}</div>
+          <div className='color-warning'>Предупреждение: {file.warning}</div>
         </div>
       ) : !Boolean(file.method) ? (
         <div className='col col-8 row center'>

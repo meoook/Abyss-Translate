@@ -1,19 +1,53 @@
 import React, { useState, useEffect, useContext } from "react"
 import AppContext from "../../context/application/appContext"
 
-const TranslateMark = ({ mark, langOrig, langTrans, same, setActive }) => {
-  const originalDisplay = mark.translates_set.find((translate) => translate.language === langOrig)
+const TranslateMark = ({ mark, langOrig, langTrans, same, setActive, activeID }) => {
+  const [displayContext, setDisplayContext] = useState(false)
+
+  return (
+    <div className='card-translate m-1'>
+      <div
+        className='card-translate-head'
+        onClick={() => {
+          setDisplayContext(!displayContext)
+        }}>
+        <div>ID&nbsp;метки&nbsp;{mark.id}</div>
+        <div>слов&nbsp;{mark.words}</div>
+      </div>
+      {displayContext && <div className='mh-2'>{mark.context}</div>}
+      <div>
+        {mark.markitem_set.map((markitem) => (
+          <TranslateMarkItem
+            key={markitem.item_number}
+            item={markitem}
+            langOrig={langOrig}
+            langTrans={langTrans}
+            setActive={setActive}
+            activeID={activeID}
+            same={same}
+          />
+        ))}
+      </div>
+    </div>
+  )
+}
+
+export default TranslateMark
+
+const TranslateMarkItem = ({ item, langOrig, langTrans, same, setActive, activeID }) => {
+  const originalDisplay = item.translate_set.find((translate) => translate.language === langOrig)
   const { transChange } = useContext(AppContext)
   const [inputVal, setInputVal] = useState("")
-  const [changed, setChanged] = useState(false)
+  const [changed, setChanged] = useState(false) // Not to send empty req
   const [transObj, setTransObj] = useState(null)
 
   useEffect(() => {
-    const translateDisplay = mark.translates_set.find((translate) => translate.language === langTrans)
+    const translateDisplay = item.translate_set.find((translate) => translate.language === langTrans)
+    console.log(translateDisplay)
     setTransObj(translateDisplay)
     if (translateDisplay) setInputVal(translateDisplay.text)
     else setInputVal("")
-  }, [mark, langTrans])
+  }, [item, langTrans])
 
   const handleChange = (event) => {
     setChanged(true)
@@ -22,8 +56,8 @@ const TranslateMark = ({ mark, langOrig, langTrans, same, setActive }) => {
   const changeTranslate = (event) => {
     if (!changed) return
     setChanged(false)
-    if (same) transChange(mark.id, langTrans, inputVal, mark.md5sum)
-    else transChange(mark.id, langTrans, inputVal)
+    if (same) transChange(transObj.id, inputVal, item.md5sum)
+    else transChange(transObj.id, inputVal)
   }
   const handleSelect = (event) => {
     // setActive(mark.id)
@@ -31,24 +65,37 @@ const TranslateMark = ({ mark, langOrig, langTrans, same, setActive }) => {
     else setActive(null)
   }
 
+  if (!Boolean(originalDisplay) || !Boolean(transObj)) return null
   return (
-    <div className='card-translate m-1' onClick={handleSelect}>
-      <div className='card-translate-head'>
-        <div>
-          ID&nbsp;{mark.id} {transObj && transObj.translator && `перевел ${transObj.translator}`}
+    <div className={`card-translate-item${activeID == transObj.id ? " active" : ""}`} onClick={handleSelect}>
+      <div className='col col-6'>
+        <div className='card-translate-item-head'>
+          <div>ID&nbsp;{originalDisplay.id}</div>
+          <div>слов&nbsp;{item.words}</div>
         </div>
-        <div>слов&nbsp;{mark.words}</div>
-      </div>
-      <>
         <div className='card-translate-content'>
-          {originalDisplay ? originalDisplay.text : `System error ${mark.id}`}
+          {originalDisplay ? originalDisplay.text : `System error ${item.id}`}
+        </div>
+      </div>
+      <div className='col col-6'>
+        <div className='card-translate-item-head'>
+          <div>
+            ID&nbsp;{transObj.id} {transObj.translator && `перевел ${transObj.translator}`}
+            {/* ID&nbsp;{transObj.id} {transObj.translator && `перевел ${transObj.translator}`} */}
+          </div>
+          <div className='color-warning'>{transObj.warning ? transObj.warning : ""}</div>
         </div>
         <div className='card-translate-input'>
-          <input type='textaria' value={inputVal} onChange={handleChange} onBlur={changeTranslate} />
+          <textarea
+            // wrap='soft'
+            // rows='auto'
+            value={inputVal}
+            onChange={handleChange}
+            onBlur={changeTranslate}
+            placeholder='текст перевода'
+          />
         </div>
-      </>
+      </div>
     </div>
   )
 }
-
-export default TranslateMark

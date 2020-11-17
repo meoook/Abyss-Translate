@@ -1,6 +1,10 @@
 import os
 import logging
 
+from django.http import FileResponse
+from django.conf import settings
+from django.db.models import Max, Q, Count
+from django.core.exceptions import ObjectDoesNotExist
 from django.contrib.auth.models import User
 from django.contrib.postgres.search import SearchVector, SearchQuery, SearchRank
 from rest_framework import viewsets, mixins, status, filters
@@ -9,10 +13,7 @@ from rest_framework.parsers import MultiPartParser
 from rest_framework.pagination import PageNumberPagination
 from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response
-from django.db.models import Max, Q
-from django.core.exceptions import ObjectDoesNotExist
 
-from django.http import FileResponse
 
 from .serializers import ProjectSerializer, FoldersSerializer, LanguagesSerializer, FilesSerializer, \
     TransferFileSerializer, FileMarksSerializer, PermissionsSerializer, TranslatesSerializer, FolderRepoSerializer, \
@@ -20,6 +21,7 @@ from .serializers import ProjectSerializer, FoldersSerializer, LanguagesSerializ
 from .models import Language, Project, Folder, FolderRepo, File, Translated, FileMark, ProjectPermission, \
     TranslateChangeLog
 from core.services.file_system.file_interface import LocalizeFileInterface
+from .services.file_interface.file_interface import FileModelAPI
 from .tasks import file_uploaded_new, file_create_translated, folder_update_repo_after_url_change, \
     folder_repo_change_access_and_update, file_uploaded_refresh
 from .permisions import IsProjectOwnerOrReadOnly, IsProjectOwnerOrAdmin, IsProjectOwnerOrManage, \
@@ -189,7 +191,7 @@ class FileViewSet(viewsets.ModelViewSet):
 
 class FileMarksView(viewsets.ModelViewSet):
     serializer_class = FileMarksSerializer
-    http_method_names = ['get', 'post']
+    http_method_names = ['get', 'put', 'post']
     permission_classes = [IsAuthenticated, IsFileOwnerOrTranslator]
     pagination_class = DefaultSetPagination
     queryset = FileMark.objects.all()
@@ -199,13 +201,15 @@ class FileMarksView(viewsets.ModelViewSet):
         file_id = request.query_params.get('file_id')
         no_trans = request.query_params.get('no_trans')  # exclude marks that have translates to no_trans lang
         search_text = request.query_params.get('search_text')  # filter by text
-        queryset = self.get_queryset().filter(file_id=file_id).order_by('item_number', 'col_number')
+        queryset = self.get_queryset().filter(file_id=file_id).order_by('fid')
         if no_trans and int(no_trans) > 0:
-            to_filter = queryset.filter(Q(item__translate__language=no_trans), ~Q(item__translate__text__exact=''))
-            queryset = queryset.exclude(id__in=to_filter)
+            queryset = queryset.filter(markitem__translate__language=no_trans, markitem__translate__text__exact='').distinct('fid')
+
+            # to_filter = queryset.filter(Q(markitem__translate__language=no_trans), ~Q(markitem__translate__text__exact=''))
+            # queryset = queryset.exclude(id__in=to_filter)
         if search_text:  # TODO: Validate ?
             # TODO: remove item__translate__text from search vector add ID what needed
-            search_vector = SearchVector('search_words', 'item__translate__text', 'translate__id')
+            search_vector = SearchVector('search_words', 'id')
             search_query = SearchQuery('')
             for word in search_text.split(' '):
                 search_query &= SearchQuery(word)
@@ -217,18 +221,19 @@ class FileMarksView(viewsets.ModelViewSet):
         return self.get_paginated_response(data=serializer.data)
 
     def create(self, request, *args, **kwargs):
-        """ Create or update translates. Update translate progress. If finished - create translate file. """
+        """Update translate and translate progress. If finished - create translate file. """
         file_id = request.data.get('file_id')
-        lang_id = request.data.get('lang_id')
-        file_manager = LocalizeFileInterface(file_id)
-        if file_manager.error:
-            return Response(file_manager.error, status=status.HTTP_404_NOT_FOUND)
-        resp, sts = file_manager.create_mark_translate(request.user.id, **request.data)
+        # lang_id = request.data.get('lang_id')
+        try:
+            file_manager = FileModelAPI(file_id)
+        except AssertionError:
+            return Response({'err': 'file object error'}, status=status.HTTP_404_NOT_FOUND)
+        resp, sts = file_manager.translate_change_by_user(request.user.id, **request.data)
         if sts > 399:  # 400+ error codes
             return Response(resp, status=sts)
-        if file_manager.update_language_progress(lang_id):
+        # if file_manager.update_language_progress(lang_id):
             # Run celery task - create_translated_copy
-            file_create_translated.delay(file_id, lang_id)
+            # file_create_translated.delay(file_id, lang_id)
         serializer = TranslatesSerializer(resp, many=False)
         return Response(serializer.data, status=sts)
 
@@ -237,12 +242,12 @@ class TranslatesLogView(mixins.RetrieveModelMixin, viewsets.GenericViewSet):
     """ To display translate change log when translate selected """
     serializer_class = TranslatesLogSerializer
     permission_classes = [IsAuthenticated, IsFileOwnerOrTranslator]
-    queryset = TranslateChangeLog.objects.all()
+    queryset = TranslateChangeLog.objects.all().order_by('-created')
 
     def retrieve(self, request, *args, **kwargs):
         """ All changes for translate (pk) """
         file_id = self.request.query_params.get('file_id')
-        qs = self.get_queryset().filter(translate_id=kwargs['pk'], translate__mark__file__id=file_id)
+        qs = self.get_queryset().filter(translate_id=kwargs['pk'], translate__item__mark__file__id=file_id)
         serializer = self.get_serializer(qs, many=True)
         return Response(serializer.data)
 
@@ -278,31 +283,56 @@ class TransferFileView(viewsets.ViewSet):
         folder_id = request.data.get('folder_id')
         file_id = request.data.get('file_id')
         lang_id = request.data.get('lang_id')
+        name = request.data.get('name')
         data = request.data.get('data')
 
         if not data:    # TODO: mb allow to create - to update from repo...
-            return Response({'err': 'file is empty'}, status=status.HTTP_400_BAD_REQUEST)
+            return Response({'err': 'upload file is empty or not set'}, status=status.HTTP_400_BAD_REQUEST)
 
-        if not file_id:   # File is new
-            folder = Folder.objects.select_related('project__lang_orig').get(id=folder_id)
+        if folder_id and name and not file_id:   # File is new
+            try:
+                folder = Folder.objects.select_related('project__lang_orig').get(id=folder_id)
+            except ObjectDoesNotExist:
+                logger.warning(f'Folder to create file in it - not found id:{folder_id}')
+                return Response({'err': 'folder not found'}, status=status.HTTP_404_NOT_FOUND)
             # Create file object
-            lang_orig_id = folder.project.lang_orig.id
+            prj_lang_orig_id = folder.project.lang_orig.id
             serializer = TransferFileSerializer(data={
-                'name': request.data.get('name'),
+                'name': name,
                 'folder': folder_id,
-                'lang_orig': lang_orig_id,  # TODO: Can set by user
+                'lang_orig': prj_lang_orig_id,  # TODO: Can set by user
                 'data': data,
             })
             if serializer.is_valid():
-                serializer.save()
-                file_id = serializer.data.get('id')  # TODO: check this method
+                file_obj = serializer.save()
                 # Run celery parse delay task
-                logger.info(f'File object created ID: {file_id}. Sending parse task to Celery.')
-                file_uploaded_new(file_id)   # .delay(file_id)
+                logger.info(f'File object created ID: {file_obj.id}. Sending parse task to Celery.')
+                file_uploaded_new(file_obj.id, prj_lang_orig_id, file_obj.data.path)
+                                               #  .delay(file_id)
                 return Response(serializer.data, status=status.HTTP_201_CREATED)
             logger.warning(f'Error creating file object: {serializer.errors}')
             return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
         elif lang_id:   # Update translates for file
-            logger.info(f'File:{file_id} uploaded to build translates for language:{lang_id}. Sending task to Celery.')
-            file_uploaded_refresh(file_id, int(lang_id), data)
+            lang_id = int(lang_id)  # Used in == expressions
+            try:
+                filo_obj = File.objects.select_related('lang_orig').get(id=file_id)
+                file_lang_orig_id = filo_obj.lang_orig.id
+            except ObjectDoesNotExist:
+                logger.warning(f'File to update not found id:{file_id}')
+                return Response({'err': 'file to update not found'}, status=status.HTTP_404_NOT_FOUND)
+            else:  # Save on IO to safe send to Celery
+                is_original = lang_id == file_lang_orig_id  # Check here for optimisation
+                if is_original:  # Replace original file
+                    # FIXME - if file linked with repo - disable upload
+                    filo_obj.data.delete()
+                    filo_obj.data = data
+                    filo_obj.save()
+                    tmp_path = filo_obj.data.path  # FIXME: path not same as name
+                else:  # Write new file to disk
+                    # If file left in error storage - it's an error :) -> copy deleted after finish
+                    settings.STORAGE_ERRORS.save(f'{file_id}_{lang_id}.txt', data)
+                    _name = f'{file_id}_{lang_id}.txt'
+                    tmp_path = settings.STORAGE_ERRORS.path(_name)
+            logger.info(f'File id:{file_id} loaded translates {tmp_path} to build for language:{lang_id}. Sending task to Celery.')
+            file_uploaded_refresh(file_id, lang_id, tmp_path, is_original)
             return Response({'ok': 'file build for language'}, status=status.HTTP_200_OK)
