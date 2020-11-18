@@ -50,6 +50,7 @@ class FileModelBasicApi:
     def _tr_change_by_user(self, translate_object, text, user_id):
         """ By id can be changed only by user_id """
         translate_object.translator_id = user_id
+        translate_object.warning = ''
         translate_object.text = text
         translate_object.save()
         self.__log_translate(translate_object.id, text, user_id)
@@ -58,6 +59,7 @@ class FileModelBasicApi:
         """ Change or create translate and empty translates for other language """
         try:
             tr = Translate.objects.get(item_id=item_id, language_id=lang_id)
+            tr.translator = None
             tr.text = text
             tr.warning = warning
             tr.save()

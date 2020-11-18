@@ -64,6 +64,9 @@ const TranslateMarkItem = ({ item, langOrig, langTrans, same, setActive, activeI
     if (transObj) setActive(transObj.id)
     else setActive(null)
   }
+  const handleWarningClick = (event) => {
+    transChange(transObj.id, transObj.text)
+  }
 
   if (!Boolean(originalDisplay) || !Boolean(transObj)) return null
   return (
@@ -79,11 +82,16 @@ const TranslateMarkItem = ({ item, langOrig, langTrans, same, setActive, activeI
       </div>
       <div className='col col-6'>
         <div className='card-translate-item-head'>
-          <div>
-            ID&nbsp;{transObj.id} {transObj.translator && `перевел ${transObj.translator}`}
-            {/* ID&nbsp;{transObj.id} {transObj.translator && `перевел ${transObj.translator}`} */}
-          </div>
-          <div className='color-warning'>{transObj.warning ? transObj.warning : ""}</div>
+          <div>ID&nbsp;{transObj.id}</div>
+          {Boolean(transObj.warning) ? (
+            <div className='color-warning' onClick={handleWarningClick}>
+              {transObj.warning}
+            </div>
+          ) : Boolean(transObj.translator) ? (
+            <div>{`перевел ${transObj.translator}`}</div>
+          ) : (
+            <div>&nbsp;</div>
+          )}
         </div>
         <div className='card-translate-input'>
           <textarea

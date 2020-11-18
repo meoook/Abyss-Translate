@@ -19,7 +19,7 @@ const MarkChangeLog = ({ mark, fileID }) => {
       {logMsgs.map((item) => (
         <div key={item.created}>
           <span className='color-white mr-0'>
-            {displayStringDate(item.created)} {item.user}
+            {displayStringDate(item.created)} {item.user ? item.user : "system"}
           </span>
           <span>{item.text}</span>
         </div>

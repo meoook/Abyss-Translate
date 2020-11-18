@@ -6,12 +6,12 @@ const MOCK_DATA_SERVER = [
   { id: 2, mark_id: 44, text: "Какой то похожий текст переведенный" },
 ]
 
-const VariantGoogle = ({ markID }) => {
+const VariantGoogle = ({ markID: translateID }) => {
   const [loading, setLoading] = useState(false)
   const [srvData, setSrvData] = useState([])
 
   useEffect(() => {
-    if (markID) {
+    if (translateID) {
       setSrvData(null)
       setLoading(true)
       setTimeout(() => {
@@ -20,12 +20,14 @@ const VariantGoogle = ({ markID }) => {
         setLoading(false)
       }, 600)
     }
-  }, [markID])
+  }, [translateID])
 
   return (
     <>
       {loading ? (
-        <div className='m-2'><Loader /></div>
+        <div className='m-2'>
+          <Loader />
+        </div>
       ) : !srvData.length ? (
         <></>
       ) : (
@@ -36,7 +38,8 @@ const VariantGoogle = ({ markID }) => {
               <div key={item.id} className='m-1'>
                 <div className='row justify'>
                   <div>ID {item.mark_id}</div>
-                  <div>trID {item.id}</div>
+                  <div>&nbsp;</div>
+                  {/* <div>trID {item.id}</div> */}
                 </div>
                 <hr />
                 <div className='mb-3'>{item.text}</div>
@@ -50,4 +53,3 @@ const VariantGoogle = ({ markID }) => {
 }
 
 export default VariantGoogle
-

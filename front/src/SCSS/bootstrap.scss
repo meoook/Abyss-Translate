@@ -633,6 +633,7 @@ table {
 }
 
 .progress-bar {
+  overflow: hidden;
   height: 20px;
   background-color: rgba($texth, 0.9);
   border-radius: $indent / 1.5;

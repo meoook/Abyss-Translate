@@ -102,10 +102,12 @@ class FolderRepo(models.Model):
 
 
 def user_directory_path(instance, filename):
-    """ File will be uploaded to users/<user_id>/<prj_id>/<folder_id>/<file_id>.<orig_ext> """
-    # TODO: Fix extension
-    name, ext = os.path.splitext(filename)
-    name = f'{instance.pk}{ext}'
+    """ File will be uploaded to users/<user_id>/<prj_id>/<folder_id>/<file_id> """
+    if instance.pk:
+        _, ext = os.path.splitext(filename)
+        name = f'{instance.pk}{ext}'
+    else:
+        name = filename
     folder = instance.folder
     return '{}/{}/{}/{}'.format(folder.project.owner.id, folder.project.id, folder.id, name)
 

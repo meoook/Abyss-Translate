@@ -63,6 +63,7 @@
     &-head {
       background: rgba($main, 0.3);
       // color: #;
+      cursor: pointer;
       display: flex;
       flex-direction: row;
       justify-content: space-between;
@@ -84,6 +85,9 @@
         border-bottom-left-radius: 0;
         border-bottom-right-radius: 0;
         padding: $indent/8 $indent * 2;
+        & .color-warning {
+          cursor: pointer;
+        }
       }
       &.active {
         background: rgba($texth, 0.05);

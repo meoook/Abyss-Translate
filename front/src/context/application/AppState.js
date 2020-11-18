@@ -266,7 +266,7 @@ const AppState = ({ children }) => {
     }
   }
   // TRANSLATES
-  const transFileInfo = async (fID, page, size, same, noTrans) => {
+  const transFileInfo = async (fID) => {
     try {
       const res = await axios.get(`${URL}/file/${fID}`, config)
       dispatch({ type: TRANSLATE_FILE_INFO, payload: res.data })
@@ -275,11 +275,11 @@ const AppState = ({ children }) => {
       addMsg(connectErrMsg(err, "Не могу получить файл"))
     }
   }
-  const transList = async (file_id, page, size, distinct, no_trans, search_text = "") => {
+  const transList = async (file_id, page, size, no_trans, search_text = "") => {
     try {
       const res = await axios.get(`${URL}/marks`, {
         ...config,
-        params: { file_id, page, size, distinct, no_trans, search_text },
+        params: { file_id, page, size, no_trans, search_text },
       })
       dispatch({ type: TRANSLATE_PAGE_REFRESH, payload: res.data })
     } catch (err) {
@@ -295,18 +295,18 @@ const AppState = ({ children }) => {
       addMsg(connectErrMsg(err, "Не могу получить историю изменений"))
     }
   }
-  const transChange = async (mark_id, lang_id, text, md5sum = "") => {
+  const transChange = async (trans_id, text, md5sum = "") => {
     const file_id = state.translates.id
     try {
-      const res = await axios.post(`${URL}/marks/`, { file_id, mark_id, lang_id, text, md5sum }, config)
+      const res = await axios.post(`${URL}/marks/`, { file_id, trans_id, text, md5sum }, config)
       const payload = state.translates.results.map((transItem) => {
         if (md5sum) {
           if (transItem.md5sum !== md5sum) return transItem
-        } else if (transItem.id !== mark_id) return transItem
-        const haveTransBefore = transItem.translates_set.find((item) => item.language === lang_id)
+        } else if (transItem.id !== trans_id) return transItem
+        const haveTransBefore = transItem.translates_set.find((item) => item.id === trans_id)
         if (!haveTransBefore) return { ...transItem, translates_set: [...transItem.translates_set, res.data] }
         const newTransSet = transItem.translates_set.map((item) => {
-          if (item.language !== lang_id) return item
+          if (item.id !== trans_id) return item
           return res.data
         })
         return { ...transItem, translates_set: newTransSet }
