@@ -2,22 +2,23 @@
 
 | version | date     | changes                                                            |
 | ------- | -------- | ------------------------------------------------------------------ |
+| !!!!!!  |  !!!!!!  | Препрод настройка - обновление доступов (файлы .env .cfg .sh)      |
 |   -?    |    +?    | Показывать удаленные переводы                                      |
-|   -?    |   same   | Общая база данных переводов - сверять при добавлении файлая и т.п. |
 |   -?    |    +?    | Save all "good" translates for search database (machine learning)  |
-|   1d    |    +     | Docker: pg_bouncer                                                 |
+| !!!!!!  |  !!!!!!  | Docker: pg_bouncer                                                 |
 |   ?     |    +?    | Что делать после ввода перевода для текста (проверки языка и т.п.) |
-|   ?     |    ?     | UI - UI config for user (sizing)                                   |
-|   ?     |    ?     | Model for user UI config and API                                   |
+|   ?     |    +     | Translate language check system for user input text - front\back   |
 |   ?     |    +     | Translate examples: Google                                         |
 |  1-2d   |    +     | Translate examples: translates from same file (by like)            |
-|   -     |  block?  | More translate filters or sorters (by like 70%)                    |
-| 2.01.0  |  block+  | Context display - отображение исходника (исключены только цифры)   |
-| 2.01.0  |  block+  | Поиск по фразе (pgSQL vectors)                                     |
-| 2.01.0  |  block?  | Merge check - отображение изменений                                |
-| 2.01.0  |  block?  | Переработка способов парсинга файлов                               |
-| 2.01.0  |  block+  | Переработка структуры: file - mark - item - translate - log        |
+|  1-2d   |    +     | Auth with Abyss                                                    |
 | !!!!!!  |  !!!!!!  | Celery - fix periodic tasks                                        |
+| 2.01.0  | 18.11.20 | Переработка UI - страница переводов, настройки для файлов          |
+| 2.01.0  | 18.11.20 | Context display - отображение исходника (исключены только цифры)   |
+| 2.01.0  | 18.11.20 | Поиск по фразе и по id метки (pgSQL vectors - можно расширять)     |
+| 2.01.0  | 18.11.20 | Merge check - отображение изменений                                |
+| 2.01.0  | 18.11.20 | Полное логирование изменений переводов (даже смена warning)        |
+| 2.01.0  | 18.11.20 | Переработка способов парсинга файлов - система fID и warning       |
+| 2.01.0  | 18.11.20 | Переработка структуры: file - mark - item - translate - log        |
 | 1.02.4  | 03.11.20 | Система Copy Context Control - для сохранения копий                |
 | 1.02.3  | 02.11.20 | Система Merge по UID и MD5                                         |
 | 1.02.2  | 30.10.20 | HTML reader - UID из дерева тэгов (DOM)                            |
