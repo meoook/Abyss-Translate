@@ -14,6 +14,8 @@ import LoaderCar from "./Elems/AppComponents/LoaderCar"
 import PageProjects from "./Elems/PageProjects/PageProjects"
 import PageProject from "./Elems/PageProject/PageProject"
 import PageOAuthCB from "./Elems/PageOAuthCB/PageOAuthCB"
+import PageAbyssAuth from "./Elems/PageAccount/PageAbyssAuth"
+import PageTestAuth from "./Elems/PageAccount/PageTestAuth"
 
 // CARE - THIS CLASS HAVE 3 COMPONENTS INSIDE
 
@@ -21,12 +23,14 @@ const NavRouter = (props) => {
   return (
     <BrowserRouter>
       <Switch>
+        <Route path={"/auth/:key"} component={PageAbyssAuth} />
         <PrivateRoute exact path={"/"} component={PageProjects} />
         <PrivateRoute path={"/translates/:id"} component={PageTranslateFile} />
         <PrivateRoute path={"/translates"} component={PageTranslateRoot} />
         <PrivateRoute path={"/prj/add"} component={PageAddPrj} />
         <PrivateRoute path={"/prj/:id"} component={PageProject} />
         <PrivateRoute path={"/oauth-callback"} component={PageOAuthCB} />
+        <Route path={"/test"} component={PageTestAuth} />
         <Route path={"/reg"} component={PageRegister} />
         <Route path={"/login"} component={PageLogin} />
         <PrivateRoute component={NoMatchPage} />

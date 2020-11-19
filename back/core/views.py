@@ -204,11 +204,9 @@ class FileMarksView(viewsets.ModelViewSet):
         queryset = self.get_queryset().filter(file_id=file_id).order_by('fid')
         if no_trans and int(no_trans) > 0:
             queryset = queryset.filter(markitem__translate__language=no_trans, markitem__translate__text__exact='').distinct('fid')
-
             # to_filter = queryset.filter(Q(markitem__translate__language=no_trans), ~Q(markitem__translate__text__exact=''))
             # queryset = queryset.exclude(id__in=to_filter)
-        if search_text:  # TODO: Validate ?
-            # TODO: remove item__translate__text from search vector add ID what needed
+        if search_text:
             search_vector = SearchVector('search_words', 'id')
             search_query = SearchQuery('')
             for word in search_text.split(' '):

@@ -89,10 +89,12 @@ const AppState = ({ children }) => {
           type: USER_ACC_VALID,
           payload: { ...res.data.user, token: res.data.token },
         })
+        return true
       })
       .catch((err) => {
         dispatch({ type: USER_ACC_LOGOUT })
         addMsg(connectErrMsg(err, "Неверное сочетание логина и пароля"))
+        return false
       })
   }
   const accLogout = async () => {
@@ -320,7 +322,7 @@ const AppState = ({ children }) => {
   const usersList = async (filterStr) => {
     // FIXME: Not correct way using (without reducer)
     try {
-      const res = await axios.get(`${URL}/auth/usr`, { ...config, params: { name: filterStr } })
+      const res = await axios.get(`${URL}/auth/users`, { ...config, params: { name: filterStr } })
       return res.data
     } catch (err) {
       addMsg(connectErrMsg(err, "Ошибка получения списка пользователей"))

@@ -8,6 +8,7 @@ const Dropzone = ({ addFiles, disabled, isSolo = false }) => {
     } else {
       fileSelector.removeAttribute("multiple")
     }
+    // eslint-disable-next-line
   }, [isSolo])
 
   const onFileAdded = (event) => {

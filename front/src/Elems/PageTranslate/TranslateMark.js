@@ -70,7 +70,7 @@ const TranslateMarkItem = ({ item, langOrig, langTrans, same, setActive, activeI
 
   if (!Boolean(originalDisplay) || !Boolean(transObj)) return null
   return (
-    <div className={`card-translate-item${activeID == transObj.id ? " active" : ""}`} onClick={handleSelect}>
+    <div className={`card-translate-item${activeID === transObj.id ? " active" : ""}`} onClick={handleSelect}>
       <div className='col col-6'>
         <div className='card-translate-item-head'>
           <div>ID&nbsp;{originalDisplay.id}</div>
