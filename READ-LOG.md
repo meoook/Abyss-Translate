@@ -10,8 +10,8 @@
 |   ?     |    +     | Translate language check system for user input text - front\back   |
 |   ?     |    +     | Translate examples: Google                                         |
 |  1-2d   |    +     | Translate examples: translates from same file (by like)            |
-|  1-2d   |    +     | Auth with Abyss                                                    |
 | !!!!!!  |  !!!!!!  | Celery - fix periodic tasks                                        |
+| 2.01.1  | 20.11.20 | Auth with Abyss by JWT                                             |
 | 2.01.0  | 18.11.20 | Переработка UI - страница переводов, настройки для файлов          |
 | 2.01.0  | 18.11.20 | Context display - отображение исходника (исключены только цифры)   |
 | 2.01.0  | 18.11.20 | Поиск по фразе и по id метки (pgSQL vectors - можно расширять)     |
