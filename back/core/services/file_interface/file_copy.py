@@ -5,7 +5,7 @@ class CopyContextControl:
         self.__mode = mode
         self.__unsaved = ''
         self.__current = ''
-        with open(path, 'w', encoding=codec) as filo:
+        with open(path, 'w+', encoding=codec) as filo:
             self.__filo = filo
 
     def add_data(self, value):

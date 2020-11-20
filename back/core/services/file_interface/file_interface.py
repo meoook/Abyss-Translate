@@ -18,11 +18,11 @@ logger = logging.getLogger('django')
 class FileModelAPI(FileModelBasicApi):
     """ File API to work with file object in application (os and model) """
 
-    def __init__(self, file_id):
+    def __init__(self, file_id: int):
         """ Get file object from database to do other actions """
         super().__init__(file_id)
 
-    def file_new(self, original_lang_id, file_path):
+    def file_new(self, original_lang_id: int, file_path: str):
         """ When new file -> update from repo -> get info -> parse -> cr progress """
         try:
             self.__update_from_repo()
@@ -31,7 +31,7 @@ class FileModelAPI(FileModelBasicApi):
         except AssertionError:
             logger.warning(f'Error loading file {file_path}')
 
-    def file_refresh(self, tmp_path, lang_id, is_original=False):
+    def file_refresh(self, tmp_path: str, lang_id: int, is_original=False):
         """ File refresh translates (mark-item-translate) for selected language """
         current_options = self._file.options
         info = FileScanner(tmp_path, self._get_lang_short_name(lang_id))
@@ -91,21 +91,21 @@ class FileModelAPI(FileModelBasicApi):
                 self._file_progress_refresh(lang_id)
         return True
 
-    def create_translated_copy(self, lang_to_id):
+    def create_translated_copy(self, lang_to_id: int):
         """ Create translation copy of the file """
-        info = FileScanner(self._file.data.path)
-        copy_path = ''  # TODO: copy path creator
-        reader = self._get_reader(info, copy_path)
+        original_file_path = self._file.data.path
+        info = FileScanner(path=original_file_path)
+        copy_path = self._get_translate_copy_path(original_file_path, self._get_lang_short_name(lang_to_id))
+        reader = self._get_reader(info_obj=info, copy_path=copy_path)
 
-        # TODO - get all translates and find from there when parse (pre-done)
         tr_items = {}
         for translate_item in Translate.objects.filter(item__mark__file__id=self._file.id, language_id=lang_to_id) \
                 .values('item__mark__fid', 'item__item_number', 'text'):
             _item = {'item_number': translate_item['item__item_number'], 'text': translate_item['text']}
-            if translate_item['item__mark__file_id'] in tr_items.keys():
-                translate_item['item__mark__file_id'].append(_item)
+            if translate_item['item__mark__fid'] in tr_items.keys():
+                tr_items['item__mark__fid'].append(_item)
             else:
-                translate_item['item__mark__file_id'] = [_item, ]
+                tr_items['item__mark__fid'] = [_item, ]
 
         for file_mark in reader:
             if file_mark['fid'] in tr_items:
@@ -114,9 +114,8 @@ class FileModelAPI(FileModelBasicApi):
         # Update model as finished
         progress = self._file.translated_set.get(language_id=lang_to_id)
         progress.translate_copy = copy_path
-        progress.finished = True  # TODO: remove it - because copy can be created not finished
+        progress.refreshed = False
         progress.save()
-        return True
 
     def translate_change_by_user(self, translator_id, trans_id, text, md5sum=None, **kwargs):
         """ API FUNC: Create or update translate(s) and return response data with status code """

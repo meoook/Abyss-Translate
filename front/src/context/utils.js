@@ -1,7 +1,7 @@
 // CONSTANTS
 export const nullState = {
   loading: false,
-  user: { id: null, token: null, role: null, username: null, email: null },
+  user: { id: null, token: null, role: null, first_name: null, email: null },
   msgs: [],
   languages: [],
   projects: [],

@@ -27,6 +27,7 @@ class CreateTranslatedCopy:
 
     def __create_copy(self, work_file, create_lang, translates):
         dir_name = os.path.dirname(work_file.data.path)
+        # dir_name = work_file.data.location
         trans_copy_name = filename_from_path(work_file.data.path, create_lang.short_name)
         logger.info(f'Creating translated copy {trans_copy_name} for file id {work_file.id}')
         self.__translated_copy = open(os.path.join(dir_name, trans_copy_name), 'wb')

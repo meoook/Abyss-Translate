@@ -31,10 +31,10 @@ import { nullState, connectErrMsg } from "../utils"
 const URL = process.env.REACT_APP_API_URL
 
 const AppState = ({ children }) => {
-  const initialState = { ...nullState, user: { token: localStorage.getItem("token") || null } }
+  const token = localStorage.getItem("token")
+  const initialState = { ...nullState, user: { token: token || null } }
   const [state, dispatch] = useReducer(appReducer, initialState)
 
-  const token = localStorage.getItem("token") // TODO: походу лишнее
   const config = {
     headers: {
       "Content-Type": "application/json",
@@ -58,12 +58,13 @@ const AppState = ({ children }) => {
   // ACCOUNT
   const accCheck = async () => {
     loading()
-    if (state.id) return
+    if (state.user.id) return
     if (!token) return dispatch({ type: USER_ACC_LOGOUT })
     await axios
       .get(`${URL}/auth/user`, config)
       .then((res) => {
-        dispatch({ type: USER_ACC_VALID, payload: res.data })
+        console.log("AUTH", res.data)
+        dispatch({ type: USER_ACC_VALID, payload: { ...res.data, token } })
       })
       .catch((err) => {
         if (err.response) {
@@ -81,24 +82,24 @@ const AppState = ({ children }) => {
   }
   const accLogin = async (credentials) => {
     loading()
+    let status = false
     await axios
       .post(`${URL}/auth/login`, credentials)
       .then((res) => {
         localStorage.setItem("token", res.data.token)
-        dispatch({
-          type: USER_ACC_VALID,
-          payload: { ...res.data.user, token: res.data.token },
-        })
-        return true
+        console.log("LOGIN", res.data)
+        dispatch({ type: USER_ACC_VALID, payload: res.data })
+        status = true
       })
       .catch((err) => {
         dispatch({ type: USER_ACC_LOGOUT })
         addMsg(connectErrMsg(err, "Неверное сочетание логина и пароля"))
-        return false
       })
+    return status
   }
   const accLogout = async () => {
     localStorage.removeItem("token")
+    if (!state.user.id) return
     dispatch({ type: USER_ACC_LOGOUT })
     await axios.post(`${URL}/auth/logout`, null, config).catch((err) => {
       addMsg(connectErrMsg(err, "Ошибка выхода"))

@@ -13,6 +13,7 @@ const PageAbyssAuth = (props) => {
     accLogout()
     if (key)
       accLogin({ key: key }).then((authStatus) => {
+        console.log("RESPONSE IS", authStatus)
         if (authStatus) setAuthed(true)
         else setNoAccess(true)
       })
@@ -23,7 +24,7 @@ const PageAbyssAuth = (props) => {
   // const params = new URLSearchParams(q)
   // const abySecID = params.get("key")
 
-  if (noAccess) return <Redirect from='*' to={`/login`} />
+  if (noAccess) return <Redirect from='*' to={`/test`} />
   if (authed) return <Redirect from='*' to={`/`} />
   return (
     <div>

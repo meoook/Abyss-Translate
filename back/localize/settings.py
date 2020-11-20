@@ -5,8 +5,21 @@ from django.core.files.storage import FileSystemStorage
 BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 
 # !!! CHANGE THIS SETTINGS IN PRODUCTION !!!
-SECRET_KEY = os.environ.get("SECRET_KEY", "NO_KEY_WARNING")
 DEBUG = os.environ.get("DEBUG", True)
+
+SECRET_KEY = os.environ.get("SECRET_KEY", "46c1d9292aee91cf7f091a1121879a6bf35cc459bcb0ed8a9a52d8d9c0f2bc83")
+ABYSS_JWT_KEY = SECRET_KEY
+
+SOCIAL_GITHUB_CLIENT = os.environ.get("SOCIAL_GITHUB_CLIENT", "46c1d9292aee91cf7f091a1121879a6bf35cc459bcb0ed8a9a52d8d9c0f2bc83")
+SOCIAL_GITHUB_SECRET = os.environ.get("SOCIAL_GITHUB_SECRET", "46c1d9292aee91cf7f091a1121879a6bf35cc459bcb0ed8a9a52d8d9c0f2bc83")
+
+SOCIAL_GITLAB_CLIENT = os.environ.get("SOCIAL_GITLAB_CLIENT", "46c1d9292aee91cf7f091a1121879a6bf35cc459bcb0ed8a9a52d8d9c0f2bc83")
+SOCIAL_GITLAB_SECRET = os.environ.get("SOCIAL_GITLAB_SECRET", "46c1d9292aee91cf7f091a1121879a6bf35cc459bcb0ed8a9a52d8d9c0f2bc83")
+
+SOCIAL_BITBUCKET_CLIENT = os.environ.get("SOCIAL_BITBUCKET_CLIENT", "46c1d9292aee91cf7f091a1121879a6bf35cc459bcb0ed8a9a52d8d9c0f2bc83")
+SOCIAL_BITBUCKET_SECRET = os.environ.get("SOCIAL_BITBUCKET_SECRET", "46c1d9292aee91cf7f091a1121879a6bf35cc459bcb0ed8a9a52d8d9c0f2bc83")
+
+
 ALLOWED_HOSTS = ['*']
 CORS_ORIGIN_ALLOW_ALL = True
 
@@ -18,6 +31,7 @@ CORS_ORIGIN_ALLOW_ALL = True
 #     'http://192.168.1.20:3000',
 #     'http://91.225.238.193:3000',
 # ]
+
 
 # Application definition
 MY_APPS = [
@@ -133,29 +147,6 @@ REST_FRAMEWORK = {
     # ],
 }
 
-# If this is used then `CORS_ORIGIN_WHITELIST` will not have any effect
-# CORS_ALLOW_CREDENTIALS = True
-# If this is used, then not need to use `CORS_ORIGIN_ALLOW_ALL = True`
-# CORS_ORIGIN_ALLOW_ALL = True
-# CORS_ORIGIN_WHITELIST = [
-#     'http://localhost:3000',
-#     'http://127.0.0.1:3000',
-#     'http://192.168.1.20:3000',
-#     'http://91.225.238.193:3000',
-# ]
-# CORS_ORIGIN_REGEX_WHITELIST = [
-#     'http://127.0.0.1:*',
-#     'http://91.225.238.193:3000',
-# ]
-# CORS_ALLOW_METHODS = [
-#     'DELETE',
-#     'GET',
-#     'OPTIONS',
-#     'PATCH',
-#     'POST',
-#     'PUT',
-# ]
-
 # Celery
 CELERY_BROKER_URL = os.environ.get("CELERY_BROKER_URL", "redis://redis:6379")
 CELERY_RESULT_BACKEND = os.environ.get("CELERY_RESULT_BACKEND", "redis://redis:6379")
@@ -174,103 +165,103 @@ CELERY_IGNORE_RESULT = True
 # CELERYD_TIME_LIMIT = 60
 
 # Logging
-# LOGGING = {
-#     'version': 1,
-#     'disable_existing_loggers': False,
-#     'formatters': {
-#         'sql': {
-#             'format': '[SQL {module} {duration:f}] {sql}',
-#             'style': '{',
-#             'datefmt': '%d/%b/%Y %H:%M:%S',
-#         },
-#         'file': {
-#             'format': '[{asctime} {levelname}/{module}] {message}',
-#             'style': '{',
-#             'datefmt': '%d/%m/%Y %H:%M:%S',
-#         },
-#         'full': {
-#             'format': '[{asctime} {levelname}/{name} in {module}] {message}',
-#             'style': '{',
-#             'datefmt': '%d/%b/%Y %H:%M:%S',
-#         },
-#         'simple': {
-#             'format': '[{levelname:.4} {module}] {message}',
-#             'style': '{',
-#             'datefmt': '%d.%m.%Y %H:%M:%S',
-#         },
-#     },
-#     'filters': {
-#         'require_debug_true': {
-#             '()': 'django.utils.log.RequireDebugTrue',
-#         },
-#         'require_debug_false': {
-#             '()': 'django.utils.log.RequireDebugFalse',
-#         },
-#     },
-#     'handlers': {
-#         'sql': {
-#             'level': 'DEBUG',
-#             'filters': ['require_debug_true'],
-#             'class': 'logging.StreamHandler',
-#             'formatter': 'sql',
-#         },
-#         'debug': {
-#             'level': 'INFO',
-#             'filters': ['require_debug_true'],
-#             'class': 'logging.StreamHandler',
-#             'formatter': 'simple',
-#         },
-#         'console': {
-#             'level': os.getenv('DJANGO_LOG_LEVEL', 'INFO'),
-#             'filters': ['require_debug_false'],
-#             'class': 'logging.StreamHandler',
-#             'formatter': 'full',
-#         },
-#         'file': {
-#             'level': 'WARNING',
-#             'filters': ['require_debug_false'],
-#             'class': 'logging.FileHandler',
-#             'filename': os.path.join(BASE_DIR, 'logs', 'log.log'),
-#             'formatter': 'file',
-#         },
-#         'mail_admins': {
-#             'level': 'ERROR',
-#             'filters': ['require_debug_false'],
-#             'class': 'django.utils.log.AdminEmailHandler',
-#             'email_backend': 'django.core.mail.backends.filebased.EmailBackend',
-#             'include_html': True,
-#         },
-#     },
-#     'loggers': {
-#         'django': {
-#             'handlers': ['console', 'file', 'debug'],
-#             'level': 'DEBUG',
-#             'propagate': True,
-#         },
-#         'django.request': {
-#             'handlers': ['console', 'file', 'debug'],
-#             'level': 'INFO',
-#             'propagate': False,
-#         },
-#         'django.server': {
-#             'handlers': ['console', 'file', 'debug'],
-#             'level': 'ERROR',
-#             'propagate': False,
-#         },
-#         'django.db.backends': {
-#             'handlers': ['sql'],
-#             'level': 'WARNING',   # set DEBUG for debug sql queries :)
-#             'propagate': False,
-#         },
-#         'logfile': {
-#             'handlers': ['file'],
-#             'level': 'INFO',    # When to log in file
-#             'propagate': True,
-#         },
-#         'django.mail': {
-#             'handlers': ['mail_admins'],
-#             'level': 'ERROR',   # When to send mails
-#             'propagate': True,
-#         },
-#     },
-# }
+LOGGING = {
+    'version': 1,
+    'disable_existing_loggers': False,
+    'formatters': {
+        'sql': {
+            'format': '[SQL {module} {duration:f}] {sql}',
+            'style': '{',
+            'datefmt': '%d/%b/%Y %H:%M:%S',
+        },
+        'file': {
+            'format': '[{asctime} {levelname}/{module}] {message}',
+            'style': '{',
+            'datefmt': '%d/%m/%Y %H:%M:%S',
+        },
+        'full': {
+            'format': '[{asctime} {levelname}/{name} in {module}] {message}',
+            'style': '{',
+            'datefmt': '%d/%b/%Y %H:%M:%S',
+        },
+        'simple': {
+            'format': '[{levelname:.4} {module}] {message}',
+            'style': '{',
+            'datefmt': '%d.%m.%Y %H:%M:%S',
+        },
+    },
+    'filters': {
+        'require_debug_true': {
+            '()': 'django.utils.log.RequireDebugTrue',
+        },
+        'require_debug_false': {
+            '()': 'django.utils.log.RequireDebugFalse',
+        },
+    },
+    'handlers': {
+        'sql': {
+            'level': 'DEBUG',
+            'filters': ['require_debug_true'],
+            'class': 'logging.StreamHandler',
+            'formatter': 'sql',
+        },
+        'debug': {
+            'level': 'INFO',
+            'filters': ['require_debug_true'],
+            'class': 'logging.StreamHandler',
+            'formatter': 'simple',
+        },
+        'console': {
+            'level': os.getenv('DJANGO_LOG_LEVEL', 'INFO'),
+            'filters': ['require_debug_false'],
+            'class': 'logging.StreamHandler',
+            'formatter': 'full',
+        },
+        'file': {
+            'level': 'WARNING',
+            'filters': ['require_debug_false'],
+            'class': 'logging.FileHandler',
+            'filename': os.path.join(BASE_DIR, 'logs', 'log.log'),
+            'formatter': 'file',
+        },
+        'mail_admins': {
+            'level': 'ERROR',
+            'filters': ['require_debug_false'],
+            'class': 'django.utils.log.AdminEmailHandler',
+            'email_backend': 'django.core.mail.backends.filebased.EmailBackend',
+            'include_html': True,
+        },
+    },
+    'loggers': {
+        'django': {
+            'handlers': ['console', 'file', 'debug'],
+            'level': 'DEBUG',
+            'propagate': True,
+        },
+        'django.request': {
+            'handlers': ['console', 'file', 'debug'],
+            'level': 'INFO',
+            'propagate': False,
+        },
+        'django.server': {
+            'handlers': ['console', 'file', 'debug'],
+            'level': 'ERROR',
+            'propagate': False,
+        },
+        'django.db.backends': {
+            'handlers': ['sql'],
+            'level': 'WARNING',   # set DEBUG for debug sql queries :)
+            'propagate': False,
+        },
+        'logfile': {
+            'handlers': ['file'],
+            'level': 'INFO',    # When to log in file
+            'propagate': True,
+        },
+        'django.mail': {
+            'handlers': ['mail_admins'],
+            'level': 'ERROR',   # When to send mails
+            'propagate': True,
+        },
+    },
+}

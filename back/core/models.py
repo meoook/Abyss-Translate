@@ -99,17 +99,18 @@ class FolderRepo(models.Model):
     updated = models.DateTimeField(auto_now=True)
     access = models.JSONField(null=True)
     error = models.CharField(max_length=255, blank=True)    # Access, exist or other errors
+    lang_in_suffix = models.BooleanField(default=False)     # Copy will be created as /name-en.txt or /en/name.txt
 
 
 def user_directory_path(instance, filename):
     """ File will be uploaded to users/<user_id>/<prj_id>/<folder_id>/<file_id> """
-    if instance.pk:
-        _, ext = os.path.splitext(filename)
-        name = f'{instance.pk}{ext}'
-    else:
-        name = filename
+    # if instance.pk:
+    #     _, ext = os.path.splitext(filename)
+    #     name = f'{instance.pk}{ext}'
+    # else:
+    #     name = filename
     folder = instance.folder
-    return '{}/{}/{}/{}'.format(folder.project.owner.id, folder.project.id, folder.id, name)
+    return '{}/{}/{}/{}'.format(folder.project.owner.id, folder.project.id, folder.id, instance.name)
 
 
 class File(models.Model):
@@ -140,8 +141,9 @@ class Translated(models.Model):
     file = models.ForeignKey(File, on_delete=models.CASCADE)
     language = models.ForeignKey(Language, on_delete=models.DO_NOTHING)
     items = models.PositiveIntegerField(default=0)  # To count total progress
-    finished = models.BooleanField(default=False)   # All items have translations
-    checked = models.BooleanField(default=False)    # Translations checked by admin?
+    # finished = models.BooleanField(default=False)   # All items have translations
+    # checked = models.BooleanField(default=False)    # Translations checked by admin?
+    refreshed = models.BooleanField(default=False)  # When any translate refreshed -> refresh translate copy
     translate_copy = models.FileField(max_length=255, blank=True, storage=settings.STORAGE_ROOT)
     repo_sha = models.CharField(max_length=40, blank=True)  # Not always hash - can be information about update status
 

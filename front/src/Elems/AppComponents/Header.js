@@ -20,7 +20,7 @@ const Header = (props) => {
         </div>
       </div>
       <div>
-        <span className='mh-3'>{user.username}</span>
+        <span className='mh-3'>{user.first_name}</span>
         <button className='btn red' onClick={logOff}>
           Выход
         </button>

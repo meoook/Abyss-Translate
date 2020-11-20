@@ -8,8 +8,8 @@ import Header from "./Elems/AppComponents/Header"
 import PageTranslateFile from "./Elems/PageTranslate/PageTranslateFile"
 import PageTranslateRoot from "./Elems/PageTranslate/PageTranslateRoot"
 import PageAddPrj from "./Elems/PageAddPrj/PageAddPrj"
-import PageLogin from "./Elems/PageAccount/PageLogin"
-import PageRegister from "./Elems/PageAccount/PageRegister"
+// import PageLogin from "./Elems/PageAccount/PageLogin"
+// import PageRegister from "./Elems/PageAccount/PageRegister"
 import LoaderCar from "./Elems/AppComponents/LoaderCar"
 import PageProjects from "./Elems/PageProjects/PageProjects"
 import PageProject from "./Elems/PageProject/PageProject"
@@ -31,8 +31,8 @@ const NavRouter = (props) => {
         <PrivateRoute path={"/prj/:id"} component={PageProject} />
         <PrivateRoute path={"/oauth-callback"} component={PageOAuthCB} />
         <Route path={"/test"} component={PageTestAuth} />
-        <Route path={"/reg"} component={PageRegister} />
-        <Route path={"/login"} component={PageLogin} />
+        {/* <Route path={"/reg"} component={PageRegister} /> */}
+        {/* <Route path={"/login"} component={PageLogin} /> */}
         <PrivateRoute component={NoMatchPage} />
       </Switch>
     </BrowserRouter>
@@ -44,7 +44,7 @@ export default NavRouter
 const PrivateRoute = ({ component: Component, ...rest }) => {
   const { user, accCheck } = useContext(AppContext)
   const [menuOpened, setMenuOpened] = useState(true)
-  // console.log("state:", state)
+  console.log("user:", user)
 
   useEffect(() => {
     accCheck()
@@ -66,7 +66,7 @@ const PrivateRoute = ({ component: Component, ...rest }) => {
         ) : user.token ? (
           <LoaderCar />
         ) : (
-          <Redirect to={{ pathname: "/login", state: { from: props.location } }} />
+          <Redirect to={{ pathname: "/test", state: { from: props.location } }} />
         )
       }
     />

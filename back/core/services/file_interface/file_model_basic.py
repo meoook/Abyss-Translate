@@ -1,4 +1,5 @@
 import logging
+import os
 
 from django.conf import settings
 from django.core.exceptions import ObjectDoesNotExist, ValidationError
@@ -190,6 +191,7 @@ class FileModelBasicApi:
         translated_items_amount = MarkItem.objects.filter(mark__file_id=self._file.id) \
             .filter(Q(translate__language=lang_id), ~Q(translate__text__exact="")).count()
         progress.items = translated_items_amount
+        progress.refreshed = True   # When progress refreshed - mark to create new translated copy
         progress.save()
         logger.info(f"File {self._log_name} progress refresh for language:{lang_id}")
         if self._file.items != translated_items_amount:
@@ -239,8 +241,28 @@ class FileModelBasicApi:
         return error_file.pk
 
     @staticmethod
-    def _get_lang_short_name(lang_id):
+    def _get_lang_short_name(lang_id: int):
         try:
             return Language.objects.get(id=lang_id).short_name
         except ObjectDoesNotExist:
             return ''
+
+    def _get_translate_copy_path(self, original_file_path: str, lang_short_name: str):
+        """ Create translate copy path: in 'language short name' folder create copy with same file name """
+        base_dir_name = os.path.dirname(original_file_path)
+        lang_dir = os.path.join(base_dir_name, lang_short_name)
+
+        if not os.path.exists(lang_dir):
+            try:
+                os.makedirs(lang_dir)
+            except OSError:  # Return path in same folder
+                return self._get_translate_copy_path_suffix(original_file_path, lang_short_name)
+        return os.path.join(base_dir_name, lang_short_name, self._file.name)
+
+    def _get_translate_copy_path_suffix(self, original_file_path: str, lang_short_name: str):
+        """ Option 2: Create copy with 'language short name' suffix added to file name in same folder """
+        dir_name = os.path.dirname(original_file_path)
+        # file_name = os.path.basename(original_file_path)
+        name, ext = os.path.splitext(self._file.name)
+        copy_name = f'{name}-{lang_short_name}{ext}'
+        return os.path.join(dir_name, copy_name)
