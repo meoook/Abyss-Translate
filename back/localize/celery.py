@@ -12,7 +12,12 @@ app.conf.beat_schedule = {
     'check-every-1-hours': {
         'task': 'back.core.tasks.check_all_file_repos',
         'schedule': crontab(minute=0, hour='*/1'),
-        'args': (16, 16)
+        # 'args': (16, 16)
+    },
+    'copy-refresh-every-1-hours': {
+        'task': 'back.core.tasks.refresh_copies',
+        'schedule': 55.0,
+        # 'args': (16, 16)
     },
 }
 
