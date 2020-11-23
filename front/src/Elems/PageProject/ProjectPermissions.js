@@ -36,7 +36,7 @@ const ProjectPermissions = ({ prjID }) => {
           ) : (
             <div>
               {permissions.sort(compare).map((item) => (
-                <PermissionItem key={item.username} perm={item} setAcc={setAccName} />
+                <PermissionItem key={item.first_name} perm={item} setAcc={setAccName} />
               ))}
             </div>
           )}
@@ -54,8 +54,8 @@ export default ProjectPermissions
 
 const PermissionItem = ({ perm, setAcc }) => {
   return (
-    <div className='table-line link m-1' onClick={setAcc.bind(this, perm.username)}>
-      <div className='col col-4'>{perm.username}</div>
+    <div className='table-line link m-1' onClick={setAcc.bind(this, perm.first_name)}>
+      <div className='col col-4'>{perm.first_name}</div>
       <div className='col col-2'>{perm.prj_perms.find((item) => item.permission === 0) && "x"}</div>
       <div className='col col-2'>{perm.prj_perms.find((item) => item.permission === 5) && "x"}</div>
       <div className='col col-2'>{perm.prj_perms.find((item) => item.permission === 8) && "x"}</div>
@@ -65,8 +65,8 @@ const PermissionItem = ({ perm, setAcc }) => {
 }
 
 function compare(a, b) {
-  const usernameA = a.username.toUpperCase()
-  const usernameB = b.username.toUpperCase()
+  const usernameA = a.first_name.toUpperCase()
+  const usernameB = b.first_name.toUpperCase()
 
   if (usernameA > usernameB) return 1
   else if (usernameA < usernameB) return -1

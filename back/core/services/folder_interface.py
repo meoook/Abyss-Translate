@@ -3,10 +3,11 @@ import logging
 from django.core.exceptions import ObjectDoesNotExist
 from django.forms.models import model_to_dict
 
+from core.services.file_interface.file_interface import FileModelAPI
 from core.services.git.git_auth import OAuth2Token
 
 from core.models import Folder, FolderRepo, File
-from core.services.file_system.file_interface import LocalizeFileInterface
+# from core.services.file_system.file_interface import LocalizeFileInterface
 
 from core.services.git.git_interface import GitInterface
 
@@ -126,6 +127,7 @@ class LocalizeGitFolderInterface:
                     logger.error(err)
 
     def __update_files_from_repo(self, folder_files):
+        # TODO: Add save warnings if repo fail update
         updated_files_amount = 0
         error_files_amount = 0
         if self.__git.need_update:  # Folder exist and new hash
@@ -141,21 +143,11 @@ class LocalizeGitFolderInterface:
                     logger.info(f"Error update file id:{filo['id']} from repository {err}")
                 else:
                     logger.info(f"For file id:{filo['id']} changing status to: True - downloaded")
-                    File.objects.filter(id=filo['id']).update(repo_status=True, repo_sha=new_file_sha, state=1)
-                    file_manager = LocalizeFileInterface(filo['id'])
+                    File.objects.filter(id=filo['id']).update(repo_status=True, repo_sha=new_file_sha)
+                    file_manager = FileModelAPI(filo['id'])
                     logger.info(f"File id:{filo['id']} start parse process")
-                    if file_manager.error or not file_manager.parse():
-                        logger.warning(f"File parse error id:{filo['id']} err: {file_manager.error} - retry once")
-                        if not file_manager.parse():  # FIXME: create task to retry (task in task) ?
-                            error_files_amount += 1
-                            logger.warning(f"File parse second error id:{filo['id']} err: {file_manager.error}")
-                            err_file_id, err_msg = file_manager.save_error()
-                            logger.error(f'Created error file (id:{err_file_id}) saved: {err_msg}')
-                        else:
-                            updated_files_amount += 1
-                    else:
-                        updated_files_amount += 1
-                    file_manager.update_all_language_progress()
+                    file_manager.file_refresh_original()
+                    updated_files_amount += 1
         return updated_files_amount, error_files_amount
 
     def __check_folder(self, method):

@@ -23,7 +23,7 @@ class LanguagesSerializer(serializers.ModelSerializer):
 
 class TranslatesLogSerializer(serializers.ModelSerializer):
     """ TRANSLATES: Change log of translates """
-    user = serializers.SlugRelatedField(slug_field='username', read_only=True)
+    user = serializers.SlugRelatedField(slug_field='first_name', read_only=True)
 
     class Meta:
         model = TranslateChangeLog
@@ -32,7 +32,7 @@ class TranslatesLogSerializer(serializers.ModelSerializer):
 
 class TranslatesSerializer(serializers.ModelSerializer):
     """ TRANSLATES: To display Translates related to Item and Detail """
-    translator = serializers.SlugRelatedField(slug_field='username', read_only=True)
+    translator = serializers.SlugRelatedField(slug_field='first_name', read_only=True)
     # user = serializers.PrimaryKeyRelatedField(read_only=True, default=serializers.CurrentUserDefault())
 
     class Meta:
@@ -147,7 +147,7 @@ class PermsListSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = User
-        fields = ['username', 'prj_perms']
+        fields = ['first_name', 'prj_perms']
         # fields = '__all__'
 
     def get_prj_perms(self, instance):
@@ -177,4 +177,4 @@ class ProjectSerializer(serializers.ModelSerializer):
 
     @staticmethod
     def get_author(instance):
-        return instance.owner.username
+        return instance.owner.first_name

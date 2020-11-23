@@ -24,7 +24,7 @@ from .models import Language, Project, Folder, FolderRepo, File, Translated, Fil
 from core.services.file_system.file_interface import LocalizeFileInterface
 
 from .services.file_interface.file_interface import FileModelAPI
-from .tasks import file_uploaded_new, file_create_translated, folder_update_repo_after_url_change, \
+from .tasks import file_uploaded_new, folder_update_repo_after_url_change, \
     folder_repo_change_access_and_update, file_uploaded_refresh
 from .permisions import IsProjectOwnerOrReadOnly, IsProjectOwnerOrAdmin, IsProjectOwnerOrManage, \
     IsFileOwnerOrHaveAccess, IsFileOwnerOrTranslator, IsFileOwnerOrManager
@@ -89,7 +89,7 @@ class ProjectPermsViewSet(viewsets.ModelViewSet):
     def perform_create(self, serializer):
         # TODO: Check perms if 5 - can create 0, if 9 can create other
         project = get_object_or_404(Project, save_id=self.request.data.get('save_id'))
-        user = get_object_or_404(User, username=self.request.data.get('username'))
+        user = get_object_or_404(User, first_name=self.request.data.get('first_name'))
         serializer.save(project=project, user=user)
 
 
@@ -307,7 +307,8 @@ class TransferFileView(viewsets.ViewSet):
                 file_obj = serializer.save()
                 # Run celery parse delay task
                 logger.info(f'File object created ID: {file_obj.id}. Sending parse task to Celery.')
-                file_uploaded_new(file_obj.id, prj_lang_orig_id, file_obj.data.path)
+                # file_uploaded_new(file_obj.id, prj_lang_orig_id, file_obj.data.path)
+                file_uploaded_new.delay(file_obj.id, prj_lang_orig_id, file_obj.data.path)
                                                #  .delay(file_id)
                 return Response(serializer.data, status=status.HTTP_201_CREATED)
             logger.warning(f'Error creating file object: {serializer.errors}')
@@ -334,5 +335,5 @@ class TransferFileView(viewsets.ViewSet):
                     _name = f'{file_id}_{lang_id}.txt'
                     tmp_path = settings.STORAGE_ERRORS.path(_name)
             logger.info(f'File id:{file_id} loaded translates {tmp_path} to build for language:{lang_id}. Sending task to Celery.')
-            file_uploaded_refresh(file_id, lang_id, tmp_path, is_original)
+            file_uploaded_refresh.delay(file_id, lang_id, tmp_path, is_original)
             return Response({'ok': 'file build for language'}, status=status.HTTP_200_OK)

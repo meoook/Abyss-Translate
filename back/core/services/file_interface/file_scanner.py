@@ -2,6 +2,7 @@ import re
 
 import chardet
 from langdetect import detect
+from langdetect.lang_detect_exception import LangDetectException
 
 from core.services.file_interface.id_finder import UniqueIDLookUp
 from core.services.file_interface.parser_utils import ParserUtils
@@ -199,7 +200,11 @@ class FileScanner(ParserUtils):
         if not self.__lang:
             self.__warning = 'original language not set'
             return
-        language = detect(text)
+        try:    # FIXME: change lang lib or load profiles before
+            language = detect(text)
+        except LangDetectException:
+            self.__warning = 'can\'t detect language'
+            return
         if not language:
             self.__warning = 'language not found'
         elif self.__lang != language:

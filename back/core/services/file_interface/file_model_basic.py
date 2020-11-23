@@ -94,20 +94,17 @@ class FileModelBasicApi:
                 mark.search_words = file_mark['search_words']
                 mark.context = file_mark['context']
                 mark.save()
-                mark_updated = False
             except ObjectDoesNotExist:
                 if not self._structure_changed:
                     logger.info('structure not changed but new mark')
                 mark = FileMark.objects.create(file_id=self._file.id, fid=file_mark['fid'],
                                                words=file_mark['words'], search_words=file_mark['search_words'],
                                                context=file_mark['context'],)
-                mark_updated = True
             finder.used_mid = mark.id  # add mark id not to delete
             numbers_not_to_delete = []  # After adding items - delete old unused if structure changed
             for mark_item in file_mark['items']:
                 numbers_not_to_delete.append(mark_item['item_number'])
                 warning = mark_item['warning']
-                # if mark_updated:
                 # Getting MarkItem object
                 try:
                     _item = MarkItem.objects.get(mark=mark, item_number=mark_item['item_number'])
@@ -117,7 +114,6 @@ class FileModelBasicApi:
                     _item.md5sum = mark_item['md5sum']
                     _item.md5sum_clear = mark_item['md5sum_clear']
                     _item.save()
-                    item_updated = True
                 except ObjectDoesNotExist:
                     if not self._structure_changed:
                         _msg_detail = f"mark:{mark.id} number:{mark_item['item_number']}"
@@ -191,7 +187,7 @@ class FileModelBasicApi:
         translated_items_amount = MarkItem.objects.filter(mark__file_id=self._file.id) \
             .filter(Q(translate__language=lang_id), ~Q(translate__text__exact="")).count()
         progress.items = translated_items_amount
-        progress.refreshed = True   # When progress refreshed - mark to create new translated copy
+        progress.need_refresh = True   # When progress need_refresh - mark to create new translated copy
         progress.save()
         logger.info(f"File {self._log_name} progress refresh for language:{lang_id}")
         if self._file.items != translated_items_amount:

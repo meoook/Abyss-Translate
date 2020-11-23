@@ -44,7 +44,7 @@ export default NavRouter
 const PrivateRoute = ({ component: Component, ...rest }) => {
   const { user, accCheck } = useContext(AppContext)
   const [menuOpened, setMenuOpened] = useState(true)
-  console.log("user:", user)
+  // console.log("user:", user)
 
   useEffect(() => {
     accCheck()

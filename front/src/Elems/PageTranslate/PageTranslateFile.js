@@ -101,17 +101,15 @@ const PageTranslateFile = (props) => {
                   <h3 className='m-2 mh-3'>&nbsp;Список пуст</h3>
                 ) : (
                   translates.results.map((mark) => (
-                    <div>
-                      <TranslateMark
-                        key={mark.id}
-                        mark={mark}
-                        langOrig={langOrig}
-                        langTrans={langTrans}
-                        same={same}
-                        setActive={setActiveTranslate}
-                        activeID={activeTranslate}
-                      />
-                    </div>
+                    <TranslateMark
+                      key={mark.id}
+                      mark={mark}
+                      langOrig={langOrig}
+                      langTrans={langTrans}
+                      same={same}
+                      setActive={setActiveTranslate}
+                      activeID={activeTranslate}
+                    />
                   ))
                 )}
               </div>

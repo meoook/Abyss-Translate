@@ -105,14 +105,14 @@ const AppState = ({ children }) => {
       addMsg(connectErrMsg(err, "Ошибка выхода"))
     })
   }
-  const accRegister = async ({ username, email, password }) => {
-    try {
-      await axios.post(`${URL}/auth/register`, { username, email, password })
-      accLogin({ username: username, password: password })
-    } catch (err) {
-      addMsg(connectErrMsg(err, "Ошибка регистрации"))
-    }
-  }
+  // const accRegister = async ({ first_name, email, password }) => {
+  //   try {
+  //     await axios.post(`${URL}/auth/register`, { first_name, email, password })
+  //     // accLogin({ first_name: first_name, password: password })
+  //   } catch (err) {
+  //     addMsg(connectErrMsg(err, "Ошибка регистрации"))
+  //   }
+  // }
   // PROJECTS
   const prjList = async () => {
     loading()
@@ -339,19 +339,19 @@ const AppState = ({ children }) => {
       addMsg(connectErrMsg(err, "Ошибка получения списка прав"))
     }
   }
-  const permAdd = async (save_id, username, permission) => {
+  const permAdd = async (save_id, first_name, permission) => {
     try {
-      const res = await axios.post(`${URL}/prj/perm/`, { save_id, username, permission }, config)
-      let user = state.permissions.find((item) => item.username === username)
-      if (!user) user = { username, prj_perms: [res.data] }
+      const res = await axios.post(`${URL}/prj/perm/`, { save_id, first_name, permission }, config)
+      let user = state.permissions.find((item) => item.first_name === first_name)
+      if (!user) user = { first_name, prj_perms: [res.data] }
       else user.prj_perms = [...user.prj_perms, res.data]
       dispatch({ type: PRJ_PERMISSION_REFRESH, payload: user })
     } catch (err) {
       addMsg(connectErrMsg(err, "Не могу добавить права"))
     }
   }
-  const permRemove = async (save_id, username, permission) => {
-    let user = state.permissions.find((item) => item.username === username)
+  const permRemove = async (save_id, first_name, permission) => {
+    let user = state.permissions.find((item) => item.first_name === first_name)
     if (!user) return addMsg({ text: "У юзера нет прав к игре" })
     const perm = user.prj_perms.find((item) => item.permission === permission)
     if (!perm) return addMsg({ text: "У юзера нет таких прав" })
@@ -415,7 +415,7 @@ const AppState = ({ children }) => {
         accLogin,
         accCheck,
         accLogout,
-        accRegister,
+        // accRegister,
         prjList,
         prjAdd,
         prjUpdate,

@@ -43,7 +43,6 @@ const TranslateMarkItem = ({ item, langOrig, langTrans, same, setActive, activeI
 
   useEffect(() => {
     const translateDisplay = item.translate_set.find((translate) => translate.language === langTrans)
-    console.log(translateDisplay)
     setTransObj(translateDisplay)
     if (translateDisplay) setInputVal(translateDisplay.text)
     else setInputVal("")

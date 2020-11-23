@@ -21,7 +21,7 @@ const ProjectError = ({ id }) => {
 export const PageProject = (props) => {
   // UTILS
   const getProj = (searchID, projs) => projs.find((prj) => prj.save_id === searchID)
-  const getPerms = (prj, usr) => (prj.author === usr.username ? [0, 5, 8, 9, 99] : prj.permissions_set) // 99 - owner permission
+  const getPerms = (prj, usr) => (prj.author === usr.first_name ? [0, 5, 8, 9, 99] : prj.permissions_set) // 99 - owner permission
   const hasPerm = (lookupPerms, userPerms) => Number.isInteger(lookupPerms.find((item) => userPerms.includes(item)))
   const translateOnly = (userPerms) => userPerms.length === 1 && userPerms[0] === 0
   // STATE

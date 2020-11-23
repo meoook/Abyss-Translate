@@ -9,7 +9,7 @@ from knox.models import AuthToken
 from core.services.jwt_decoder import AbyssJwtValidator
 from .serializers import UserSerializer, UserListSerializer
 # from .serializers import UserSerializer, RegisterSerializer, LoginSerializer, UserListSerializer
-from django.contrib.auth.models import User
+from django.contrib.auth.models import User, Permission
 
 
 class LoginAPI(generics.GenericAPIView):
@@ -46,6 +46,9 @@ class LoginAPI(generics.GenericAPIView):
                                             password=nick,
                                             first_name=f'{nick}#{data["tag"]}',
                                             last_name=data['lang'])
+            # TODO: check if is abyss creator - if so - give permission
+            creator = Permission.objects.get(codename='creator')
+            user.user_permissions.add(creator)
         _, token = AuthToken.objects.create(user)
         return Response(UserSerializer(user, context={'token': token}).data)
 
@@ -67,8 +70,8 @@ class UserListAPI(generics.ListAPIView):
     queryset = User.objects.exclude(is_staff=True, is_superuser=True)
 
     def list(self, request, *args, **kwargs):
-        username = request.query_params.get('name')
+        first_name = request.query_params.get('name')
         qs = self.get_queryset().exclude(Q(user_permissions__codename='creator') | Q(id=request.user.id))
-        qs = qs.filter(username__icontains=username) if username else qs
+        qs = qs.filter(first_name__icontains=first_name) if first_name else qs
         serializer = UserListSerializer(qs, many=True)
         return Response(serializer.data, status=200)

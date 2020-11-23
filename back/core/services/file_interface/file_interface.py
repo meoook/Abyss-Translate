@@ -26,12 +26,15 @@ class FileModelAPI(FileModelBasicApi):
         """ When new file -> update from repo -> get info -> parse -> cr progress """
         try:
             self.__update_from_repo()
-            if not self.file_refresh(file_path, original_lang_id, True):
-                self._save_error()
+            self.file_refresh(file_path, original_lang_id, True)
         except AssertionError:
             logger.warning(f'Error loading file {file_path}')
 
     def file_refresh(self, tmp_path: str, lang_id: int, is_original=False):
+        if not self._file_refresh(tmp_path, lang_id, is_original) and is_original:  # Don't change order
+            self._save_error()
+
+    def _file_refresh(self, tmp_path: str, lang_id: int, is_original: bool):
         """ File refresh translates (mark-item-translate) for selected language """
         current_options = self._file.options
         info = FileScanner(tmp_path, self._get_lang_short_name(lang_id))
@@ -91,6 +94,11 @@ class FileModelAPI(FileModelBasicApi):
                 self._file_progress_refresh(lang_id)
         return True
 
+    def file_refresh_original(self):
+        """ After git upload file - need to refresh it """
+        self.file_refresh(tmp_path=self._file.data.path, lang_id=self._file.lang_orig, is_original=True)
+
+    # TODO: file close IO exception decorator
     def create_translated_copy(self, lang_to_id: int):
         """ Create translation copy of the file """
         original_file_path = self._file.data.path
@@ -98,23 +106,20 @@ class FileModelAPI(FileModelBasicApi):
         copy_path = self._get_translate_copy_path(original_file_path, self._get_lang_short_name(lang_to_id))
         reader = self._get_reader(info_obj=info, copy_path=copy_path)
 
-        tr_items = {}
-        for translate_item in Translate.objects.filter(item__mark__file__id=self._file.id, language_id=lang_to_id) \
-                .values('item__mark__fid', 'item__item_number', 'text'):
-            _item = {'item_number': translate_item['item__item_number'], 'text': translate_item['text']}
-            if translate_item['item__mark__fid'] in tr_items.keys():
-                tr_items['item__mark__fid'].append(_item)
-            else:
-                tr_items['item__mark__fid'] = [_item, ]
-
         for file_mark in reader:
-            if file_mark['fid'] in tr_items:
-                reader.change_item_content_and_save(file_mark['fid'])
-        reader.change_item_content_and_save([{'item_number': 0, 'text': ''}])  # To save - left/unsaved data
+            mark_translates = Translate.objects\
+                .filter(item__mark__file__id=self._file.id, language_id=lang_to_id, item__mark__fid=file_mark['fid'])\
+                .exclude(text__exact="").values('item__item_number', 'text')
+            # Remap items as {item_number: xx, text: yy}
+            mark_translates = [{'item_number': tr['item__item_number'], 'text': tr['text']} for tr in mark_translates]
+            # if file_mark['fid'] in tr_items:
+            reader.change_item_content_and_save(mark_translates)
+
+        reader.change_item_content_and_save(values=None)  # To save - left/unsaved data
         # Update model as finished
         progress = self._file.translated_set.get(language_id=lang_to_id)
         progress.translate_copy = copy_path
-        progress.refreshed = False
+        progress.need_refresh = False   # Set status - copy refreshed
         progress.save()
 
     def translate_change_by_user(self, translator_id, trans_id, text, md5sum=None, **kwargs):
@@ -140,7 +145,8 @@ class FileModelAPI(FileModelBasicApi):
         self._file_progress_refresh(translate_lang_id)
         return translate, status.HTTP_201_CREATED
 
-    def update_copy_in_repo(self, lang_id):
+    # TODO: mb run after 'create_translated_copy' ?
+    def update_copy_in_repo(self, lang_id: int):
         """ Update file translated copy in repository """
         if self._file.folder.repo_status:
             copy = self._file.translated_set.get(language_id=lang_id)

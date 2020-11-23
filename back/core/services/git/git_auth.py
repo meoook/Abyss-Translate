@@ -1,7 +1,9 @@
 import base64
 from core.services.git.git_util import GitProviderUtils
+from django.conf import settings
 
 # TODO: Key to env
+
 
 class OAuth2Token:
     """ Util to get refresh token (main idea to pass provider class creation) """
@@ -81,8 +83,10 @@ class AuthGitHub(AuthConnector):
     __abyss_auth = {'access_type': 'token', 'token': 'a64a7ef131c0a8823e9f4b8228b86f5c077fd6b9'}
     __oauth_url_redirect = 'https://github.com/login/oauth/authorize'  # scope, state, allow_signup
     __oauth_url_access = 'https://github.com/login/oauth/access_token'
-    __oauth_app_id = '55aa8a87265bfa0f5ccf'
-    __oauth_secret = 'fa43864806ab46c5fb45f39ee8828d110a4d8b59'
+    # __oauth_app_id = '55aa8a87265bfa0f5ccf'
+    # __oauth_secret = 'fa43864806ab46c5fb45f39ee8828d110a4d8b59'
+    __oauth_app_id = settings.SOCIAL_GITHUB_CLIENT
+    __oauth_secret = settings.SOCIAL_GITHUB_SECRET
 
     # NTVhYThhODcyNjViZmEwZjVjY2Y6ZmE0Mzg2NDgwNmFiNDZjNWZiNDVmMzllZTg4MjhkMTEwYTRkOGI1OQ==
 
@@ -118,8 +122,10 @@ class AuthBitBucket(AuthConnector):
     __abyss_auth = {'access_type': 'oauth', 'token': 'dT3cWh4p3QxvMf4WnG'}
     __oauth_url_redirect = 'https://bitbucket.org/site/oauth2/authorize'
     __oauth_url_access = 'https://bitbucket.org/site/oauth2/access_token'
-    __oauth_app_id = 'xckDCgTDkpEAtWnfYe'
-    __oauth_secret = 'TTuaxUvCPynXBZd6pMeumDtfuchzdJvp'
+    __oauth_app_id = settings.SOCIAL_BITBUCKET_CLIENT
+    __oauth_secret = settings.SOCIAL_BITBUCKET_SECRET
+    # __oauth_app_id = 'xckDCgTDkpEAtWnfYe'
+    # __oauth_secret = 'TTuaxUvCPynXBZd6pMeumDtfuchzdJvp'
 
     # eGNrRENnVERrcEVBdFduZlllOlRUdWF4VXZDUHluWEJaZDZwTWV1bUR0ZnVjaHpkSnZw
 
@@ -166,8 +172,10 @@ class AuthGitLab(AuthConnector):
     __abyss_auth = {'access_type': 'token', 'token': 'ZocaYQAp9UYd18wk1Psk'}
     __oauth_url_redirect = 'https://gitlab.com/oauth/authorize'  # state
     __oauth_url_access = 'https://gitlab.com/oauth/access_token'  # /oauth/token
-    __oauth_app_id = '56fcf0ae30f04c6d0bfa1a327274eb81a2c3bf6d64f1b5927ac0d2f47ef4ecdf'
-    __oauth_secret = '5ccb384de48b1041d39af4b570afe95281fb8e4a79c3b4382ec3ea7dbffc6309'
+    __oauth_app_id = settings.SOCIAL_GITLAB_CLIENT
+    __oauth_secret = settings.SOCIAL_GITLAB_SECRET
+    # __oauth_app_id = '56fcf0ae30f04c6d0bfa1a327274eb81a2c3bf6d64f1b5927ac0d2f47ef4ecdf'
+    # __oauth_secret = '5ccb384de48b1041d39af4b570afe95281fb8e4a79c3b4382ec3ea7dbffc6309'
 
     def __init__(self):
         super().__init__(self.__abyss_auth)

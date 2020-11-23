@@ -143,7 +143,7 @@ class Translated(models.Model):
     items = models.PositiveIntegerField(default=0)  # To count total progress
     # finished = models.BooleanField(default=False)   # All items have translations
     # checked = models.BooleanField(default=False)    # Translations checked by admin?
-    refreshed = models.BooleanField(default=False)  # When any translate refreshed -> refresh translate copy
+    need_refresh = models.BooleanField(default=False)  # When any translate need_refresh -> refresh translate copy
     translate_copy = models.FileField(max_length=255, blank=True, storage=settings.STORAGE_ROOT)
     repo_sha = models.CharField(max_length=40, blank=True)  # Not always hash - can be information about update status
 
@@ -213,7 +213,7 @@ def auto_delete_file_on_delete(sender, instance, **kwargs):
     if sender._meta.model_name == 'file':
         inst_obj = instance.data
     elif sender._meta.model_name == 'translated':
-        if instance.finished and instance.translate_copy:
+        if instance.translate_copy:
             inst_obj = instance.translate_copy
         else:
             return

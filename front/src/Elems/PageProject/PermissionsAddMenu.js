@@ -16,10 +16,10 @@ const PermissionsAddMenu = ({ accName, prjID }) => {
       setName("")
       setInput("")
     } else {
-      const username = accName ? accName : input
-      setName(username)
-      setInput(username)
-      const userPerms = permissions.find((item) => item.username === username)
+      const first_name = accName ? accName : input
+      setName(first_name)
+      setInput(first_name)
+      const userPerms = permissions.find((item) => item.first_name === first_name)
       if (userPerms) setPerms(userPerms.prj_perms.map((item) => item.permission))
       else setPerms([])
     }
@@ -36,12 +36,12 @@ const PermissionsAddMenu = ({ accName, prjID }) => {
     } else if (options.find((item) => item.toLowerCase() === searchVal.toLowerCase())) {
       setName(searchVal)
       setInput(searchVal)
-      const userPerms = permissions.find((item) => item.username.toLowerCase() === searchVal.toLowerCase())
+      const userPerms = permissions.find((item) => item.first_name.toLowerCase() === searchVal.toLowerCase())
       if (userPerms) setPerms(userPerms.prj_perms.map((item) => item.permission))
       else setPerms([])
     } else if (LEN_TO_SEARCH === searchVal.length) {
       usersList(searchVal).then((newOptions) => {
-        setOptions(newOptions.map((item) => item.username))
+        setOptions(newOptions.map((item) => item.first_name))
       })
       setName("")
       setPerms([])

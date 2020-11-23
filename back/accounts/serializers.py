@@ -68,5 +68,5 @@ class UserListSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = User  # settings.AUTH_USER_MODEL
-        fields = ['username']
+        fields = ['first_name']
 

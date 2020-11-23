@@ -2,12 +2,13 @@ import base64
 import hmac
 import json
 from django.conf import settings
-from datetime import datetime, timedelta
+from datetime import datetime
 
 
 class AbyssJwtValidator:
     _ABYSS_ALGORITHM = 'sha256'
     _ABYSS_SECRET_KEY = settings.ABYSS_JWT_KEY.encode()
+    _JWT_VALID_TIME = 86400
 
     def __init__(self, jwt_key):
         jwt_parts = jwt_key.split('.')
@@ -33,18 +34,17 @@ class AbyssJwtValidator:
         return json.loads(_data)
 
     def _validate(self):
-        income_sig = self._decode_str_with_fix_padding(self._income_signature)
-        check_sig = self._create_check_signature()
-        if income_sig != check_sig:
+        sig_in = self._decode_str_with_fix_padding(self._income_signature)
+        sig_check = self._create_check_signature()
+        if sig_in != sig_check:
             return False
         payload_dict = self._get_data()
         try:
-            # created_date = payload_dict['timestamp']
-            created_date = 1605790124.049204    # TODO: REMOVE AFTER TESTS
+            created_date = payload_dict['timestamp']
         except KeyError:
             return False
 
-        check_date = datetime.timestamp(datetime.now()) - 86400
+        check_date = datetime.timestamp(datetime.now()) - self._JWT_VALID_TIME
         if created_date > check_date:
             self._data = payload_dict
             return True

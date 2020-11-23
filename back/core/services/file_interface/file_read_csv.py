@@ -18,6 +18,9 @@ class LocalizeCSVReader:
         self.__file_words = 0
         # If copy path set - create CCC object to control it
         self.__copy = CopyContextControl(copy_path, data_codec) if copy_path else None
+        if self.__copy and self.__row_index:
+            for _top_row_idx in range(self.__row_index):
+                self.__copy.add_data(self.__data[_top_row_idx])
 
     @property
     def stats(self):
@@ -48,8 +51,11 @@ class LocalizeCSVReader:
     def change_item_content_and_save(self, values: list):
         """ Create row filled with values - to create translation file """
         if self.__copy:  # handle copy control
-            to_add = self.__row_parser.fill_row_with_items(values)
-            self.__copy.replace_and_save(to_add)
+            if not values:
+                self.__copy.finish()
+            else:
+                to_add = self.__row_parser.fill_row_with_items(values)
+                self.__copy.replace_and_save(to_add)
 
 
 class _MarkDataFromRow(ParserUtils):
