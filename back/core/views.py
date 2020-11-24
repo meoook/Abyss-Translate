@@ -3,11 +3,11 @@ import logging
 
 from django.http import FileResponse
 from django.conf import settings
-from django.db.models import Max, Q, Count
+from django.db.models import Max
 from django.core.exceptions import ObjectDoesNotExist
 from django.contrib.auth.models import User
 from django.contrib.postgres.search import SearchVector, SearchQuery, SearchRank
-from rest_framework import viewsets, mixins, status, filters
+from rest_framework import viewsets, mixins, status
 from rest_framework.generics import get_object_or_404
 from rest_framework.parsers import MultiPartParser
 from rest_framework.pagination import PageNumberPagination
@@ -20,8 +20,6 @@ from .serializers import ProjectSerializer, FoldersSerializer, LanguagesSerializ
     PermsListSerializer, TranslatesLogSerializer
 from .models import Language, Project, Folder, FolderRepo, File, Translated, FileMark, ProjectPermission, \
     TranslateChangeLog
-
-from core.services.file_system.file_interface import LocalizeFileInterface
 
 from .services.file_interface.file_interface import FileModelAPI
 from .tasks import file_uploaded_new, folder_update_repo_after_url_change, \
@@ -152,6 +150,7 @@ class FolderRepoViewSet(mixins.RetrieveModelMixin,
         if access_type and access_value:
             # Run celery task to check access for repository and update files if needed
             folder_repo_change_access_and_update.delay(folder_id, access_type.lower(), access_value)
+            # folder_repo_change_access_and_update(folder_id, access_type.lower(), access_value)
             return Response({'status': 'updating', 'err': None}, status=status.HTTP_200_OK)
         return Response({'err': 'request params error'}, status=status.HTTP_400_BAD_REQUEST)
 
@@ -336,4 +335,5 @@ class TransferFileView(viewsets.ViewSet):
                     tmp_path = settings.STORAGE_ERRORS.path(_name)
             logger.info(f'File id:{file_id} loaded translates {tmp_path} to build for language:{lang_id}. Sending task to Celery.')
             file_uploaded_refresh.delay(file_id, lang_id, tmp_path, is_original)
+            # file_uploaded_refresh(file_id, lang_id, tmp_path, is_original)
             return Response({'ok': 'file build for language'}, status=status.HTTP_200_OK)

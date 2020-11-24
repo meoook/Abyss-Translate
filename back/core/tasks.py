@@ -6,7 +6,6 @@ from celery.exceptions import SoftTimeLimitExceeded, MaxRetriesExceededError
 from core.models import Folder, Translated
 from core.services.file_interface.file_interface import FileModelAPI
 
-from core.services.file_system.file_interface import LocalizeFileInterface
 from core.services.folder_interface import LocalizeGitFolderInterface
 
 logger = logging.getLogger('django')
