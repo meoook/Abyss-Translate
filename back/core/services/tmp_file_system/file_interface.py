@@ -6,11 +6,11 @@ from django.core.exceptions import ObjectDoesNotExist, ValidationError
 from rest_framework import status
 
 from core.models import File, ErrorFiles, Translate, Translated, TranslateChangeLog
-from core.services.file_system.file_cr_trans_copy import CreateTranslatedCopy
+from core.services.tmp_file_system.file_cr_trans_copy import CreateTranslatedCopy
 
-from core.services.file_system.file_get_info import DataGetInfo
-from core.services.file_system.file_rebuild import FileRebuild
-from core.services.git.git_interface import GitInterface
+from core.services.tmp_file_system.file_get_info import DataGetInfo
+from core.services.tmp_file_system.file_rebuild import FileRebuild
+from core.services.git_interface.git_interface import GitInterface
 
 logger = logging.getLogger('logfile')
 

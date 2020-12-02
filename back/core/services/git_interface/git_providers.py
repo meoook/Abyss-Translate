@@ -2,8 +2,8 @@ import base64
 import json
 from urllib import parse
 
-from core.services.git.git_auth import AuthGitHub, AuthGitLab, AuthBitBucket
-from core.services.git.git_util import GitProviderUtils
+from core.services.git_interface.git_auth import AuthGitHub, AuthGitLab, AuthBitBucket
+from core.services.git_interface.git_util import GitProviderUtils
 
 
 class GitHubConnect(GitProviderUtils):

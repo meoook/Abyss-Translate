@@ -2,7 +2,7 @@
 
 import re
 
-from core.services.git.git_providers import GitHubConnect, GitLabConnect, BitBucketConnect
+from core.services.git_interface.git_providers import GitHubConnect, GitLabConnect, BitBucketConnect
 
 # TODO: remake by django.http.requests ?
 

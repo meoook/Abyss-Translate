@@ -1,5 +1,5 @@
 import base64
-from core.services.git.git_util import GitProviderUtils
+from core.services.git_interface.git_util import GitProviderUtils
 from django.conf import settings
 
 # TODO: Key to env

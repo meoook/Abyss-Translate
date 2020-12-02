@@ -9,14 +9,14 @@ app.config_from_object('django.conf:settings', namespace='CELERY')
 app.autodiscover_tasks()
 
 app.conf.beat_schedule = {
-    'check-every-1-hours': {
-        'task': 'back.core.tasks.check_all_file_repos',
-        'schedule': crontab(minute=0, hour='*/1'),
+    'files-update-from-repo': {
+        'task': 'check_all_file_repos',
+        'schedule': crontab(minute=0, hour='*/2'),
         # 'args': (16, 16)
     },
-    'copy-refresh-every-1-hours': {
-        'task': 'back.core.tasks.refresh_copies',
-        'schedule': 55.0,
+    'copy-refresh-then-to-repo': {
+        'task': 'refresh_copies',
+        'schedule': crontab(minute=0, hour='1/2'),
         # 'args': (16, 16)
     },
 }

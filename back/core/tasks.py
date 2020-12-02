@@ -135,7 +135,6 @@ def refresh_copies():
     try:
         for copy_info in Translated.objects.filter(need_refresh=True).values('file__id', 'language__id'):
             file_manager = FileModelAPI(copy_info['file__id'])
-            file_manager.create_translated_copy(copy_info['language__id'])
-            file_manager.update_copy_in_repo(copy_info['language__id'])
+            file_manager.translated_copy_refresh(copy_info['language__id'])
     except SoftTimeLimitExceeded:
         logger.warning('Creating copies too slow')

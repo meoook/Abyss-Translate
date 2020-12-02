@@ -4,12 +4,12 @@ from django.core.exceptions import ObjectDoesNotExist
 from django.forms.models import model_to_dict
 
 from core.services.file_interface.file_interface import FileModelAPI
-from core.services.git.git_auth import OAuth2Token
+from core.services.git_interface.git_auth import OAuth2Token
 
 from core.models import Folder, FolderRepo, File
-# from core.services.file_system.file_interface import LocalizeFileInterface
+# from core.services.tmp_file_system.file_interface import LocalizeFileInterface
 
-from core.services.git.git_interface import GitInterface
+from core.services.git_interface.git_interface import GitInterface
 
 logger = logging.getLogger('logfile')
 

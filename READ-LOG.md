@@ -10,7 +10,9 @@
 |   ?     |    +     | Translate language check system for user input text - front\back   |
 |   ?     |    +     | Translate examples: Google                                         |
 |  1-2d   |    +     | Translate examples: translates from same file (by like)            |
-| !!!!!!  |  !!!!!!  | Celery - fix periodic tasks                                        |
+|   ?     |  ??????  | Что делать с файлами у которых кодировка не соответсвует языку     |
+| 2.01.3  |    +     | Новый способ парсинга файла - row (1 row = 1 value)                |
+| 2.01.2  | 03.12.20 | Celery - исправление ошибок в переодических задачах                |
 | 2.01.1  | 20.11.20 | Auth with Abyss by JWT                                             |
 | 2.01.0  | 18.11.20 | Переработка UI - страница переводов, настройки для файлов          |
 | 2.01.0  | 18.11.20 | Context display - отображение исходника (исключены только цифры)   |

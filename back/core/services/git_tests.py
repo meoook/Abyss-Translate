@@ -1,4 +1,4 @@
-from core.services.git.git_interface import GitInterface
+from core.services.git_interface.git_interface import GitInterface
 
 
 def test_git_manager():
