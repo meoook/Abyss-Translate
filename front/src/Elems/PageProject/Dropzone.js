@@ -3,7 +3,6 @@ import React, { useEffect } from "react"
 const Dropzone = ({ addFiles, disabled, isSolo = false }) => {
   useEffect(() => {
     if (!isSolo) {
-      console.log(`SOLO IS ${isSolo} set multy`)
       fileSelector.setAttribute("multiple", "multiple")
     } else {
       fileSelector.removeAttribute("multiple")

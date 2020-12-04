@@ -84,7 +84,7 @@ const FileItem = ({ file, onOptClick = null }) => {
   return (
     <div className='table-line m-0'>
       <div className='col col-3'>
-        {file.state === "uploaded" || file.state === "error" ? (
+        {Boolean(file.error) ? (
           file.name
         ) : (
           <Link to={`/translates/${file.id}`}>

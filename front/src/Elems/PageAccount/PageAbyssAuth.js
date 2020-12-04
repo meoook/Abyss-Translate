@@ -13,28 +13,21 @@ const PageAbyssAuth = (props) => {
     accLogout()
     if (key)
       accLogin({ key: key }).then((authStatus) => {
-        console.log("RESPONSE IS", authStatus)
         if (authStatus) setAuthed(true)
         else setNoAccess(true)
       })
     // eslint-disable-next-line
   }, [key])
 
-  // const q = props.location.search
-  // const params = new URLSearchParams(q)
-  // const abySecID = params.get("key")
-
   if (noAccess) return <Redirect from='*' to={`/test`} />
   if (authed) return <Redirect from='*' to={`/`} />
+
   return (
     <div>
       <h1>Проверка аккаунта</h1>
       <Loader />
     </div>
   )
-
-  // if (prjID) return <Redirect from='*' to={`/prj/${prjID}`} />
-  // return <Redirect from='*' to='/' />
 }
 
 export default PageAbyssAuth

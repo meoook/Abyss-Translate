@@ -106,7 +106,7 @@ class LocalizeGitFolderInterface:
     def update_files(self):
         """ To run by celery to update files from repo folder """
         if self.__check_folder(__name__):
-            folder_files = self.__folder.files_set.all()
+            folder_files = self.__folder.file_set.all()
             if not self.__url:
                 logger.info(f'For files in folder id:{self.__id} changing repo status to: None - no git control')
                 folder_files.update(repo_status=None, repo_sha='')  # TODO: really null hash ?
