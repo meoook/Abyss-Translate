@@ -11,34 +11,33 @@ from core.services.file_interface.parser_utils import ParserUtils
 
 
 class LocalizeHtmlReader(ParserUtils):
-    """ Generator class: Read csv file and yield FileMark object to insert in DB """
+    """ Read html file and yield FileMark object to insert in DB. Also control creating translation copy. """
 
-    def __init__(self, decoded_data, data_codec, _, copy_path=''):
-        assert isinstance(decoded_data, str), "Data must be type - string"
-        assert isinstance(data_codec, str), "Codec must be type - string"
+    def __init__(self, decoded_data: str, data_codec: str, _, copy_path: str = ''):
         self.__html_parser = _HtmlDataSeeker(decoded_data)
         self.__codec = data_codec
         # File results
-        self.__file_items = 0
-        self.__file_words = 0
+        self.__file_items: int = 0
+        self.__file_words: int = 0
         # Counter
-        self.__elem_index = 0
-        # If copy path set - create CCC object to control it
+        self.__elem_index: int = 0  # unused TODO: remove if no need
+        # If copy path set - create CCC object to control copy creation
         self.__copy = CopyContextControl(copy_path, data_codec, mode='append') if copy_path else None
 
     @property
-    def stats(self):
+    def stats(self) -> tuple[int, int]:
         return self.__file_items, self.__file_words
 
     def __iter__(self):
         return self
 
-    def __next__(self):
+    def __next__(self) -> dict[str, any]:
         try:
             next(self.__html_parser)  # StopIteration raised in this method
         except StopIteration:
             if self.__copy:  # handle copy control
-                self.__copy.add_data('')  # To finish file
+                self.__copy.finish()  # To finish file
+            # [print(tree_item) for tree_item in self.__html_parser.tree]  # DEBUG: Print final tags tree
             raise StopIteration
         # Copy controlling inside html parser
         seeker_data = self.__html_parser.data
@@ -69,35 +68,30 @@ class LocalizeHtmlReader(ParserUtils):
             'context': seeker_data['context'],
         }
 
-    def change_item_content_and_save(self, values: list):
-        """ Return context from start of file or previous tag with replaced context of current tag """
-        # if not values[0]['text']:    # DEBUG - to check final tree
-        #     [print(tree_item) for tree_item in self.__html_parser.tree]  # Print tag tree
+    def copy_write_mark_items(self, values: list[dict[str, any]]) -> None:
+        """ Translation file copy write new translates for current item """
         if self.__copy:  # handle copy control
-            if not values:
-                self.__copy.finish()
-            else:
-                to_add = self.__html_parser.change_item_content_and_save(values[0]['text'])
-                self.__copy.replace_and_save(to_add)  # To finish file
+            to_add = self.__html_parser.change_item_content(values[0]['text'])
+            self.__copy.replace_and_save(to_add)
 
 
 class _HtmlDataSeeker:
-    def __init__(self, html_data):
-        self.__current_value = ''
-        self.__left_data = html_data  # Not parsed data
-        self.__tags = [1]  # DOM tree with child index(is always last item)
-        self.__tag_params = ''  # Use tag params as context
+    def __init__(self, html_data: str):
+        self.__left_data: str = html_data  # Not parsed data
+        self.__current_value: dict[str, str] = {}  # Current tag data
+        self.__tags: list[any] = [1]  # DOM tree with child index(is always last item)
+        self.__tag_params: str = ''  # Use tag params as context
         # Content before item (from file start or item before) to create changed copy
-        self.__delta_content = {'unsaved_content': '', 'current_content': ''}
+        self.__delta_content: dict[str, str] = {'unsaved_content': '', 'current_content': ''}
         # DOM tree of elements with context
-        self.__dom_tree = []  # possible use - when merge (new element added in tree)
-        self.__warning = ''
+        self.__dom_tree: list[str] = []  # possible use - when merge (new element added in tree)
+        self.__warning: str = ''
 
     @property
-    def tree(self):
+    def tree(self) -> list[str]:
         return self.__dom_tree
 
-    def change_item_content_and_save(self, value):
+    def change_item_content(self, value: str) -> str:
         """ This method can be used - when needed to make copy of file and replace some content """
         delta_content = self.__delta_content['unsaved_content'] + value
         # Null delta content
@@ -106,7 +100,7 @@ class _HtmlDataSeeker:
         return delta_content
 
     @property
-    def data(self):
+    def data(self) -> dict[str, str]:
         """ work around with bug - that __next__ don't return value """
         val = dict(self.__current_value)
         self.__warning = ''
@@ -116,7 +110,7 @@ class _HtmlDataSeeker:
     def __iter__(self):
         return self
 
-    def __next__(self):
+    def __next__(self) -> None:
         """ Return not parsed html data and value if it was """
         if not self.__left_data:  # no more data to parse
             raise StopIteration
@@ -134,11 +128,11 @@ class _HtmlDataSeeker:
                 'warning': self.__warning,
             }
 
-    def __open_or_close_next_tag(self):
+    def __open_or_close_next_tag(self) -> None:
         """ Find what tag is next and continue lookup data """
         if self.__left_data.strip().startswith('<!'):
             # tag is <!doctype html>
-            end = self.__left_data.index('>') + 1
+            end: int = self.__left_data.index('>') + 1
         else:
             open_tag = re.match(r'^<([\w]+)([^>]*)?>', self.__left_data)  # <tag and=params>
             if open_tag:
@@ -163,13 +157,13 @@ class _HtmlDataSeeker:
         self.__data_handler(end)
         self.__next__()
 
-    def __data_handler(self, cut_index):
+    def __data_handler(self, cut_index: int) -> None:
         """ Update unsaved content and left data """
         self.__delta_content['unsaved_content'] += self.__delta_content['current_content']
         self.__delta_content['current_content'] = self.__left_data[:cut_index]  # add found content
         self.__left_data = self.__left_data[cut_index:]  # refresh not parsed data
 
-    def __close_tag(self, tag_name):
+    def __close_tag(self, tag_name: str) -> None:
         """ Handle closing tag - update tag tree """
         if tag_name in self.__tags:
             if self.__tags[-2] == tag_name:
@@ -184,8 +178,8 @@ class _HtmlDataSeeker:
             # close tag not found in tree (tree error)
             self.__warning = 'incorrect close tag before previous'
 
-    def __get_item_tree(self):
-        """ Get item DOM tree """
+    def __get_item_tree(self) -> str:
+        """ Get item DOM tree -> DEBUG -> upgrade lookup fid (search radius) """
         item_tree = ':'.join([str(tag) for tag in self.__tags])
         self.__dom_tree.append(item_tree)
         return item_tree

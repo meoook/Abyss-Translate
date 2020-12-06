@@ -1,5 +1,6 @@
 # misc
 .git
+.env*
 .idea
 .vscode
 #coverage

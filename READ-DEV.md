@@ -6,9 +6,11 @@
 
 ```py
 from django.conf.global_settings import LANGUAGES
+from django.contrib.postgres.operations import BtreeGinExtension
+
 
 def get_languages(apps, schema_editor):
-    languages = apps.get_model('core', 'Languages')
+    languages = apps.get_model('core', 'Language')
     for language in LANGUAGES:
         language_to_add = languages(name=language[1], short_name=language[0])
         if language[0] in ('en', 'ru', 'de', 'es'):
@@ -16,6 +18,8 @@ def get_languages(apps, schema_editor):
         language_to_add.save()
     ...
         migrations.RunPython(get_languages),
+    ...
+        BtreeGinExtension(),
 ```
 
 

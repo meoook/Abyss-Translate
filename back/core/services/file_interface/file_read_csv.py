@@ -1,3 +1,5 @@
+from typing import Callable
+
 from core.services.file_interface.file_copy import CopyContextControl
 from core.services.file_interface.id_finder import UniqueIDLookUp
 from core.services.file_interface.parser_utils import ParserUtils
@@ -5,34 +7,33 @@ from core.services.file_interface.quote_finder import TextQuoteFinder
 
 
 class LocalizeCSVReader:
-    """ Generator class: Read csv file and yield FileMark object to insert in DB """
-    def __init__(self, decoded_data, data_codec, scan_options, copy_path=''):
-        assert isinstance(decoded_data, str), "Data must be type - string"
-        assert isinstance(data_codec, str), "Codec must be type - string"
-        self.__data = decoded_data.splitlines()
+    """ Read csv file and yield FileMark object to insert in DB. Also control creating translation copy. """
+
+    def __init__(self, decoded_data: str, data_codec: str, scan_options: dict[str, any], copy_path: str = ''):
+        self.__data: list[str] = decoded_data.splitlines()
         self.__row_parser = _MarkDataFromRow(data_codec, scan_options)
-        self.__row_index = scan_options['top_rows']
-        self.__max_index = len(self.__data) - 1
+        self.__row_index: int = scan_options['top_rows']
+        self.__max_index: int = len(self.__data) - 1
         # File results
-        self.__file_items = 0
-        self.__file_words = 0
-        # If copy path set - create CCC object to control it
+        self.__file_items: int = 0
+        self.__file_words: int = 0
+        # If copy path set - create CCC object to control copy creation
         self.__copy = CopyContextControl(copy_path, data_codec) if copy_path else None
         if self.__copy and self.__row_index:
-            for _top_row_idx in range(self.__row_index):
+            for _top_row_idx in range(self.__row_index):  # Add top rows to translated copy
                 self.__copy.add_data(self.__data[_top_row_idx])
 
     @property
-    def stats(self):
+    def stats(self) -> tuple[int, int]:
         return self.__file_items, self.__file_words
 
     def __iter__(self):
         return self
 
-    def __next__(self):
+    def __next__(self) -> dict[str, any]:
         if self.__row_index > self.__max_index:
             if self.__copy:  # handle copy control
-                self.__copy.add_data('')  # To finish file
+                self.__copy.finish()  # To finish file
             raise StopIteration
         if self.__copy:  # handle copy control
             self.__copy.add_data(self.__data[self.__row_index])
@@ -46,37 +47,35 @@ class LocalizeCSVReader:
         if self.__row_parser.data['fid']:
             return self.__row_parser.data
         else:
-            return {**self.__row_parser.data, 'fid': self.__row_index}
+            # return {**self.__row_parser.data, 'fid': self.__row_index}
+            return self.__row_parser.data | {'fid': self.__row_index}
 
-    def change_item_content_and_save(self, values: list):
-        """ Create row filled with values - to create translation file """
+    def copy_write_mark_items(self, values: list[dict[str, any]]) -> None:
+        """ Write row filled with values in translation file copy """
         if self.__copy:  # handle copy control
-            if not values:
-                self.__copy.finish()
-            else:
-                to_add = self.__row_parser.fill_row_with_items(values)
-                self.__copy.replace_and_save(to_add)
+            to_add = self.__row_parser.fill_row_with_items(values)
+            self.__copy.replace_and_save(to_add)
 
 
 class _MarkDataFromRow(ParserUtils):
-    def __init__(self, codec, scan_options):
-        self.__current_row_items = []
+    def __init__(self, codec: str, scan_options: dict[str, any]):
+        self.__current_row_items: list[str] = []
         # Row parse options
-        self.__codec = codec
-        self.__delimiter = scan_options['delimiter']
-        self.__fields = scan_options['fields']
+        self.__codec: str = codec
+        self.__delimiter: str = scan_options['delimiter']
+        self.__fields: list[int] = scan_options['fields']
         # Define function to get text from quoted text
-        self.__get_unquote_text = TextQuoteFinder.get_unquoted_text(scan_options['quotes'])
+        self.__get_unquote_text: Callable[[str], str] = TextQuoteFinder.function_to_unquote_text(scan_options['quotes'])
         # Define function to get fID from formula
-        self.__get_fid_from_item_list = self.__set_fid_lookup_fn(scan_options['fid_lookup'])
+        self.__get_fid_from_item_list: Callable[[any], str] = self.__set_fid_lookup_fn(scan_options['fid_lookup'])
         # Row results
-        self.__fid = 0
+        self.__fid: str = ''           # Unique id to mark item
         self.__words_amount = 0
-        self.__items = []
-        self.__search_words = ''  # Words in all items
-        self.__context = ''       # Context of row (cleared row)
+        self.__items: list[dict[str, any]] = []
+        self.__search_words: str = ''  # Words in all items
+        self.__context: str = ''       # Context of row (cleared row)
 
-    def fill_row_with_items(self, items: list):
+    def fill_row_with_items(self, items: list[dict[str, any]]) -> str:
         """ Put items value in current row fields for translated version """
         assert isinstance(items, list), "items must be a list"
         updated_items = []
@@ -91,7 +90,7 @@ class _MarkDataFromRow(ParserUtils):
         return self.__delimiter.join(updated_items)
 
     @property
-    def data(self):
+    def data(self) -> dict[str, any]:
         return {
             'fid': self.__fid,
             'words': self.__words_amount,
@@ -101,7 +100,7 @@ class _MarkDataFromRow(ParserUtils):
         }
 
     @data.setter
-    def data(self, row):
+    def data(self, row: str):
         self.__current_row_items = row.split(self.__delimiter)
         # Mark data
         self.__fid = self.__get_fid_from_item_list(self.__current_row_items)
@@ -131,13 +130,13 @@ class _MarkDataFromRow(ParserUtils):
             self.__context = self._clean_text(row)
 
     @staticmethod
-    def __set_fid_lookup_fn(formula):
+    def __set_fid_lookup_fn(formula: str) -> Callable[[list[any]], str]:
         """ Work around to get lookup function even if no formula """
         if formula:
             find_unique_id = UniqueIDLookUp()
             find_unique_id.formula = formula
             return find_unique_id.function
         else:
-            def fun(*args):
+            def blank_function(_) -> str:
                 return ''
-            return fun
+            return blank_function

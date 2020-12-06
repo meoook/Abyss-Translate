@@ -8,6 +8,7 @@ from django.db.models import Q
 from core.services.file_interface.file_find_item import FileItemsFinder
 from core.services.file_interface.file_read_csv import LocalizeCSVReader
 from core.services.file_interface.file_read_html import LocalizeHtmlReader
+from core.services.file_interface.file_read_row import LocalizeRowReader
 from core.services.file_interface.file_read_ue import LocalizeUEReader
 
 from core.models import TranslateChangeLog, Translate, File, Translated, MarkItem, FileMark, ErrorFiles, Language
@@ -214,14 +215,19 @@ class FileModelBasicApi:
     @staticmethod
     def _get_reader(info_obj, copy_path=''):
         """ Get parser for method """
-        reader_params = [info_obj.data, info_obj.codec, info_obj.options]
-        assert info_obj.method in ['csv', 'html', 'ue'], "Unknown method to read file"
+        assert info_obj.method in ['csv', 'html', 'ue', 'row'], "Critical: unknown method to read file"
+        assert info_obj.codec, "Critical: codec parameter is required"
+        assert isinstance(info_obj.data, str) and info_obj.data, "Critical: data must be type string and not empty"
+
+        reader_params = [info_obj.data, info_obj.codec, info_obj.options, copy_path]
         if info_obj.method == 'csv':
-            return LocalizeCSVReader(*reader_params, copy_path=copy_path)
+            return LocalizeCSVReader(*reader_params)
         elif info_obj.method == 'html':
-            return LocalizeHtmlReader(*reader_params, copy_path=copy_path)
+            return LocalizeHtmlReader(*reader_params)
         elif info_obj.method == 'ue':
-            return LocalizeUEReader(*reader_params, copy_path=copy_path)
+            return LocalizeUEReader(*reader_params)
+        elif info_obj.method == 'row':
+            return LocalizeRowReader(*reader_params)
 
     def _save_error(self):
         """ Save error file to analyze  """

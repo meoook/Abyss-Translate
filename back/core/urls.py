@@ -15,5 +15,5 @@ router.register('marks', FileMarksView, 'marks')
 router.register('repo', FolderRepoViewSet, 'repo')
 
 urlpatterns = router.urls + [
-    # path('test2/<int:folder_id>', get_folder_content),  # TODO: Testing
+    # path('test2/<int:folder_id>', get_folder_content),
 ]

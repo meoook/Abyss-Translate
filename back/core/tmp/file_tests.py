@@ -1,7 +1,5 @@
 import os
 
-import polib
-
 from core.services.file_interface.file_read_csv import LocalizeCSVReader
 from core.services.file_interface.file_read_html import LocalizeHtmlReader
 from core.services.file_interface.file_read_ue import LocalizeUEReader
@@ -84,7 +82,7 @@ def csv_reader_test():
                 print('READ ROW BY ROW ================================================')
                 row_reader = LocalizeCSVReader(info.data, info.codec, info.options)
                 print('CHECK REPLACE', next(row_reader)['context'])
-                print('REPLACED ROW ===', row_reader.change_item_content_and_save([{'item_number': 10, 'text': 'bugaga'}]))
+                print('REPLACED ROW ===', row_reader.copy_write_mark_items([{'item_number': 10, 'text': 'bugaga'}]))
                 for idx, row_data in enumerate(row_reader):
                     print(idx + 1, 'VAL:', row_data)
                     if idx > 4:
@@ -109,7 +107,7 @@ def ue_reader_test():
                 print('READ ROW BY ROW ================================================')
                 reader = LocalizeUEReader(info.data, info.codec, info.options)
                 print('CHECK REPLACE', next(reader))
-                print('REPLACED ROW ===', reader.change_item_content_and_save([{'item_number': 1, 'text': 'bugaga'}]))
+                print('REPLACED ROW ===', reader.copy_write_mark_items([{'item_number': 1, 'text': 'bugaga'}]))
                 for idx, row_data in enumerate(reader):
                     print(idx + 1, 'VAL:', row_data)
                     if idx > 10:
@@ -133,11 +131,11 @@ def html_reader_test():
                 reader = LocalizeHtmlReader(info.data, info.codec, info.options)
                 check_replace = ''
                 print('CHECK REPLACE', next(reader))
-                check_replace += reader.change_item_content_and_save({'text': 'bugaga'})
+                check_replace += reader.copy_write_mark_items({'text': 'bugaga'})
                 print('REPLACED ROW ===', check_replace)
                 for x in reader:
                     print('VALUE', x)
-                check_replace += reader.change_item_content_and_save({'text': 'bugaga'})
+                check_replace += reader.copy_write_mark_items({'text': 'bugaga'})
                 print('FINAL', check_replace)
 
 
@@ -145,8 +143,8 @@ if __name__ == '__main__':
     # file_scanner_test()
     # po_lib_test()
     # fid_finder_test()
-    csv_reader_test()
-    # ue_reader_test()
+    # csv_reader_test()
+    ue_reader_test()
     # html_reader_test()
     # my_path = r'C:\Projects\PY\Abby\HELIOS\Ability-ru.txt'
     # w = r'C:\Projects\PY\Abby\test.txt'

@@ -1,6 +1,6 @@
 # pull official base image
 # FROM python:3.8.3-slim
-FROM python:3.8.5-alpine
+FROM python:3.9.0-alpine
 
 # set work directory
 WORKDIR /usr/src/back

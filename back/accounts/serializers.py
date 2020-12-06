@@ -20,7 +20,7 @@ class UserSerializer(serializers.ModelSerializer):
         return self.context.get('token')
 
 
-# Register serializer
+# Register serializer -> can be changed - to change pass
 # class RegisterSerializer(serializers.ModelSerializer):
 #
 #     class Meta:
@@ -56,7 +56,7 @@ class UserSerializer(serializers.ModelSerializer):
 #
 #     class Meta:
 #         model = User  # settings.AUTH_USER_MODEL
-#         fields = ('id', 'username', 'email', 'password')
+#         fields = ('id', 'username', 'password')
 #         extra_kwargs = {'password': {'write_only': True}}
 
 
@@ -65,7 +65,7 @@ class UserSerializer(serializers.ModelSerializer):
 
 # User List (not creators)
 class UserListSerializer(serializers.ModelSerializer):
-
+    """ List of users to give permissions on project """
     class Meta:
         model = User  # settings.AUTH_USER_MODEL
         fields = ['first_name']

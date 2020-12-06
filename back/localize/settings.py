@@ -23,6 +23,9 @@ SOCIAL_BITBUCKET_SECRET = os.environ.get("SOCIAL_BITBUCKET_SECRET", "TTuaxUvCPyn
 ALLOWED_HOSTS = ['*']
 CORS_ORIGIN_ALLOW_ALL = True
 
+# Number of letters in word to count it as word(payment)
+WORD_LEN_TO_COUNT = 3
+
 # ALLOWED_HOSTS = os.environ.get("DJANGO_ALLOWED_HOSTS").split(" ")
 # CORS_ORIGIN_WHITELIST = os.environ.get("DJANGO_ALLOWED_HOSTS").split(" ")
 # CORS_ORIGIN_WHITELIST = [
@@ -89,8 +92,8 @@ DATABASES = {
         "NAME": os.environ.get("SQL_DATABASE", "postgres"),
         "USER": os.environ.get("SQL_USER", "postgres"),
         "PASSWORD": os.environ.get("SQL_PASSWORD", "xaxaxue"),
-        # "HOST": os.environ.get("SQL_HOST", "127.0.0.1"),
-        "HOST": os.environ.get("SQL_HOST", "postgres"),
+        "HOST": os.environ.get("SQL_HOST", "127.0.0.1"),
+        # "HOST": os.environ.get("SQL_HOST", "postgres"),
         "PORT": os.environ.get("SQL_PORT", "5432"),
         "TEST": {'NAME': 'test_postgres'},
     }

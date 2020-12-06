@@ -1,7 +1,8 @@
 import hashlib
-import os
 import re
+# from django.conf import settings
 
+# WORD_LEN_TO_COUNT = 3 -> to django settings
 WORD_LEN_TO_COUNT = 3
 CLEANER_PATTERN = r'[\d\-/\[\]\"\'\\`~.,><:;!?@#$%^&*()+=|_{}]'
 
@@ -10,17 +11,19 @@ class ParserUtils:
     """ Util methods for parser classes """
 
     @staticmethod
-    def _count_words(clean_text):
+    def _count_words(clean_text: str) -> int:
         """ App function to find number of words(payment) in text """
+        # return len([x for x in clean_text.split(' ') if len(x) >= settings.WORD_LEN_TO_COUNT])
         return len([x for x in clean_text.split(' ') if len(x) >= WORD_LEN_TO_COUNT])
 
     @staticmethod
-    def _clean_text(text):
-        """ Clean text to check if exist and detect language """
-        return re.sub(CLEANER_PATTERN, '', text).strip()
+    def _clean_text(text: str) -> str:
+        """ Clean text to leave only words separated with one space """
+        clean_text = re.sub(CLEANER_PATTERN, '', text.strip())
+        return re.sub(r' {2,}', ' ', clean_text)
 
     @staticmethod
-    def _get_md5(binary_data: bytes):
+    def _get_md5(binary_data: bytes) -> str:
         return hashlib.md5(binary_data).hexdigest()
 
     # @staticmethod

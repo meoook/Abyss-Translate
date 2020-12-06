@@ -4,19 +4,17 @@
 файлы игр для локализации, оставляя для переводчика только
 **_полезный текст_**, отсекая _технические данные_.
 
-* prod site: [localize.ru][prod] (not set)
+* prod site: [localize.ru][prod]
 * pre prod: [91.225.238.193][pre prod]
-* version: 1.02.4
+* version: 1.04.2
 * author: [meok][author]
 * build: react, django, postgres, celery, redis, nginx
-
-[Dev help][dev help]
 
 ## Функции приложения:
 
 - [x] управление проектами
 - [x] загрузка файла (API)
-- [x] автоматический парсинг файла (**html**, **csv**, **po**) (нереализован **row**)
+- [x] автоматический парсинг файла (**html**, **csv**, **po**, **row**)
 - [x] парсинг загруженных переведенных копий
 - [x] создание переведенных копий и их выгрузка через API
 - [x] роли пользователей
@@ -86,8 +84,12 @@ $ sh ./runner.sh 5
 
 [Release notes][log]
 
-[prod]: <https://localize.wuku.ru> "Abyss localize system"
+## Dev help page
+
+[Dev help][dev help]
+
+[prod]: <https://localizegame.com> "Abyss localize system"
 [pre prod]: <http://91.225.238.193:3000/> "Preprod server"
 [log]: <READ-LOG.md> "Release notes"
 [dev help]: <READ-DEV.md> "Help for development"
-[author]: <https://ruinf.ru> "meok home page"
+[author]: <https://bazha.ru> "meok home page"

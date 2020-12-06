@@ -84,7 +84,7 @@ const FileItem = ({ file, onOptClick = null }) => {
   return (
     <div className='table-line m-0'>
       <div className='col col-3'>
-        {Boolean(file.error) ? (
+        {!Boolean(file.method) ? (
           file.name
         ) : (
           <Link to={`/translates/${file.id}`}>

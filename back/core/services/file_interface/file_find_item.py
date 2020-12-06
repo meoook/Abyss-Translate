@@ -1,4 +1,4 @@
-from core.models import Translate, FileMark
+from core.models import Translate
 
 
 class FileItemsFinder:
