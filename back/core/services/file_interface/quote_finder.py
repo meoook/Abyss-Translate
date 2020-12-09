@@ -5,8 +5,8 @@ class TextQuoteFinder:
     """ Simple class to find quotes in texts (minimum 2 values needed to work) """
     def __init__(self):
         # Max quote length
-        self.__left = 4
-        self.__right = 4
+        self.__left: int = 4
+        self.__right: int = 4
         # Quote values
         self.__l1: str = ''
         self.__l2: str = ''
@@ -80,4 +80,3 @@ class TextQuoteFinder:
         if self.__right >= 1:
             if self.__r1 != value[-1]:
                 self.__right = 0
-

@@ -1,48 +1,52 @@
 import re
 
+# FIXME: Need to finish comments parsing
 
-def escape(st):
+# Fixme: Do we really need escape/unescape?
+
+
+def escape(string_val) -> str:
     """ Escapes the characters ``\\\\``, ``\\t``, ``\\n``, ``\\r`` and ``"`` in the given string """
-    return st.replace('\\', r'\\') \
+    return string_val.replace('\\', r'\\') \
         .replace('\t', r'\t') \
         .replace('\r', r'\r') \
         .replace('\n', r'\n') \
         .replace('\"', r'\"')
 
 
-def unescape(st):
-    """ Unescapes the characters ``\\\\``, ``\\t``, ``\\n``, ``\\r`` and ``"`` in the given string ``st`` """
-    def unescape_repl(m):
-        m = m.group(1)
-        if m == 'n':
+def unescape(string_val: str) -> str:
+    """ Unescapes the characters ``\\\\``, ``\\t``, ``\\n``, ``\\r`` and ``"`` in the given string ``string_val`` """
+    def unescape_repl(re_exp) -> str:
+        char = re_exp.group(1)
+        if char == 'n':
             return '\n'
-        if m == 't':
+        if char == 't':
             return '\t'
-        if m == 'r':
+        if char == 'r':
             return '\r'
-        if m == '\\':
+        if char == '\\':
             return '\\'
-        return m  # handles escaped double quote
+        return char  # handles escaped double quote
 
-    return re.sub(r'\\(\\|n|t|r")', unescape_repl, st)
+    return re.sub(r'\\(\\|n|t|r")', unescape_repl, string_val)
 
 
 class GettextEntrySerializer:
     """ Serializer to parse efficiently and correctly entries for .po file format (gettext) """
     def __init__(self):
         self.__row_type = None  # fid, comment or texts
-        # Values can be on several lines. That's why using array to keep values.
-        self.__msg_id = []  # unique id
-        self.__msg_id_plural = []  # unique id plural
-        self.__msg_c_txt = []  # unique id additional data
-        self.__comments = ''  # translator comments for context
-        self.__msg_strings = []  # texts here
-        self.__warning = ''  # parse warnings
+        # Values can be on several lines. That's why using array to keep them.
+        self.__msg_id: list[str] = []         # unique id
+        self.__msg_id_plural: list[str] = []  # unique id plural
+        self.__msg_c_txt: list[str] = []      # unique id additional data
+        self.__comments: list[str] = []       # translator comments for context
+        self.__msg_strings: list[str] = []    # texts here
+        self.__warning: str = ''              # parse warnings
 
-        self.__types = ['msgid', 'msgctxt', 'msgstr', 'msgid_plural']
+        self.__types: list[str] = ['msgid', 'msgctxt', 'msgstr', 'msgid_plural']
 
     @property
-    def data(self) -> dict:
+    def data(self) -> dict[str, any]:
         return {
             'msgid': ' '.join(self.__msg_id),
             'msgidx': ' '.join(self.__msg_id_plural),
@@ -53,11 +57,11 @@ class GettextEntrySerializer:
         }
 
     @data.setter
-    def data(self, entry: list):
+    def data(self, entry: list[str]):
         """ Set gettext file entry to this function. Entry must be a list of entry rows. """
         self.__parse(entry)
 
-    def __parse(self, entry: list):
+    def __parse(self, entry: list[str]) -> None:
         """ Parse entry row by row and fill entry parameters """
         for entry_line in entry:
             entry_line = entry_line.strip()
@@ -119,7 +123,8 @@ class GettextEntrySerializer:
             else:
                 self.__warning = 'Syntax error'
 
-    def __added(self, value):
+    def __added(self, value: str) -> None:
+        """ Add value to results by current row type """
         val = self.__unquote_and_unescape(value)
         if not val:
             return
@@ -132,10 +137,10 @@ class GettextEntrySerializer:
         elif self.__row_type == 'msgid_plural':
             self.__msg_id_plural.append(val)
         elif self.__row_type == 'comments':
-            self.__comments = f'{self.__comments} {val}' if self.__comments else val
+            self.__comments.append(val)
         elif not self.__warning:
             self.__warning = 'parse error'
 
     @staticmethod
-    def __unquote_and_unescape(value):
+    def __unquote_and_unescape(value: str) -> str:
         return unescape(value[1:-1]) if value.startswith('"') else unescape(value)

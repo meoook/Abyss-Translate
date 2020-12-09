@@ -23,7 +23,7 @@ def file_uploaded_new(file_id, original_lang_id, file_path):
     """ After file uploaded -> If possible update it from repo then get info and build new translates """
     file_manager = FileModelAPI(file_id)
     logger.info(f'File id:{file_id} try update from repo and parse')
-    file_manager.file_new(original_lang_id, file_path)
+    file_manager.file_new(file_path, original_lang_id)
 
 
 @shared_task(

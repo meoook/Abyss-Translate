@@ -2,14 +2,18 @@ import logging
 import os
 
 from django.conf import settings
+from django.forms.models import model_to_dict
 from django.core.exceptions import ObjectDoesNotExist, ValidationError
 from django.db.models import Q
 
+# from core.services.file_interface.file_model_utility import FileModelUtility
+from core.services.git_interface.git_interface import GitInterface
 from core.services.file_interface.file_find_item import FileItemsFinder
 from core.services.file_interface.file_read_csv import LocalizeCSVReader
 from core.services.file_interface.file_read_html import LocalizeHtmlReader
 from core.services.file_interface.file_read_row import LocalizeRowReader
 from core.services.file_interface.file_read_ue import LocalizeUEReader
+from core.services.file_interface.file_scanner import FileScanner
 
 from core.models import TranslateChangeLog, Translate, File, Translated, MarkItem, FileMark, ErrorFiles, Language
 
@@ -19,7 +23,7 @@ logger = logging.getLogger('django')
 class FileModelBasicApi:
     """ Api with file model and sub models(file-mark-item-translate-log) """
 
-    def __init__(self, file_id):
+    def __init__(self, file_id: int):
         """ Get file object from database to do other actions """
         # Object flags and params
         self._log_name = ''
@@ -27,6 +31,7 @@ class FileModelBasicApi:
         try:
             # self._file = File.objects.select_related('lang_orig').get(id=file_id)
             self._file = File.objects.get(id=file_id)
+            # TODO: Save file params to class params that used
         except ObjectDoesNotExist:
             self._handle_err(f"File not found ID: {file_id}")
         except Exception as exc:
@@ -80,12 +85,12 @@ class FileModelBasicApi:
             else:  # Create empty translate if no suggestion
                 self.__tr_up_or_cr_by_parser(item_id, lang_to, '', '')
 
-    def _file_rebuild_original(self, orig_id, languages_to, info_obj):
+    def __file_rebuild_original(self, orig_id, languages_to, info_obj):
         """ Update, delete, insert translates while parsing file -> then refresh file stats """
         if not self.__fid_lookup_formula_exist(info_obj):
             logger.info(f'File {self._log_name} don\'t have fID formula and will build by index')
 
-        reader = self._get_reader(info_obj)
+        reader = self.__get_reader(info_obj)
         finder = FileItemsFinder(self._file.id)  # Prepare finder and remember old marks
         for file_mark in reader:
             # Getting FileMark object
@@ -105,8 +110,11 @@ class FileModelBasicApi:
             numbers_not_to_delete = []  # After adding items - delete old unused if structure changed
             for mark_item in file_mark['items']:
                 numbers_not_to_delete.append(mark_item['item_number'])
+                # Prepare translates to find by inner text (old translates in DB)
+                translates_with_text = finder.find_by_md5(mark_item['md5sum'])
+
                 warning = mark_item['warning']
-                # Getting MarkItem object
+                # Get or create MarkItem object
                 try:
                     _item = MarkItem.objects.get(mark=mark, item_number=mark_item['item_number'])
                     if _item.md5sum == mark_item['md5sum']:
@@ -123,8 +131,6 @@ class FileModelBasicApi:
                     _item = MarkItem.objects.create(mark=mark, item_number=mark_item['item_number'],
                                                     words=mark_item['words'], md5sum=mark_item['md5sum'],
                                                     md5sum_clear=mark_item['md5sum_clear'])
-                # Prepare translates to find by inner text (old translates in DB)
-                translates_with_text = finder.find_by_md5(mark_item['md5sum'])
                 # Create/update translates - For optimisation we save languages before
                 self.__tr_refresh_by_parser_for_languages(_item.pk, orig_id, languages_to,
                                                           mark_item['text'], translates_with_text, warning)
@@ -141,7 +147,7 @@ class FileModelBasicApi:
         self._file.save()
         logger.info(f"File {self._log_name} build as original success")
 
-    def _file_rebuild_translates(self, lang_id, info_obj):
+    def __file_rebuild_translates(self, lang_id, info_obj):
         """ Update, delete, insert translates while parsing file for selected language then update progress """
         if self.__fid_lookup_formula_exist(info_obj):
             warning = ''
@@ -149,7 +155,7 @@ class FileModelBasicApi:
             warning = 'translate placed by file index'  # TODO: It ok to change translate without formula ?
             self._handle_err('translate copy don\'t have fID formula and will build by index')
 
-        reader = self._get_reader(info_obj)
+        reader = self.__get_reader(info_obj)
         for file_mark in reader:
             try:
                 mark = self._file.filemark_set.get(fid=file_mark['fid'])
@@ -170,7 +176,7 @@ class FileModelBasicApi:
                         self.__log_translate(translate.id, mark_item['text'])
         logger.info(f"File {self._log_name} build as copy success")
 
-    def _file_progress_create(self):
+    def __file_progress_create(self):
         """ Create progress for 'new' file """
         logger.info(f"File {self._log_name} creating progress for all languages")
         translate_to_ids = [x for x in self._file.folder.project.translate_to.values_list('id', flat=True)]
@@ -197,7 +203,7 @@ class FileModelBasicApi:
             return False
         return True
 
-    def _file_progress_refresh_all(self):
+    def __file_progress_refresh_all(self):
         """ Refresh file progress for all languages """
         for translated in self._file.translated_set.all():
             self._file_progress_refresh(translated.language)
@@ -213,7 +219,7 @@ class FileModelBasicApi:
         # raise AssertionError(msg)
 
     @staticmethod
-    def _get_reader(info_obj, copy_path=''):
+    def __get_reader(info_obj, copy_path=''):
         """ Get parser for method """
         assert info_obj.method in ['csv', 'html', 'ue', 'row'], "Critical: unknown method to read file"
         assert info_obj.codec, "Critical: codec parameter is required"
@@ -229,7 +235,7 @@ class FileModelBasicApi:
         elif info_obj.method == 'row':
             return LocalizeRowReader(*reader_params)
 
-    def _save_error(self):
+    def _save_error_file(self):
         """ Save error file to analyze  """
         err_file_name = f'err_{self._file.id}.txt'
         try:
@@ -243,13 +249,13 @@ class FileModelBasicApi:
         return error_file.pk
 
     @staticmethod
-    def _get_lang_short_name(lang_id: int):
+    def __get_lang_short_name(lang_id: int):
         try:
             return Language.objects.get(id=lang_id).short_name
         except ObjectDoesNotExist:
             return ''
 
-    def _get_translate_copy_path(self, original_file_path: str, lang_short_name: str):
+    def __translate_copy_get_path(self, original_file_path: str, lang_short_name: str):
         """ Create translate copy path: in 'language short name' folder create copy with same file name """
         base_dir_name = os.path.dirname(original_file_path)
         lang_dir = os.path.join(base_dir_name, lang_short_name)
@@ -258,13 +264,143 @@ class FileModelBasicApi:
             try:
                 os.makedirs(lang_dir)
             except OSError:  # Return path in same folder
-                return self._get_translate_copy_path_suffix(original_file_path, lang_short_name)
+                return self.__translate_copy_get_path_suffix(original_file_path, lang_short_name)
         return os.path.join(base_dir_name, lang_short_name, self._file.name)
 
-    def _get_translate_copy_path_suffix(self, original_file_path: str, lang_short_name: str):
+    def __translate_copy_get_path_suffix(self, original_file_path: str, lang_short_name: str):
         """ Option 2: Create copy with 'language short name' suffix added to file name in same folder """
         dir_name = os.path.dirname(original_file_path)
         # file_name = os.path.basename(original_file_path)
         name, ext = os.path.splitext(self._file.name)
         copy_name = f'{name}-{lang_short_name}{ext}'
         return os.path.join(dir_name, copy_name)
+
+    def _file_refresh(self, tmp_path: str, lang_id: int, is_original: bool) -> bool:
+        """ File refresh translates (mark-item-translate) for selected language """
+        current_options = self._file.options
+        info = FileScanner(tmp_path, self.__get_lang_short_name(lang_id))
+        """ Phase 0: Delete progress for new original (then refresh if no errors) """
+        if is_original:
+            self._file.translated_set.all().delete()
+        """ Phase 1: Check info for critical errors """
+        if info.error:
+            if is_original:
+                self._handle_err(f"get info error:{info.error}")
+                self._file.error = info.error
+                self._file.save()
+            else:
+                self._handle_err(f"Uploaded {tmp_path} file get info error:{info.error}")
+                settings.STORAGE_ERRORS.delete(tmp_path)
+            return False
+        """ Phase 2: Check file if structure change (new = true) """
+        if current_options != info.options:
+            logger.info(f'Loaded file {tmp_path} structure not same as was before for {self._log_name}')
+            if is_original:
+                self._structure_changed = True
+            else:
+                self._handle_err("Can't fill translates if structure not same")
+                settings.STORAGE_ERRORS.delete(tmp_path)
+                return False
+        """ Phase 3: Update structure if upload file is original language """
+        logger.info(f"File {self._log_name} get info success - method:{info.method}")
+        if is_original and self._structure_changed:
+            logger.info(f"File {self._log_name} uploaded new original with changed structure:{info.options}")
+            self._file.codec = info.codec
+            self._file.method = info.method
+            self._file.options = info.options
+        """ Phase 4: Rebuild file """
+        if is_original:
+            languages = self.__file_progress_create()
+            try:
+                logger.info(f'File {self._log_name} try build marks as original')
+                self.__file_rebuild_original(lang_id, languages, info)  # file.save() called if success
+            except AssertionError as err:
+                self._handle_err("File {} build marks error: " + str(err))
+                self._file.error = err
+                self._file.save()
+                return False
+            else:
+                """ Phase 5: Refresh progress """
+                self.__file_progress_refresh_all()
+        else:
+            logger.info(f'File {self._log_name} try build marks for language {lang_id}')
+            try:
+                self.__file_rebuild_translates(lang_id, info)
+            except AssertionError as err:
+                self._handle_err("File {} build translates error: " + str(err))
+            finally:
+                """ Phase 5: Refresh progress and del tmp data """
+                settings.STORAGE_ERRORS.delete(tmp_path)
+                self._file_progress_refresh(lang_id)
+        return True
+
+    def _translate_copy_create(self, lang_to_id: int) -> None:
+        """ Create translation copy of the file to selected language """
+        original_file_path = self._file.data.path
+        info = FileScanner(path=original_file_path)  # Fixme - get info from db_model
+        copy_path = self.__translate_copy_get_path(original_file_path, self.__get_lang_short_name(lang_to_id))
+        reader = self.__get_reader(info_obj=info, copy_path=copy_path)
+
+        for file_mark in reader:
+            mark_translates = Translate.objects\
+                .filter(item__mark__file__id=self._file.id, language_id=lang_to_id, item__mark__fid=file_mark['fid'])\
+                .exclude(text__exact="").values('item__item_number', 'text')
+            # Remap items as {item_number: xx, text: yy}
+            mark_translates = [{'item_number': tr['item__item_number'], 'text': tr['text']} for tr in mark_translates]
+            # if file_mark['fid'] in tr_items:
+            reader.copy_write_mark_items(mark_translates)
+        # reader.change_item_content_and_save(values=None)  # To save - left/unsaved data
+        # Update model as finished
+        progress = self._file.translated_set.get(language_id=lang_to_id)
+        progress.translate_copy = copy_path
+        progress.need_refresh = False   # Set status - copy refreshed
+        progress.save()
+
+    def _translate_copy_update_in_repo(self, lang_id: int) -> bool:
+        """ Update file translated copy in repository """
+        # TODO: Make choices how to save copy in repo (EN/filename.txt or filename-en.txt)
+        if self._file.folder.repo_status:
+            copy = self._file.translated_set.get(language_id=lang_id)
+            git_manager = GitInterface()
+            try:
+                git_manager.repo = model_to_dict(self._file.folder.folderrepo)
+                new_file_sha, err = git_manager.upload_file(copy.translate_copy.path, copy.repo_sha)
+            except AssertionError as err:
+                logger.warning(f"Can't set repository for file {self._log_name} error: {err}")
+                return False
+            if err:
+                logger.error(f"Error uploading copy for {self._log_name} to lang {lang_id} - {err}")
+                return False
+            copy.repo_hash = new_file_sha
+            copy.save()
+            logger.info(f"Success uploaded file copy {self._log_name} for lang {lang_id} to repository")
+            return True
+        else:
+            logger.info(f"Folder repository not found for file {self._log_name}")
+        return False
+
+    def _update_from_repo(self):
+        """ Update file from git repository """
+        if self._file.folder.repo_status:
+            self._file.repo_status = False
+            logger.info(f"File {self._log_name} trying to update from repository - set status False (not found)")
+            # Get list of updated files from git
+            git_manager = GitInterface()
+            try:
+                git_manager.repo = model_to_dict(self._file.folder.folderrepo)
+                new_sha, err = git_manager.update_file(self._file.data.path, self._file.repo_sha)
+            except AssertionError as error:
+                logger.error(f"Can't set repository for file {self._log_name} error: {error}")
+            else:
+                if err:
+                    logger.warning(f"File update from repository error: {err}")
+                elif new_sha:
+                    logger.info(f"File {self._log_name} updated from repository - set status True (found)")
+                    self._file.repo_status = True
+                    self._file.repo_sha = new_sha
+                else:  # If not set - file not updated in repository
+                    logger.info(f"File {self._log_name} no need to update from repository - set status True (found)")
+                    self._file.repo_status = True
+            self._file.save()
+        else:
+            logger.info(f"Folder repository not found for file {self._log_name}")

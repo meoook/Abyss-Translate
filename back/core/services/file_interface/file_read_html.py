@@ -12,15 +12,12 @@ from core.services.file_interface.parser_utils import ParserUtils
 
 class LocalizeHtmlReader(ParserUtils):
     """ Read html file and yield FileMark object to insert in DB. Also control creating translation copy. """
-
     def __init__(self, decoded_data: str, data_codec: str, _, copy_path: str = ''):
         self.__html_parser = _HtmlDataSeeker(decoded_data)
-        self.__codec = data_codec
+        self.__codec: str = data_codec
         # File results
         self.__file_items: int = 0
         self.__file_words: int = 0
-        # Counter
-        self.__elem_index: int = 0  # unused TODO: remove if no need
         # If copy path set - create CCC object to control copy creation
         self.__copy = CopyContextControl(copy_path, data_codec, mode='append') if copy_path else None
 
@@ -49,7 +46,6 @@ class LocalizeHtmlReader(ParserUtils):
         if not item_words:  # Pass if no words in text
             self.__next__()
 
-        self.__elem_index += 1  # unused TODO: remove if no need
         self.__file_items += 1  # only one item for html
         self.__file_words += item_words
 
@@ -77,10 +73,10 @@ class LocalizeHtmlReader(ParserUtils):
 
 class _HtmlDataSeeker:
     def __init__(self, html_data: str):
-        self.__left_data: str = html_data  # Not parsed data
+        self.__left_data: str = html_data          # Not parsed data
         self.__current_value: dict[str, str] = {}  # Current tag data
-        self.__tags: list[any] = [1]  # DOM tree with child index(is always last item)
-        self.__tag_params: str = ''  # Use tag params as context
+        self.__tags: list[any] = [1]               # DOM tree for elem (index is always last item)
+        self.__tag_params: str = ''                # Use tag params as context
         # Content before item (from file start or item before) to create changed copy
         self.__delta_content: dict[str, str] = {'unsaved_content': '', 'current_content': ''}
         # DOM tree of elements with context
@@ -101,7 +97,7 @@ class _HtmlDataSeeker:
 
     @property
     def data(self) -> dict[str, str]:
-        """ work around with bug - that __next__ don't return value """
+        """ Return serialized data """
         val = dict(self.__current_value)
         self.__warning = ''
         self.__tag_params = ''
@@ -131,7 +127,7 @@ class _HtmlDataSeeker:
     def __open_or_close_next_tag(self) -> None:
         """ Find what tag is next and continue lookup data """
         if self.__left_data.strip().startswith('<!'):
-            # tag is <!doctype html>
+            # tag is <!doctype>
             end: int = self.__left_data.index('>') + 1
         else:
             open_tag = re.match(r'^<([\w]+)([^>]*)?>', self.__left_data)  # <tag and=params>
@@ -143,7 +139,7 @@ class _HtmlDataSeeker:
                 if tag in ['script', 'style', 'meta', 'link'] \
                         or tag[-1] == '/' \
                         or (params and params[-1] == '/')\
-                        or (tag in ['br', 'hr', ] and not params):
+                        or (tag in ['br', 'hr'] and not params):
                     self.__close_tag(tag)
                 end = open_tag.end()
             else:
@@ -179,7 +175,7 @@ class _HtmlDataSeeker:
             self.__warning = 'incorrect close tag before previous'
 
     def __get_item_tree(self) -> str:
-        """ Get item DOM tree -> DEBUG -> upgrade lookup fid (search radius) """
+        """ Get item DOM tree -> DEBUG -> TODO: For not 100% dom tree coincidence upgrade lookup fid (search radius) """
         item_tree = ':'.join([str(tag) for tag in self.__tags])
         self.__dom_tree.append(item_tree)
         return item_tree

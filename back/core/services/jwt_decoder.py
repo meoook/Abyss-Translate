@@ -13,8 +13,8 @@ class AbyssJwtValidator:
     def __init__(self, jwt_key):
         jwt_parts = jwt_key.split('.')
         # Params
-        self._valid = False
-        self._data = None
+        self._valid: bool = False
+        self._data: dict[str, any] = {}
         if len(jwt_parts) == 3:
             self._header, self._payload, self._income_signature = jwt_parts
             if self._validate():
@@ -22,18 +22,19 @@ class AbyssJwtValidator:
                 self._data = self._get_data()
 
     @property
-    def valid(self):
+    def valid(self) -> bool:
         return self._valid
 
     @property
-    def data(self):
+    def data(self) -> dict[str, any]:
         return self._data
 
-    def _get_data(self):
+    def _get_data(self) -> dict[str, any]:
         _data = self._decode_str_with_fix_padding(self._payload)
         return json.loads(_data)
 
-    def _validate(self):
+    def _validate(self) -> bool:
+        """ Create signature of incoming data by *key* and check it with incoming signature """
         sig_in = self._decode_str_with_fix_padding(self._income_signature)
         sig_check = self._create_check_signature()
         if sig_in != sig_check:
@@ -51,7 +52,8 @@ class AbyssJwtValidator:
         return False
 
     @staticmethod
-    def _decode_str_with_fix_padding(value: str):
+    def _decode_str_with_fix_padding(value: str) -> bytes:
+        """ JWT token cut '='. This method add '=' to the end row to fix bytes length """
         val = value.encode()
         try:
             return_val = base64.urlsafe_b64decode(val)
@@ -60,7 +62,8 @@ class AbyssJwtValidator:
             return_val = base64.urlsafe_b64decode(val)
         return return_val
 
-    def _create_check_signature(self):
+    def _create_check_signature(self) -> bytes:
+        """ Create signature with income data by secret key """
         msg = f'{self._header}.{self._payload}'.encode()
         context = hmac.new(self._ABYSS_SECRET_KEY, msg, self._ABYSS_ALGORITHM)
         return context.digest()

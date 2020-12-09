@@ -11,7 +11,7 @@ class LocalizeCSVReader:
 
     def __init__(self, decoded_data: str, data_codec: str, scan_options: dict[str, any], copy_path: str = ''):
         self.__data: list[str] = decoded_data.splitlines()
-        self.__row_parser = _MarkDataFromRow(data_codec, scan_options)
+        self.__row_parser = _CsvRowToMarkSerializer(data_codec, scan_options)
         self.__row_index: int = scan_options['top_rows']
         self.__max_index: int = len(self.__data) - 1
         # File results
@@ -57,7 +57,8 @@ class LocalizeCSVReader:
             self.__copy.replace_and_save(to_add)
 
 
-class _MarkDataFromRow(ParserUtils):
+class _CsvRowToMarkSerializer(ParserUtils):
+    """ Row to mark serializer """
     def __init__(self, codec: str, scan_options: dict[str, any]):
         self.__current_row_items: list[str] = []
         # Row parse options
@@ -70,7 +71,7 @@ class _MarkDataFromRow(ParserUtils):
         self.__get_fid_from_item_list: Callable[[any], str] = self.__set_fid_lookup_fn(scan_options['fid_lookup'])
         # Row results
         self.__fid: str = ''           # Unique id to mark item
-        self.__words_amount = 0
+        self.__words_amount: int = 0
         self.__items: list[dict[str, any]] = []
         self.__search_words: str = ''  # Words in all items
         self.__context: str = ''       # Context of row (cleared row)
@@ -78,7 +79,7 @@ class _MarkDataFromRow(ParserUtils):
     def fill_row_with_items(self, items: list[dict[str, any]]) -> str:
         """ Put items value in current row fields for translated version """
         assert isinstance(items, list), "items must be a list"
-        updated_items = []
+        updated_items: list = []
         for col_n, orig_col_value in enumerate(self.__current_row_items, start=1):
             to_append = orig_col_value
             if col_n in self.__fields:
@@ -91,6 +92,7 @@ class _MarkDataFromRow(ParserUtils):
 
     @property
     def data(self) -> dict[str, any]:
+        """ Return serialized object """
         return {
             'fid': self.__fid,
             'words': self.__words_amount,
@@ -101,6 +103,7 @@ class _MarkDataFromRow(ParserUtils):
 
     @data.setter
     def data(self, row: str):
+        """ Set data to serialize """
         self.__current_row_items = row.split(self.__delimiter)
         # Mark data
         self.__fid = self.__get_fid_from_item_list(self.__current_row_items)

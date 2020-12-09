@@ -72,10 +72,11 @@ class LocalizeUEReader:
 
 
 class _GettextToMarkSerializer(ParserUtils):
+    """ Gettext entry to mark serializer """
     def __init__(self, codec: str, scan_options: dict[str, any]):
         self.__current_items: list[str] = []
         # Row parse options
-        self.__codec = codec
+        self.__codec: str = codec
         # Define function to get fID from formula
         self.__get_fid_from_entry = self.__fid_lookup_function_by_formula(scan_options['fid_lookup'])
         # Row results
@@ -104,6 +105,7 @@ class _GettextToMarkSerializer(ParserUtils):
 
     @property
     def data(self) -> dict[str, any]:
+        """ Return serialized data """
         return {
             'fid': self.__fid,
             'words': self.__words_amount,
@@ -114,14 +116,15 @@ class _GettextToMarkSerializer(ParserUtils):
 
     @data.setter
     def data(self, entry: list[str]):
+        """ Set data to serialize """
         self.__current_items = entry
 
         entry_parser = GettextEntrySerializer()
         entry_parser.data = entry
 
         # Null result data
-        self.__items = []  # Array of FileMarksObjects
-        self.__words_amount = 0  # Words amount in all items
+        self.__items = []         # Array of FileMarksObjects
+        self.__words_amount = 0   # Words amount in all items
         self.__search_words = ''  # Words in all items
 
         for item_number, item_text in enumerate(entry_parser.data['items'], start=1):

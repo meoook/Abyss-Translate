@@ -35,22 +35,22 @@ class ParserUtils:
     #     return f'{name}-{suffix}{ext}'
 
     # @staticmethod
-    # def escape(st):   # TODO: Check needed
+    # def escape(string_val):   # TODO: Check needed
     #     """
     #     Escapes the characters ``\\\\``, ``\\t``, ``\\n``, ``\\r`` and ``"`` in
-    #     the given string ``st`` and returns it.
+    #     the given string ``string_val`` and returns it.
     #     """
-    #     return st.replace('\\', r'\\')\
+    #     return string_val.replace('\\', r'\\')\
     #              .replace('\t', r'\t')\
     #              .replace('\r', r'\r')\
     #              .replace('\n', r'\n')\
     #              .replace('\"', r'\"')
     #
     # @staticmethod
-    # def unescape(st):   # TODO: Check needed
+    # def unescape(string_val):   # TODO: Check needed
     #     """
     #     Unescapes the characters ``\\\\``, ``\\t``, ``\\n``, ``\\r`` and ``"`` in
-    #     the given string ``st`` and returns it.
+    #     the given string ``string_val`` and returns it.
     #     """
     #     def unescape_repl(m):
     #         m = m.group(1)
@@ -63,4 +63,4 @@ class ParserUtils:
     #         if m == '\\':
     #             return '\\'
     #         return m  # handles escaped double quote
-    #     return re.sub(r'\\(\\|n|t|r")', unescape_repl, st)
+    #     return re.sub(r'\\(\\|n|t|r")', unescape_repl, string_val)

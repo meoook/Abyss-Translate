@@ -33,7 +33,7 @@ class Command(BaseCommand):
             'name': file_name,
             'folder': folder1.id,
             'lang_orig': prj_lang_orig_id,
-            'data': ContentFile(b"""param1, param2, param3\nbut numbers, 897, and settings\nwill be, random_setting.on, ignored\none, more, row\n""", file_name),
+            'data': ContentFile(b"""param1, param2, param3\nbut numbers, 897, and settings\nwill be, random_setting.on, ignored\none, more, string_val\n""", file_name),
         })
         if serializer.is_valid():
             self.stdout.write(f'FILE SAVE OK')

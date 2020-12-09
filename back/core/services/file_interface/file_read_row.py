@@ -48,8 +48,9 @@ class LocalizeRowReader(ParserUtils):
 
 
 class _RowToMarkSerializer(ParserUtils):
+    """ Row to mark serializer """
     def __init__(self, codec: str):
-        self.__codec = codec
+        self.__codec: str = codec
 
     def serialize(self, row_text: str) -> dict[str, any]:
         clean_text: str = self._clean_text(row_text)
