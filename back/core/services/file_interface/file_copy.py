@@ -1,4 +1,5 @@
 import logging
+import os
 
 logger = logging.getLogger('django')
 
@@ -45,3 +46,32 @@ class CopyContextControl:
             logger.critical(f'File {self.__path} was unexceptionally closed. Reopen...')
             self.__filo = open(self.__path, 'a', encoding=self.__codec)
             self.__filo.write(self.__unsaved + data)
+
+    @staticmethod
+    def get_path(original_file_path: str, lang_short_name: str) -> str:
+        """ To make method static (used without Class object) """
+        _params = (original_file_path, lang_short_name)
+        return CopyContextControl.get_path_in_folder(*_params) or CopyContextControl.get_path_with_suffix(*_params)
+
+    @staticmethod
+    def get_path_in_folder(original_file_path: str, lang_short_name: str) -> str:
+        """ Get translate copy path in 'language short name' folder (create folder if needed) """
+        base_dir_name = os.path.dirname(original_file_path)
+        file_name = os.path.basename(original_file_path)
+        lang_dir = os.path.join(base_dir_name, lang_short_name)
+
+        if not os.path.exists(lang_dir):
+            try:
+                os.makedirs(lang_dir)
+            except OSError:  # Return path in same folder
+                return ''
+        return os.path.join(base_dir_name, lang_short_name, file_name)
+
+    @staticmethod
+    def get_path_with_suffix(original_file_path: str, lang_short_name: str) -> str:
+        """ Get translate copy path related to original but add 'language short name' suffix """
+        dir_name = os.path.dirname(original_file_path)
+        file_name = os.path.basename(original_file_path)
+        name, ext = os.path.splitext(file_name)
+        copy_name = f'{name}-{lang_short_name}{ext}'
+        return os.path.join(dir_name, copy_name)

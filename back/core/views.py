@@ -21,7 +21,7 @@ from .serializers import ProjectSerializer, FoldersSerializer, LanguagesSerializ
 from .models import Language, Project, Folder, FolderRepo, File, Translated, FileMark, ProjectPermission, \
     TranslateChangeLog
 
-from .services.file_interface.file_interface import FileModelAPI
+from .services.file_interface.file_interface import FileInterface
 from .tasks import file_uploaded_new, folder_update_repo_after_url_change, \
     folder_repo_change_access_and_update, file_uploaded_refresh
 from .permisions import IsProjectOwnerOrReadOnly, IsProjectOwnerOrAdmin, IsProjectOwnerOrManage, \
@@ -224,7 +224,7 @@ class FileMarksView(viewsets.ModelViewSet):
         file_id = request.data.get('file_id')
         # lang_id = request.data.get('lang_id')
         try:
-            file_manager = FileModelAPI(file_id)
+            file_manager = FileInterface(file_id)
         except AssertionError:
             return Response({'err': 'file object error'}, status=status.HTTP_404_NOT_FOUND)
         resp, sts = file_manager.translate_change_by_user(request.user.id, **request.data)

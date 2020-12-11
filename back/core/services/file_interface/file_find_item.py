@@ -11,11 +11,11 @@ class FileItemsFinder:
         self.__fill_check_objects(file_id)
 
     @property
-    def used_mid(self) -> list[int]:
+    def used_mark_id(self) -> list[int]:
         return self.__marks_ids_not_to_del
 
-    @used_mid.setter
-    def used_mid(self, value: int):
+    @used_mark_id.setter
+    def used_mark_id(self, value: int):
         self.__marks_ids_not_to_del.append(value)
 
     def find_by_md5(self, md5: str) -> dict[int, dict[str, any]]:

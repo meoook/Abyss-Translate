@@ -3,7 +3,7 @@ import logging
 from django.core.exceptions import ObjectDoesNotExist
 from django.forms.models import model_to_dict
 
-from core.services.file_interface.file_interface import FileModelAPI
+from core.services.file_interface.file_interface import FileInterface
 from core.services.git_interface.git_auth import OAuth2Token
 
 from core.models import Folder, FolderRepo, File
@@ -144,7 +144,7 @@ class LocalizeGitFolderInterface:
                 else:
                     logger.info(f"For file id:{filo['id']} changing status to: True - downloaded")
                     File.objects.filter(id=filo['id']).update(repo_status=True, repo_sha=new_file_sha)
-                    file_manager = FileModelAPI(filo['id'])
+                    file_manager = FileInterface(filo['id'])
                     logger.info(f"File id:{filo['id']} start parse process")
                     file_manager.file_refresh_original()
                     updated_files_amount += 1

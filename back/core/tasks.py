@@ -4,7 +4,7 @@ from celery import shared_task
 from celery.exceptions import SoftTimeLimitExceeded, MaxRetriesExceededError
 
 from core.models import Folder, Translated
-from core.services.file_interface.file_interface import FileModelAPI
+from core.services.file_interface.file_interface import FileInterface
 
 from core.services.folder_interface import LocalizeGitFolderInterface
 
@@ -21,7 +21,7 @@ logger = logging.getLogger('django')
 )
 def file_uploaded_new(file_id, original_lang_id, file_path):
     """ After file uploaded -> If possible update it from repo then get info and build new translates """
-    file_manager = FileModelAPI(file_id)
+    file_manager = FileInterface(file_id)
     logger.info(f'File id:{file_id} try update from repo and parse')
     file_manager.file_new(file_path, original_lang_id)
 
@@ -36,7 +36,7 @@ def file_uploaded_new(file_id, original_lang_id, file_path):
 )
 def file_uploaded_refresh(file_id, lang_id, tmp_path, is_original):
     """ After copy or new original uploaded -> Get info and rebuild translates for language """
-    file_manager = FileModelAPI(file_id)
+    file_manager = FileInterface(file_id)
     _settings_to_msg = f'language:{lang_id} as {"original" if is_original else "translates"}'
     logger.info(f'File id:{file_id} loaded new data for {_settings_to_msg}')
     file_manager.file_refresh(tmp_path, lang_id, is_original)
@@ -134,7 +134,7 @@ def refresh_copies():
     logger.info('Refresh all copies witch translates updated')
     try:
         for copy_info in Translated.objects.filter(need_refresh=True).values('file__id', 'language__id'):
-            file_manager = FileModelAPI(copy_info['file__id'])
+            file_manager = FileInterface(copy_info['file__id'])
             file_manager.translated_copy_refresh(copy_info['language__id'])
     except SoftTimeLimitExceeded:
         logger.warning('Creating copies too slow')
