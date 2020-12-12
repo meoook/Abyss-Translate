@@ -15,6 +15,6 @@ class Command(BaseCommand):
 
         # User.objects.all().delete()
 
-        for copy_info in Translated.objects.filter(need_refresh=True).values('file__id', 'language__id'):
-            file_manager = FileInterface(copy_info['file__id'])
-            file_manager.translated_copy_refresh(copy_info['language__id'])
+        for copy_info in Translated.objects.filter(need_refresh=True).values('file_id', 'language_id'):
+            file_manager = FileInterface(copy_info['file_id'])
+            file_manager.translated_copy_refresh(copy_info['language_id'])

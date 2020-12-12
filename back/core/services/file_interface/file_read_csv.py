@@ -127,7 +127,7 @@ class _CsvRowToMarkSerializer(ParserUtils):
                         'md5sum_clear': self._get_md5(clean_text.encode(self.__codec)),
                         'words': item_words,
                         'text': text,
-                        'warning': None,
+                        'warning': '',
                     })
         if self.__words_amount:
             self.__context = self._clean_text(row)

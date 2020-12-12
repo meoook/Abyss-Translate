@@ -64,7 +64,7 @@ class _RowToMarkSerializer(ParserUtils):
                 'md5sum_clear': self._get_md5(clean_text.encode(self.__codec)),
                 'words': item_words,
                 'text': row_text,
-                'warning': None,
+                'warning': '',
             })
 
         return {
