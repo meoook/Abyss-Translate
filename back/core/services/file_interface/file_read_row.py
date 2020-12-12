@@ -42,7 +42,7 @@ class LocalizeRowReader(ParserUtils):
 
     def copy_write_mark_items(self, values: list[dict[str, any]]) -> None:
         """ Write translates in translation file copy file for current item """
-        if self.__copy:  # handle copy control
+        if self.__copy and values:  # handle copy control
             to_add = values[0]['text']
             self.__copy.replace_and_save(to_add)
 

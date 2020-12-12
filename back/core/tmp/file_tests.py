@@ -3,6 +3,7 @@ import os
 from core.services.file_interface.file_read_csv import LocalizeCSVReader
 from core.services.file_interface.file_read_html import LocalizeHtmlReader
 from core.services.file_interface.file_read_ue import LocalizeUEReader
+from core.services.file_interface.html_parser import HtmlContextControl
 from core.services.file_interface.id_finder import UniqueIDLookUp
 from core.services.file_interface.file_scanner import FileScanner
 
@@ -116,23 +117,37 @@ def html_reader_test():
             if not info.error:
                 print('READ ROW BY ROW ================================================')
                 reader = LocalizeHtmlReader(info.data, info.codec, info.options)
-                check_replace = ''
-                print('CHECK REPLACE', next(reader))
-                check_replace += reader.copy_write_mark_items([{'item_number': 1, 'text': 'bugaga'}])
-                print('REPLACED ROW ===', check_replace)
                 for x in reader:
                     print('VALUE', x)
-                check_replace += reader.copy_write_mark_items([{'item_number': 1, 'text': 'bugaga'}])
-                print('FINAL', check_replace)
+                reader.copy_write_mark_items([{'item_number': 1, 'text': 'bugaga'}])
+
+
+def html_reader_test2():
+    my_path = r'C:\Projects\PY\Abby\HELIOS\html'
+    _, _, file_names = next(os.walk(my_path))
+
+    for idxx, file_name in enumerate(file_names):
+        if file_name[-3:] == 'htm' or file_name[-4:] == 'html':
+            file_path = os.path.join(my_path, file_name)
+            info = FileScanner(file_path, 'ru')
+            print(idxx, file_path, {**info.info})
+            if not info.error:
+                print('READ ROW BY ROW ================================================')
+                html_manager = HtmlContextControl(info.data, info.codec, info.options)
+                for key in html_manager.data:
+                    print(f'VALUE: {key}')
+                # reader.copy_write_mark_items([{'item_number': 1, 'text': 'bugaga'}])
+        return
 
 
 if __name__ == '__main__':
     # file_scanner_test()
     # po_lib_test()
     # fid_finder_test()
-    csv_reader_test()
+    # csv_reader_test()
     # ue_reader_test()
     # html_reader_test()
+    html_reader_test2()
     # my_path = r'C:\Projects\PY\Abby\HELIOS\Ability-ru.txt'
     # w = r'C:\Projects\PY\Abby\test.txt'
     #
@@ -142,5 +157,3 @@ if __name__ == '__main__':
     # for x in data.splitlines():
     #     print(x.encode())
     #     other.write(x + '\n')
-
-

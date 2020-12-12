@@ -38,16 +38,20 @@ class LocalizeHtmlReader(ParserUtils):
             raise StopIteration
         # Copy controlling inside html parser
         seeker_data = self.__html_parser.data
-
+        print('OOOOOOOOOOOOOOOO ')
         text = seeker_data['text']
+        print('ZZZZZZZZZZZZZZ', text.encode())
         clean_text = self._clean_text(text)
         item_words = self._count_words(clean_text)
 
         if not item_words:  # Pass if no words in text
+            print('YYYYYYYYYYYYYYYYYY')
             self.__next__()
 
         self.__file_items += 1  # only one item for html
         self.__file_words += item_words
+
+        print('XXXXXXXXXXXXXXXXXXXX', item_words, text.encode(), clean_text.encode())
 
         return {
             'fid': seeker_data['tree'],
@@ -60,13 +64,13 @@ class LocalizeHtmlReader(ParserUtils):
                 'text': text,
                 'warning': seeker_data['warning'],
             }, ],
-            'search_words': clean_text,
+            'search_words': clean_text.lower(),
             'context': seeker_data['context'],
         }
 
     def copy_write_mark_items(self, values: list[dict[str, any]]) -> None:
         """ Translation file copy write new translates for current item """
-        if self.__copy:  # handle copy control
+        if self.__copy and values:  # handle copy control
             to_add = self.__html_parser.change_item_content(values[0]['text'])
             self.__copy.replace_and_save(to_add)
 
