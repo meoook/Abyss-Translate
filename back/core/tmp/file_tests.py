@@ -28,19 +28,6 @@ def file_scanner_test():
             break
 
 
-def po_lib_test():
-    my_path = r'C:\Projects\PY\Abby\HELIOS\ls'
-
-    _, _, file_names = next(os.walk(my_path))
-
-    for idxx, file_name in enumerate(file_names):
-        print('GOING TO PARSE', file_name)
-        po = polib.pofile(os.path.join(my_path, file_name), encoding='UTF-8-SIG')
-
-        for entry in po:
-            print(entry.msgid, entry.msgstr, entry.msgctxt)
-
-
 def fid_finder_test():
     xx = UniqueIDLookUp()
     xx.header = ['xasixdccd', 'asdfsa_IxDdf']
@@ -131,11 +118,11 @@ def html_reader_test():
                 reader = LocalizeHtmlReader(info.data, info.codec, info.options)
                 check_replace = ''
                 print('CHECK REPLACE', next(reader))
-                check_replace += reader.copy_write_mark_items({'text': 'bugaga'})
+                check_replace += reader.copy_write_mark_items([{'item_number': 1, 'text': 'bugaga'}])
                 print('REPLACED ROW ===', check_replace)
                 for x in reader:
                     print('VALUE', x)
-                check_replace += reader.copy_write_mark_items({'text': 'bugaga'})
+                check_replace += reader.copy_write_mark_items([{'item_number': 1, 'text': 'bugaga'}])
                 print('FINAL', check_replace)
 
 
@@ -143,8 +130,8 @@ if __name__ == '__main__':
     # file_scanner_test()
     # po_lib_test()
     # fid_finder_test()
-    # csv_reader_test()
-    ue_reader_test()
+    csv_reader_test()
+    # ue_reader_test()
     # html_reader_test()
     # my_path = r'C:\Projects\PY\Abby\HELIOS\Ability-ru.txt'
     # w = r'C:\Projects\PY\Abby\test.txt'

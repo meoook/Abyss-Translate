@@ -46,13 +46,12 @@ class UniqueIDLookUp:
         """ String formula to save in DB - get fid lookup function with it """
         if not self.__formula:
             self.__set_formula()
-        return self.__formula
+        return str(self.__formula)
 
     @formula.setter
     def formula(self, value: str):
         """ Set formula to get fid lookup function """
-        if isinstance(value, str):
-            self.__formula = value
+        self.__formula = str(value)
 
     @property
     def header(self) -> list[str]:

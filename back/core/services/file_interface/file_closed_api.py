@@ -237,7 +237,7 @@ class FileClosedApi:
         return False
 
     def _file_download_from_repo(self):
-        """ Update file from git repository """
+        """ Download file from git repository (replace original) """
         if self._file.folder.repo_status:
             self._file.repo_status = False
             logger.info(f"File {self._log_name} trying to update from repository - set status False (not found)")
@@ -263,6 +263,7 @@ class FileClosedApi:
             logger.info(f"Folder repository not found for file {self._log_name}")
 
     def _handle_err(self, err_msg: str, lvl: int = 0) -> None:
+        """ Log error messages """
         msg = f"File {self._log_name} - {err_msg}" if self._log_name else err_msg
         if lvl == 2:
             logger.critical(msg)
