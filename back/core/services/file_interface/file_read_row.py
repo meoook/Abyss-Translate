@@ -30,7 +30,7 @@ class LocalizeRowReader(ParserUtils):
             raise StopIteration
         if self.__copy:  # handle copy control
             self.__copy.add_data(self.__data[self.__row_index])
-
+        # Set next row
         mark_obj = self.__serializer.serialize(self.__data[self.__row_index])
         self.__row_index += 1
         if not mark_obj['words']:
@@ -69,7 +69,7 @@ class _RowToMarkSerializer(ParserUtils):
 
         return {
             'words': item_words,
-            'items': items,
             'search_words': clean_text.lower(),
             'context': clean_text,
+            'items': items,
         }

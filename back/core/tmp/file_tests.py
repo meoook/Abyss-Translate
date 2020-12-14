@@ -3,7 +3,7 @@ import os
 from core.services.file_interface.file_read_csv import LocalizeCSVReader
 from core.services.file_interface.file_read_html import LocalizeHtmlReader
 from core.services.file_interface.file_read_ue import LocalizeUEReader
-from core.services.file_interface.html_parser import HtmlContextControl
+from core.services.file_interface.html_parser import HtmlContextParser
 from core.services.file_interface.id_finder import UniqueIDLookUp
 from core.services.file_interface.file_scanner import FileScanner
 
@@ -110,7 +110,7 @@ def html_reader_test():
     _, _, file_names = next(os.walk(my_path))
 
     for idxx, file_name in enumerate(file_names):
-        if file_name[-3:] == 'htm' or file_name[-4:] == 'html':
+        if file_name == 'top_list_info2.htm' and file_name[-3:] == 'htm' or file_name[-4:] == 'html':
             file_path = os.path.join(my_path, file_name)
             info = FileScanner(file_path, 'ru')
             print(idxx, file_path, {**info.info})
@@ -127,17 +127,17 @@ def html_reader_test2():
     _, _, file_names = next(os.walk(my_path))
 
     for idxx, file_name in enumerate(file_names):
-        if file_name[-3:] == 'htm' or file_name[-4:] == 'html':
+        if file_name == 'top_list_info2.htm' and file_name[-3:] == 'htm' or file_name[-4:] == 'html':
             file_path = os.path.join(my_path, file_name)
             info = FileScanner(file_path, 'ru')
             print(idxx, file_path, {**info.info})
             if not info.error:
                 print('READ ROW BY ROW ================================================')
-                html_manager = HtmlContextControl(info.data, info.codec, info.options)
+                html_manager = HtmlContextParser(info.data, info.codec, info.options)
+                [print('TREE:', x) for x in html_manager.tree]
                 for key in html_manager.data:
                     print(f'VALUE: {key}')
                 # reader.copy_write_mark_items([{'item_number': 1, 'text': 'bugaga'}])
-        return
 
 
 if __name__ == '__main__':

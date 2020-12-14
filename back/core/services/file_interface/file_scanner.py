@@ -228,6 +228,6 @@ class FileScanner(ParserUtils):
     @staticmethod
     def __ue_text_serializer(text: str) -> str:
         """ Unreal Engine use 'gettext'(.po) files for translates - check format """
-        search = re.search(r'^msg(?:id|str|ctxt) "(.+)"\s?$', text)
+        search = re.search(r'^msg(?:id|str|ctxt) "(.+)"\s?$', text, re.IGNORECASE)
         if search:
             return search.group(1)

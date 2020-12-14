@@ -4,7 +4,7 @@ import re
 
 # WORD_LEN_TO_COUNT = 3 -> to django settings
 WORD_LEN_TO_COUNT = 3
-CLEANER_PATTERN = r'[\d\-/\[\]\"\'\\`~.,><:;!?@#$%^&*()+=|_{}]'
+CLEANER_PATTERN = r'[\r\d\-/\[\]\"\'\\`~.,><:;!?@#$%^&*()+=|_{}]'
 
 
 class ParserUtils:
@@ -20,7 +20,7 @@ class ParserUtils:
     def _clean_text(text: str) -> str:
         """ Clean text to leave only words separated with one space """
         clean_text = re.sub(CLEANER_PATTERN, '', text.strip())
-        return re.sub(r' {2,}', ' ', clean_text)
+        return re.sub(r'( {2,}|[\s]+)', ' ', clean_text)
 
     @staticmethod
     def _get_md5(binary_data: bytes) -> str:

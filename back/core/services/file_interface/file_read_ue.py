@@ -109,9 +109,9 @@ class _GettextToMarkSerializer(ParserUtils):
         return {
             'fid': self.__fid,
             'words': self.__words_amount,
-            'items': self.__items,
             'search_words': self.__search_words.lower(),
             'context': self.__context,
+            'items': self.__items,
         }
 
     @data.setter

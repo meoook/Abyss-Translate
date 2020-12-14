@@ -37,7 +37,7 @@ class LocalizeCSVReader:
             raise StopIteration
         if self.__copy:  # handle copy control
             self.__copy.add_data(self.__data[self.__row_index])
-
+        # Set next row
         self.__row_parser.data = self.__data[self.__row_index]
         self.__row_index += 1
         if not self.__row_parser.data['words']:
@@ -96,9 +96,9 @@ class _CsvRowToMarkSerializer(ParserUtils):
         return {
             'fid': self.__fid,
             'words': self.__words_amount,
-            'items': self.__items,
             'search_words': self.__search_words.lower(),
             'context': self.__context,
+            'items': self.__items,
         }
 
     @data.setter

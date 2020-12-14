@@ -1,8 +1,11 @@
 import re
 
 
-class HtmlContextControl:
+class HtmlContextParser:
     """ Control text data in HTML document """
+
+    __INVALID_DATA_TAGS = ['script', 'style']
+    __AUTO_CLOSE_TAGS = ['meta', 'link', 'br', 'hr']
 
     def __init__(self, html_data: str, *_args):
         self.__left_data: str = html_data  # Not parsed data
@@ -10,7 +13,7 @@ class HtmlContextControl:
         self.__dom_data: list[dict[str, str]] = []  # List of DOM-tree items (item where is valid text)
         self.__dom_tree: list[str] = []   # DOM tree of elements with context
         # Element props while parsing
-        self.__elem_dom: list[any] = [1]  # Element DOM tree (index is always last item)
+        self.__elem_dom: list[any] = [1, ]  # Element DOM tree *Unique* (index is always last item)
         self.__elem_prefix: str = ''      # Element technical text before valid text
         self.__elem_warning: str = ''     # Element warning (DOM tree errors like 'tag not closed')
 
@@ -20,9 +23,6 @@ class HtmlContextControl:
         """ Parse file while not EOF """
         while self.__next_parse():
             pass
-        # Add left data to return data as 'EOF'
-        _data_tail = {'dom': 'EOF', 'text': self.__elem_prefix, 'prefix': self.__elem_prefix, 'warning': 'end of file'}
-        self.__dom_data.append(_data_tail)
 
     @property
     def tree(self) -> list[str]:
@@ -36,6 +36,9 @@ class HtmlContextControl:
     def __next_parse(self) -> bool:
         """ Parse next part of file to find valid text """
         if not self.__left_data:  # no more data to parse
+            _prefix = self.__prefix_return(0)
+            _data_tail = {'dom': 'EOF', 'text': _prefix, 'prefix': _prefix, 'warning': 'end of file'}
+            self.__dom_data.append(_data_tail)  # Add left data to return data as 'EOF'
             return False
         # Check for newline at start
         _start_with_newline = re.match(r'[\r\n]+(.*)', self.__left_data)
@@ -44,23 +47,24 @@ class HtmlContextControl:
             self.__prefix_add(_cut_idx)  # Add \r or \n to prefix
             return True
         # Try to parse data as 'in tag'
-        tag_data = re.match(r'[^<>]+', self.__left_data, flags=re.A)
-        if not tag_data:  # Data not found
+        _tag_data = re.match(r'[^<]+', self.__left_data, flags=re.A)
+        if not _tag_data:  # Data not found
             self.__open_or_close_next_tag()
         else:
-            _text: str = tag_data.group()
-            _cut_idx: int = tag_data.end()
+            _text: str = _tag_data.group()
+            _cut_idx: int = _tag_data.end()
             try:
                 float(_text)
             except ValueError:
-                if _text.strip():  # If 'next' valid
+                if self.__is_text_valid(_text):  # URL check
                     _prefix = self.__prefix_return(_cut_idx)  # Will null prefix
                     _warning = self.__warning_return()    # Will null warning
-                    _dom_tree = self.__elem_dom_string()
+                    _dom_tree = self.__elem_dom_string()  # Save element dom position to dom tree
                     _text = self.__handle_newline(_text)  # If text end with \r \n cut them and add to next prefix
                     self.__dom_data.append({'dom': _dom_tree, 'text': _text, 'prefix': _prefix, 'warning': _warning})
                     return True
-            self.__prefix_add(_cut_idx)  # If 'next' not valid
+            # If 'next' not valid
+            self.__prefix_add(_cut_idx)
         return True
 
     def __warning_return(self) -> str:
@@ -82,49 +86,58 @@ class HtmlContextControl:
         self.__left_data = self.__left_data[cut_index:]  # refresh not parsed data
 
     def __open_or_close_next_tag(self) -> None:
-        """ Find what tag is next and continue lookup data """
-        if self.__left_data.strip().startswith('<!'):
-            # tag is <!doctype>
-            _cut_idx: int = self.__left_data.index('>') + 1  # index in row where tag ends
-        else:
-            open_tag = re.match(r'^<([\w]+)([^>]*)?>', self.__left_data)  # <tag and=params>
-            if open_tag:
-                tag, _tag_params = open_tag.groups('')  # '' - for no group match
-                self.__elem_dom += [tag, 1]  # Add tag and it's first index to tag tree
-                # Close tag without content or other no-value-html-tags (<br/> <img .../> or <hr><br>)
-                if tag in ['script', 'style', 'meta', 'link'] \
-                        or tag[-1] == '/' \
-                        or (_tag_params and _tag_params[-1] == '/')\
-                        or (tag in ['br', 'hr'] and not _tag_params):
-                    self.__close_tag(tag)
-                _cut_idx = open_tag.end()
-            else:
-                closed_tag = re.match(r'^\s*</([\w]+)>', self.__left_data)
-                if closed_tag:
-                    self.__close_tag(closed_tag.group(1))
-                    _cut_idx = closed_tag.end()
-                else:
-                    # unknown data - add to the end of context
-                    _cut_idx = len(self.__left_data)
-        self.__prefix_add(_cut_idx)
+        """ Find what tag is next """
+        _next_tag = re.match(r'<(/?\w+)+([^>]*)?>', self.__left_data)  # <tag_name and=params>
+        if _next_tag:
+            _tag_name, _tag_params = _next_tag.groups('')  # '' - as default
+            _tag_name = _tag_name.lower()
+            # Handle left data
+            _cut_idx = _next_tag.end()
+            self.__prefix_add(_cut_idx)
 
-    def __close_tag(self, tag_name: str) -> None:
+            if _tag_name.startswith('/'):  # Close tag - remove from dom tree
+                self.__tag_dom_close(_tag_name[1:])
+            else:  # Open tag - add tag and it's first index to dom tree
+                self.__elem_dom += [_tag_name, 1]
+                self.__tag_check_auto_close(_tag_name, _tag_params)
+        elif re.match(r'</?(\W)+([^>]*)?>', self.__left_data.strip()):
+            # tag like <!doctype> or unknown tags <?> ignored in DOM tree
+            _cut_idx: int = self.__left_data.index('>') + 1
+            self.__prefix_add(_cut_idx)
+        else:  # Data broken - left data have no '<...>' pattern
+            _cut_idx = len(self.__left_data)
+            self.__prefix_add(_cut_idx)
+            _prefix = self.__prefix_return(_cut_idx)
+            _data_tail = {'dom': 'EOF', 'text': _prefix, 'prefix': _prefix, 'warning': 'data broken'}
+            self.__dom_data.append(_data_tail)  # Add left data to return data as 'EOF'
+
+    def __tag_check_auto_close(self, tag_name: str, tag_params: str) -> None:
+        """ Open tag and check for auto-closed - if so -> return True """
+        if tag_name in self.__INVALID_DATA_TAGS:
+            # Auto-close not-valid-html-tags (<script> and <style>) and cut data inside them
+            _cut_idx: int = self.__left_data.index(f'</{tag_name}')
+            self.__prefix_add(_cut_idx)
+        elif tag_name in self.__AUTO_CLOSE_TAGS or tag_name[-1] == '/' or (tag_params and tag_params[-1] == '/'):
+            # Auto-close tags without content(<hr>, <br>) or <img... /> <input... />
+            self.__tag_dom_close(tag_name)
+
+    def __tag_dom_close(self, tag_name: str) -> None:
         """ Handle closing tag - update tag tree """
         if tag_name in self.__elem_dom:
             if self.__elem_dom[-2] == tag_name:
                 self.__elem_dom = self.__elem_dom[:-2]
             else:
-                # tag not the last in tree (tree cut error)
-                self.__elem_warning = 'previous tag was not closed'
-                tag_index_from_right = len(self.__elem_dom) - 1 - self.__elem_dom[::-1].index(tag_name)
-                self.__elem_dom = self.__elem_dom[:tag_index_from_right]
+                # tag not at the end of a tree (tree cut error)
+                self.__elem_warning = 'dom tree error - previous tag was not closed'
+                _fix_dom_tree_cut_deep = len(self.__elem_dom) - 1 - self.__elem_dom[::-1].index(tag_name)
+                self.__elem_dom = self.__elem_dom[:_fix_dom_tree_cut_deep]
             self.__elem_dom[-1] += 1  # increment index for next child
         else:
             # close tag not found in tree (tree error)
-            self.__elem_warning = 'incorrect close tag before previous'
+            self.__elem_warning = 'dom tree error - close tag have no open tag'
 
     def __elem_dom_string(self) -> str:
-        """ Get item DOM tree """
+        """ Get tag and DOM tree of last element  """
         item_tree = ':'.join([str(tag) for tag in self.__elem_dom])
         self.__dom_tree.append(item_tree)
         return item_tree
@@ -137,3 +150,17 @@ class HtmlContextControl:
             self.__elem_prefix += text[_index:]  # elem_prefix must be empty at this moment
             return text[:_index]
         return text
+
+    @staticmethod
+    def __is_text_valid(text: str) -> bool:
+        """ Validate text """
+        try:  # Float check
+            float(text)
+            return False
+        except ValueError:
+            pass
+        _text = text.strip()
+        if _text and re.match(r'( |[^.:/])+.$', _text):  # Not empty and not URL or like technical
+            return True
+        else:
+            return False

@@ -1,6 +1,7 @@
 import re
 
 from core.services.file_interface.file_copy import CopyContextControl
+from core.services.file_interface.html_parser import HtmlContextParser
 from core.services.file_interface.parser_utils import ParserUtils
 
 # regular = r'<([\w]+)(\s.*)?>\s*([^<>]+[^\s])\s*<'
@@ -13,8 +14,11 @@ from core.services.file_interface.parser_utils import ParserUtils
 class LocalizeHtmlReader(ParserUtils):
     """ Read html file and yield FileMark object to insert in DB. Also control creating translation copy. """
     def __init__(self, decoded_data: str, data_codec: str, _, copy_path: str = ''):
-        self.__html_parser = _HtmlDataSeeker(decoded_data)
         self.__codec: str = data_codec
+        _html_parser = HtmlContextParser(decoded_data)  # Parse html data to list of elements
+        self.__data: list[dict[str, str]] = _html_parser.data
+        self.__elem_index: int = 0
+        self.__eof_index: int = len(self.__data) - 1
         # File results
         self.__file_items: int = 0
         self.__file_words: int = 0
@@ -29,49 +33,53 @@ class LocalizeHtmlReader(ParserUtils):
         return self
 
     def __next__(self) -> dict[str, any]:
-        try:
-            next(self.__html_parser)  # StopIteration raised in this method
-        except StopIteration:
+        if self.__elem_index >= self.__eof_index:
             if self.__copy:  # handle copy control
+                _html_left_data = self.__data[self.__eof_index]
+                self.__copy.add_data(_html_left_data['prefix'])
                 self.__copy.finish()  # To finish file
-            # [print(tree_item) for tree_item in self.__html_parser.tree]  # DEBUG: Print final tags tree
             raise StopIteration
-        # Copy controlling inside html parser
-        seeker_data = self.__html_parser.data
-        print('OOOOOOOOOOOOOOOO ')
-        text = seeker_data['text']
-        print('ZZZZZZZZZZZZZZ', text.encode())
-        clean_text = self._clean_text(text)
-        item_words = self._count_words(clean_text)
+        # Set next element
+        _html_item = self.__data[self.__elem_index]
+        self.__elem_index += 1
+
+        if self.__copy:  # handle copy control
+            self.__copy.add_data(_html_item['prefix'])
+            self.__copy.add_data(_html_item['text'])
+
+        text: str = _html_item['text']
+        clean_text: str = self._clean_text(text)
+        item_words: int = self._count_words(clean_text)
 
         if not item_words:  # Pass if no words in text
-            print('YYYYYYYYYYYYYYYYYY')
             self.__next__()
 
         self.__file_items += 1  # only one item for html
         self.__file_words += item_words
 
-        print('XXXXXXXXXXXXXXXXXXXX', item_words, text.encode(), clean_text.encode())
+        return self.__serialize(text, clean_text, item_words, _html_item)
 
-        return {
-            'fid': seeker_data['tree'],
-            'words': item_words,
-            'items': [{
+    def __serialize(self, text: str, clean_text: str, words: int, html_item: dict[str, str]) -> dict[str, any]:
+        _item = {
                 'item_number': 1,
                 'md5sum': self._get_md5(text.encode(self.__codec)),
                 'md5sum_clear': self._get_md5(clean_text.encode(self.__codec)),
-                'words': item_words,
+                'words': words,
                 'text': text,
-                'warning': seeker_data['warning'],
-            }, ],
+                'warning': html_item['warning'],
+            }
+        return {
+            'fid': html_item['dom'],
+            'words': words,
             'search_words': clean_text.lower(),
-            'context': seeker_data['context'],
+            'context': html_item['prefix'] + html_item['text'],
+            'items': [_item, ],
         }
 
     def copy_write_mark_items(self, values: list[dict[str, any]]) -> None:
         """ Translation file copy write new translates for current item """
         if self.__copy and values:  # handle copy control
-            to_add = self.__html_parser.change_item_content(values[0]['text'])
+            to_add = values[0]['text']
             self.__copy.replace_and_save(to_add)
 
 
