@@ -1,15 +1,10 @@
 import uuid
 
-from django.contrib.postgres.indexes import GinIndex, BTreeIndex
+from django.contrib.postgres.indexes import GinIndex
 from django.db import models
 from django.conf import settings
-from django.db.models.signals import post_delete
 
-from core.services.model_util import auto_delete_file_on_delete, on_create_file_path
-
-
-def user_directory_path(instance, filename):
-    return ''
+from core.services.os_delete import DeleteInOS
 
 
 class Language(models.Model):
@@ -45,10 +40,10 @@ class Project(models.Model):
 class ProjectPermission(models.Model):
     """ Permissions for project """
     PROJECT_PERMISSION_CHOICES = [
-        (0, 'tranlate'),            # Can translate files in project
-        (5, 'invite translator'),   # Default admin role (can change permission 0 to other users)
-        (8, 'manage'),              # Can create\delete\update - folders\files
-        (9, 'admin'),               # Can change permissions to other admins (change permission 5, 8)
+        (0, 'translator'),  # Can translate files in project
+        (5, 'invite'),      # Can invite translators to project (change permission 0)
+        (8, 'manage'),      # Can create\delete\update - folders\files
+        (9, 'admin'),       # Can change permissions to other users (change permission 5, 8)
     ]
     user = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE)
     project = models.ForeignKey(Project, on_delete=models.CASCADE)
@@ -93,7 +88,7 @@ class File(models.Model):
     codec = models.CharField(max_length=20, blank=True)
     method = models.CharField(max_length=10, blank=True)    # csv, ue, html
     options = models.JSONField(null=True)           # csv delimiter and fields, quotes. Mb some info about PO files.
-    data = models.FileField(upload_to=on_create_file_path, max_length=255, storage=settings.STORAGE_ROOT)
+    data = models.FileField(upload_to=DeleteInOS.file_name_from_instance, max_length=255, storage=settings.STORAGE_ROOT)
     created = models.DateTimeField(auto_now_add=True)
     updated = models.DateTimeField(auto_now=True)           # File updated
     items = models.PositiveIntegerField(null=True)          # FileMark count
@@ -139,6 +134,7 @@ class FileMark(models.Model):
 
     class Meta:
         unique_together = ['file', 'fid']
+        indexes = [GinIndex(fields=['search_words'], name='core_marks_search_gin')]
 
 
 class MarkItem(models.Model):
@@ -159,7 +155,6 @@ class Translate(models.Model):
     item = models.ForeignKey(MarkItem, on_delete=models.CASCADE)
     language = models.ForeignKey(Language, on_delete=models.DO_NOTHING)
     text = models.TextField()  # db_index=True
-    # words = pg_search.SearchVectorField(null=True)
     created = models.DateTimeField(auto_now_add=True)
     updated = models.DateTimeField(auto_now=True)
     checked = models.BooleanField(default=False)
@@ -168,8 +163,7 @@ class Translate(models.Model):
 
     class Meta:
         unique_together = ['item', 'language']
-        indexes = [GinIndex(fields=['text'], name='core_transl_text_gin')]
-        # indexes = [BTreeIndex(fields=['text'], opclasses=("text_ops", ), name='core_transl_text_gintrgm')]
+        # indexes = [GinIndex(fields=['text'], name='core_transl_text_gin')]
 
 
 class TranslateChangeLog(models.Model):
@@ -178,9 +172,3 @@ class TranslateChangeLog(models.Model):
     translate = models.ForeignKey(Translate, on_delete=models.CASCADE)
     text = models.TextField(blank=True)
     created = models.DateTimeField(auto_now_add=True)
-
-
-# post_delete.connect(auto_delete_file_on_delete, sender=File)
-post_delete.connect(auto_delete_file_on_delete, sender=Translated)
-# post_delete.connect(auto_delete_folder_on_delete, sender=Folder)
-# post_delete.connect(auto_delete_project_on_delete, sender=Project)

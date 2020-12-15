@@ -49,7 +49,9 @@ class ProjectViewSet(viewsets.ModelViewSet):
 
     def perform_destroy(self, instance):
         """ Call celery task to delete """
-        delete_from_os.delay('project', instance.id)
+        _path: str = '{}/{}/'.format(instance.owner.id, instance.id)
+        logger.info(f'Project delete model object:{instance.id} and dir in OS:{_path}')
+        delete_from_os.delay('project', _path)
         instance.delete()
 
 
@@ -108,7 +110,9 @@ class FolderViewSet(viewsets.ModelViewSet):
 
     def perform_destroy(self, instance):
         """ Call celery task to delete """
-        delete_from_os.delay('folder', instance.id)
+        _path: str = '{}/{}/{}/'.format(instance.project.owner.id, instance.project.id, instance.id)
+        logger.info(f'Folder delete model object:{instance.id} and dir in OS:{_path}')
+        delete_from_os.delay('folder', _path)
         instance.delete()
 
 
@@ -154,7 +158,9 @@ class FileViewSet(viewsets.ModelViewSet):
 
     def perform_destroy(self, instance):
         """ Call celery task to delete """
-        delete_from_os.delay('file', instance.id)
+        _path: str = instance.data.path
+        logger.info(f'File delete model object:{instance.id} and in OS:{_path}')
+        delete_from_os.delay('file', _path)
         instance.delete()
 
 
@@ -233,4 +239,3 @@ class TransferFileView(viewsets.ViewSet):
         else:
             _response, _status = {'err': 'request params error'}, status.HTTP_400_BAD_REQUEST
         return Response(_response, status=_status)
-

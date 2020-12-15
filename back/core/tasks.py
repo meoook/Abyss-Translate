@@ -80,13 +80,13 @@ def folder_repo_change_access_and_update(folder_id: int, access_type: str, acces
     time_limit=10,
     ignore_result=True
 )
-def delete_from_os(obj_type: str, obj_id: int):
+def delete_from_os(obj_type: str, path: str):
     """ After delete Project, Folder, File or Translated object -> Delete in OS """
     try:
-        if not DeleteInOS.delete_object(obj_type, obj_id):
+        if not DeleteInOS.delete_object(obj_type, path):
             delete_from_os.retry(countdown=60)  # retry after 60 seconds
     except SoftTimeLimitExceeded:
-        logger.warning(f'Deleting {obj_type} id:{obj_id} too slow')
+        logger.warning(f'Deleting {obj_type} path:{path} too slow')
         delete_from_os.retry(countdown=60)  # retry after 60 seconds
 
 
