@@ -7,6 +7,7 @@ from core.models import Folder, Translated
 from core.services.file_interface.file_interface import FileInterface
 
 from core.services.folder_interface import LocalizeGitFolderInterface
+from core.services.os_delete import DeleteInOS
 
 logger = logging.getLogger('django')
 
@@ -14,12 +15,9 @@ logger = logging.getLogger('django')
 @shared_task(
     name="T1: Update file from repo then parse it",
     max_retries=2,
-    # soft_time_limit=5,
-    # time_limit=20,
-    # rate_limit='2/h',
     ignore_result=True
 )
-def file_uploaded_new(file_id, original_lang_id, file_path):
+def file_uploaded_new(file_id: int, original_lang_id: int, file_path: str):
     """ After file uploaded -> If possible update it from repo then get info and build new translates """
     file_manager = FileInterface(file_id)
     logger.info(f'File id:{file_id} try update from repo and parse')
@@ -29,12 +27,9 @@ def file_uploaded_new(file_id, original_lang_id, file_path):
 @shared_task(
     name="T2: Update translates from uploaded file",
     max_retries=2,
-    # soft_time_limit=5,
-    # time_limit=20,
-    # rate_limit='2/h',
     ignore_result=True
 )
-def file_uploaded_refresh(file_id, lang_id, tmp_path, is_original):
+def file_uploaded_refresh(file_id: int, lang_id: int, tmp_path: str, is_original: bool):
     """ After copy or new original uploaded -> Get info and rebuild translates for language """
     file_manager = FileInterface(file_id)
     _settings_to_msg = f'language:{lang_id} as {"original" if is_original else "translates"}'
@@ -45,12 +40,12 @@ def file_uploaded_refresh(file_id, lang_id, tmp_path, is_original):
 @shared_task(
     name="T3: Git repository url changed",
     max_retries=0,
-    soft_time_limit=5,
-    time_limit=15,
+    soft_time_limit=8,
+    time_limit=10,
     # rate_limit='12/h',
     ignore_result=True
 )
-def folder_update_repo_after_url_change(folder_id):
+def folder_update_repo_after_url_change(folder_id: int):
     """ After changing git url -> Update folder files from git repository folder """
     try:
         folder_manager = LocalizeGitFolderInterface(folder_id)
@@ -63,12 +58,12 @@ def folder_update_repo_after_url_change(folder_id):
 @shared_task(
     name="T4: Git repository access changed",
     max_retries=0,
-    soft_time_limit=5,
-    time_limit=15,
+    soft_time_limit=8,
+    time_limit=10,
     # rate_limit='12/h',
     ignore_result=True
 )
-def folder_repo_change_access_and_update(folder_id, access_type, access_value):
+def folder_repo_change_access_and_update(folder_id: int, access_type: str, access_value: str):
     """ After changing git access -> Update folder files from git repository folder """
     try:
         folder_manager = LocalizeGitFolderInterface(folder_id)
@@ -79,24 +74,25 @@ def folder_repo_change_access_and_update(folder_id, access_type, access_value):
 
 
 @shared_task(
-    name="T5: Delete project or folder",
-    max_retries=0,
-    soft_time_limit=2,
-    time_limit=5,
+    name="T5: Delete file or folder",
+    max_retries=5,
+    soft_time_limit=8,
+    time_limit=10,
     ignore_result=True
 )
-def delete_folder_object(obj_id, obj_type='folder'):
-    """ After delete project or folder -> Delete in database and in file system """
+def delete_from_os(obj_type: str, obj_id: int):
+    """ After delete Project, Folder, File or Translated object -> Delete in OS """
     try:
-        pass
+        if not DeleteInOS.delete_object(obj_type, obj_id):
+            delete_from_os.retry(countdown=60)  # retry after 60 seconds
     except SoftTimeLimitExceeded:
-        logger.warning(f'Checking {"folder" if obj_type == "folder" else "project"} id:{obj_id} too slow')
+        logger.warning(f'Deleting {obj_type} id:{obj_id} too slow')
+        delete_from_os.retry(countdown=60)  # retry after 60 seconds
 
 
 @shared_task(
     # name="P1: (2h) Update users files from git repositories",
     name="check_all_file_repos",
-    # run_every=crontab(minute=0, hour='*/2'),
     max_retries=0,
     soft_time_limit=110,
     time_limit=120,
@@ -120,7 +116,6 @@ def check_all_file_repos():
 @shared_task(
     # name="P2: (2h) Update users copy files in git repositories",
     name="refresh_copies",
-    # run_every=crontab(minute=0, hour='*/2'),
     max_retries=0,
     soft_time_limit=110,
     time_limit=120,
@@ -130,8 +125,7 @@ def check_all_file_repos():
 )
 def refresh_copies():
     """ It's a global app task -> Get all users files check git status and update if needed """
-    # GET ALL FOLDERS
-    logger.info('Refresh all copies witch translates updated')
+    logger.info('Refresh all copies where translates updated')
     try:
         for copy_info in Translated.objects.filter(need_refresh=True).values('file_id', 'language_id'):
             file_manager = FileInterface(copy_info['file_id'])

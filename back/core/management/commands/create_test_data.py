@@ -1,11 +1,11 @@
 import random
 from django.core.management.base import BaseCommand
 
-from core.models import Project, Folder, ProjectPermission
+from core.models import Project, Folder
 from django.contrib.auth.models import User, Permission
 from django.core.files.base import ContentFile
 
-from core.serializers import TransferFileSerializer
+from core.api.serializers import TransferFileSerializer
 from core.tasks import file_uploaded_new
 
 

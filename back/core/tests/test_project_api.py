@@ -5,7 +5,7 @@ from rest_framework.test import APITestCase
 
 from django.contrib.auth.models import User, Permission
 from core.models import Language, Project, ProjectPermission
-from core.serializers import ProjectSerializer
+from core.api.serializers import ProjectSerializer
 
 
 class ProjectsApiTestCase(APITestCase):

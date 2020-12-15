@@ -1,32 +1,15 @@
-import os
 import uuid
 
 from django.contrib.postgres.indexes import GinIndex, BTreeIndex
 from django.db import models
 from django.conf import settings
-# from django.contrib.auth.models import User
-from django.db.models.signals import post_save, post_delete, pre_save
+from django.db.models.signals import post_delete
 
-import django.contrib.postgres.search as pg_search
+from core.services.model_util import auto_delete_file_on_delete, on_create_file_path
 
-# class Profiles(models.Model):
-#     USER_ROLE_CHOICES = [
-#         (0, 'admin'),
-#         (3, 'moderator'),
-#         (5, 'game creator'),
-#         (8, 'translator'),
-#         (10, 'no role user'),
-#     ]
-#     user = models.OneToOneField(User, on_delete=models.CASCADE, related_name='profile', primary_key=True)
-#     role = models.SmallIntegerField(default=10, choices=USER_ROLE_CHOICES)
-#
-#
-# def create_user_profile(sender, instance, created, **kwargs):
-#     if created:
-#         profile, created = Profiles.objects.get_or_create(user=instance)
-#
-#
-# post_save.connect(create_user_profile, sender=settings.AUTH_USER_MODEL)
+
+def user_directory_path(instance, filename):
+    return ''
 
 
 class Language(models.Model):
@@ -102,17 +85,6 @@ class FolderRepo(models.Model):
     lang_in_suffix = models.BooleanField(default=False)     # Copy will be created as /name-en.txt or /en/name.txt
 
 
-def user_directory_path(instance, filename):
-    """ File will be uploaded to users/<user_id>/<prj_id>/<folder_id>/<file_id> """
-    # if instance.pk:
-    #     _, ext = os.path.splitext(filename)
-    #     name = f'{instance.pk}{ext}'
-    # else:
-    #     name = filename
-    folder = instance.folder
-    return '{}/{}/{}/{}'.format(folder.project.owner.id, folder.project.id, folder.id, instance.name)
-
-
 class File(models.Model):
     """" File model with auto delete. File is unique for folder. """
 
@@ -121,7 +93,7 @@ class File(models.Model):
     codec = models.CharField(max_length=20, blank=True)
     method = models.CharField(max_length=10, blank=True)    # csv, ue, html
     options = models.JSONField(null=True)           # csv delimiter and fields, quotes. Mb some info about PO files.
-    data = models.FileField(upload_to=user_directory_path, max_length=255, storage=settings.STORAGE_ROOT)
+    data = models.FileField(upload_to=on_create_file_path, max_length=255, storage=settings.STORAGE_ROOT)
     created = models.DateTimeField(auto_now_add=True)
     updated = models.DateTimeField(auto_now=True)           # File updated
     items = models.PositiveIntegerField(null=True)          # FileMark count
@@ -141,7 +113,7 @@ class Translated(models.Model):
     file = models.ForeignKey(File, on_delete=models.CASCADE)
     language = models.ForeignKey(Language, on_delete=models.DO_NOTHING)
     items = models.PositiveIntegerField(default=0)  # To count total progress
-    # finished = models.BooleanField(default=False)   # All items have translations
+    # finished = models.BooleanField(default=False)   # All items have translations  # TODO: do we need (with checked) ?
     # checked = models.BooleanField(default=False)    # Translations checked by admin?
     need_refresh = models.BooleanField(default=False)  # When any translate need_refresh -> refresh translate copy
     translate_copy = models.FileField(max_length=255, blank=True, storage=settings.STORAGE_ROOT)
@@ -208,47 +180,7 @@ class TranslateChangeLog(models.Model):
     created = models.DateTimeField(auto_now_add=True)
 
 
-def auto_delete_file_on_delete(sender, instance, **kwargs):
-    """ TRIGGER: Deletes file from filesystem when corresponding `File` or `Translated` object is deleted. """
-    if sender._meta.model_name == 'file':
-        inst_obj = instance.data
-    elif sender._meta.model_name == 'translated':
-        if instance.translate_copy:
-            inst_obj = instance.translate_copy
-        else:
-            return
-    else:
-        print("Error: trigger auto_delete_file_on_delete - input wrong instance")
-        return
-    try:
-        if os.path.isfile(inst_obj.path):
-            print('Delete file -> onDelete File object', inst_obj.path)
-            # os.remove(instance.file.path)
-            inst_obj.delete(save=False)
-    except ValueError:
-        pass
-
-
-# TODO: for prj and folder -> one function
-def auto_delete_folder_on_delete(sender, instance, **kwargs):
-    """ TRIGGER: Deletes folder from filesystem when corresponding `Folder` object is deleted. """
-    path_to_delete = '{}/{}/{}/'.format(instance.project.owner.username, instance.project.id, instance.id)
-    folder = os.path.join(settings.MEDIA_ROOT, path_to_delete)
-    if os.path.isdir(folder):
-        print('Delete folder -> onDelete Folder object', folder)
-        settings.STORAGE_ROOT.delete(path_to_delete)
-
-
-def auto_delete_project_on_delete(sender, instance, **kwargs):
-    """ TRIGGER: Deletes folder from filesystem when corresponding `Project` object is deleted. """
-    path_to_delete = '{}/{}/'.format(instance.owner.username, instance.id)
-    folder = os.path.join(settings.MEDIA_ROOT, path_to_delete)
-    if os.path.isdir(folder):
-        print('Delete project folder -> onDelete Project object', folder)
-        settings.STORAGE_ROOT.delete(path_to_delete)
-
-
-post_delete.connect(auto_delete_file_on_delete, sender=File)
+# post_delete.connect(auto_delete_file_on_delete, sender=File)
 post_delete.connect(auto_delete_file_on_delete, sender=Translated)
-post_delete.connect(auto_delete_folder_on_delete, sender=Folder)
-post_delete.connect(auto_delete_project_on_delete, sender=Project)
+# post_delete.connect(auto_delete_folder_on_delete, sender=Folder)
+# post_delete.connect(auto_delete_project_on_delete, sender=Project)

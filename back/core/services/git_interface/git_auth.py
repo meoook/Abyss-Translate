@@ -2,7 +2,7 @@ import base64
 from core.services.git_interface.git_util import GitProviderUtils
 from django.conf import settings
 
-# TODO: Key to env
+# TODO: Token to env
 
 
 class OAuth2Token:
@@ -26,7 +26,7 @@ class OAuth2Token:
             self.__connector = AuthBitBucket()
 
 
-class AuthConnector:
+class AuthBaseConnector:
     """ Auth system for git repositories """
     # TODO: Generate URL for redirect ( provider state parameter )
 
@@ -79,7 +79,7 @@ class AuthConnector:
         return ''
 
 
-class AuthGitHub(AuthConnector):
+class AuthGitHub(AuthBaseConnector):
     __abyss_auth = {'access_type': 'token', 'token': 'a64a7ef131c0a8823e9f4b8228b86f5c077fd6b9'}
     __oauth_url_redirect = 'https://github.com/login/oauth/authorize'  # scope, state, allow_signup
     __oauth_url_access = 'https://github.com/login/oauth/access_token'
@@ -118,7 +118,7 @@ class AuthGitHub(AuthConnector):
         return refresh_token
 
 
-class AuthBitBucket(AuthConnector):
+class AuthBitBucket(AuthBaseConnector):
     __abyss_auth = {'access_type': 'oauth', 'token': 'dT3cWh4p3QxvMf4WnG'}
     __oauth_url_redirect = 'https://bitbucket.org/site/oauth2/authorize'
     __oauth_url_access = 'https://bitbucket.org/site/oauth2/access_token'
@@ -168,7 +168,7 @@ class AuthBitBucket(AuthConnector):
         return self._return_token(req_obj, 'access')
 
 
-class AuthGitLab(AuthConnector):
+class AuthGitLab(AuthBaseConnector):
     __abyss_auth = {'access_type': 'token', 'token': 'ZocaYQAp9UYd18wk1Psk'}
     __oauth_url_redirect = 'https://gitlab.com/oauth/authorize'  # state
     __oauth_url_access = 'https://gitlab.com/oauth/access_token'  # /oauth/token
