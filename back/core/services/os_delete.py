@@ -102,9 +102,11 @@ class DeleteInOS:
         _path = os.path.join(settings.MEDIA_ROOT, folder_path)
         if os.path.isdir(_path):
             try:
-                settings.STORAGE_ROOT.delete(folder_path)
+                settings.STORAGE_ROOT.delete(folder_path, save=False)
             except ValueError:
-                logger.error(f'OS delete {model_name} path:{_path} - fail')
+                logger.error(f'OS delete {model_name} path:{_path} - value fail')
+            except OSError:
+                logger.error(f'OS delete {model_name} path:{_path} - os fail')
             else:
                 logger.info(f'OS delete {model_name} path:{_path} - success')
                 return True
