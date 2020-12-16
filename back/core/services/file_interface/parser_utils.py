@@ -1,9 +1,8 @@
 import hashlib
 import re
-# from django.conf import settings
+from django.conf import settings
 
-# WORD_LEN_TO_COUNT = 3 -> to django settings
-WORD_LEN_TO_COUNT = 3
+# WORD_LEN_TO_COUNT = 3
 CLEANER_PATTERN = r'[\r\d\-/\[\]\"\'\\`~.,><:;!?@#$%^&*()+=|_{}]'
 
 
@@ -13,8 +12,8 @@ class ParserUtils:
     @staticmethod
     def _count_words(clean_text: str) -> int:
         """ App function to find number of words(payment) in text """
-        # return len([x for x in clean_text.split(' ') if len(x) >= settings.WORD_LEN_TO_COUNT])
-        return len([x for x in clean_text.split(' ') if len(x) >= WORD_LEN_TO_COUNT])
+        return len([x for x in clean_text.split(' ') if len(x) >= settings.WORD_LEN_TO_COUNT])
+        # return len([x for x in clean_text.split(' ') if len(x) >= WORD_LEN_TO_COUNT])
 
     @staticmethod
     def _clean_text(text: str) -> str:

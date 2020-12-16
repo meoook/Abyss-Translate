@@ -32,13 +32,14 @@ def jwt_decode(jwt: str):
     print('HEADER IS', header)
     print('PAYLOAD IS', payload)
     signature = create_signature(jwt_parts[0], jwt_parts[1])
-    print('SIGNATURE IS', signature)
     print(signature.digest())
-    print(decode_with_fix_padding(jwt_parts[2]))
-
+    print('SIGNATURE VALID IS', signature.digest() == decode_with_fix_padding(jwt_parts[2]))
     return True
 
 
 if __name__ == '__main__':
     token = 'eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9.eyJ1dWlkIjoiMDA3Yi1lZWNmLTM3MDAtMDE4OCIsIm5pY2tuYW1lIjoiUGFSWjFWQUwiLCJ0YWciOiIwMDExIiwibGFuZyI6ImVuIn0.GOZQAecsqU6-PfEFG8jIOZfBmRzM1ww3V4MNmDsQrd4'
+    jwt_decode(token)
+    print('=============================================')
+    token = 'eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9.eyJ1dWlkIjoiMDc0OC1hY2M1LTRjMDgtZjIyOSIsIm5pY2tuYW1lIjoibG9sIiwidGFnIjoiNzQzNiIsImxhbmciOiJydSIsInRpbWVzdGFtcCI6MTYwODA2NjA1NS41Njg3MTF9.dbHxUI06QXEM1I7KrbOg6oWbpNUmDJzEF3dQXIXc5Dk'
     jwt_decode(token)

@@ -42,7 +42,6 @@ class FileInterface(FileModelApi):
         # Can't change original text
         _translate_lang_id = _translate.language.id
         if _translate_lang_id == self._file.lang_orig.id:
-            # TODO: permissions check - mb owner can change ?
             return {'err': 'can\'t change original text'}, status.HTTP_400_BAD_REQUEST
         _model_api = FileRelatedModelApi()
         if md5sum:  # multi update

@@ -56,11 +56,11 @@ class ApiUtil:
         else:  # Save on IO to safe send to Celery
             _is_original: bool = lang_id == _file_lang_orig_id  # Check here for optimisation
             if _is_original:  # Replace original file
-                # FIXME - if file linked with repo - disable upload
+                # FIXME - if file linked with repo - disable upload (file refreshing from repo)
                 _file_object.data.delete()
                 _file_object.data = data
                 _file_object.save()
-                _tmp_path: str = _file_object.data.path  # FIXME: path not same as name
+                _tmp_path: str = _file_object.data.path  # FIXME: path not same as name - is OK? (seems so)
             else:  # Write new file to disk
                 # If file left in error storage - it's an error :) -> tmp file(copy only) deleted after finish
                 _name = f'{file_id}_{lang_id}.txt'

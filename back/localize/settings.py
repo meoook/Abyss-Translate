@@ -4,9 +4,12 @@ from django.core.files.storage import FileSystemStorage
 # Build paths inside the project like this: os.path.join(BASE_DIR, ...)
 BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 
-# !!! CHANGE THIS SETTINGS IN PRODUCTION !!!
+# Number of letters in word to count it as word(payment)
+WORD_LEN_TO_COUNT = 3   # TODO: Put as constant in class
+""" !!! CHANGE THIS SETTINGS IN PRODUCTION !!! """
 DEBUG = os.environ.get("DEBUG", True)
 
+# SECRETS
 SECRET_KEY = os.environ.get("SECRET_KEY", "29137435e1353abc40a825efbf5ce632f08ffa907bd72a6164de5e505c45cc74")
 ABYSS_JWT_KEY = SECRET_KEY
 
@@ -19,12 +22,9 @@ SOCIAL_GITLAB_SECRET = os.environ.get("SOCIAL_GITLAB_SECRET", "5ccb384de48b1041d
 SOCIAL_BITBUCKET_CLIENT = os.environ.get("SOCIAL_BITBUCKET_CLIENT", "xckDCgTDkpEAtWnfYe")
 SOCIAL_BITBUCKET_SECRET = os.environ.get("SOCIAL_BITBUCKET_SECRET", "TTuaxUvCPynXBZd6pMeumDtfuchzdJvp")
 
-
+# CORS
 ALLOWED_HOSTS = ['*']
 CORS_ORIGIN_ALLOW_ALL = True
-
-# Number of letters in word to count it as word(payment)
-WORD_LEN_TO_COUNT = 3
 
 # ALLOWED_HOSTS = os.environ.get("DJANGO_ALLOWED_HOSTS").split(" ")
 # CORS_ORIGIN_WHITELIST = os.environ.get("DJANGO_ALLOWED_HOSTS").split(" ")
@@ -34,7 +34,7 @@ WORD_LEN_TO_COUNT = 3
 #     'http://192.168.1.20:3000',
 #     'http://91.225.238.193:3000',
 # ]
-
+""" !!! TILL HERE !!! """
 
 # Application definition
 MY_APPS = [

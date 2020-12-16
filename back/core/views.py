@@ -45,6 +45,9 @@ class ProjectViewSet(viewsets.ModelViewSet):
         return self.queryset.filter(projectpermission__user=self.request.user).distinct()
 
     def perform_create(self, serializer):
+        _user = self.request.user
+        _project_name: str = self.request.get("name")  # For log only
+        logger.info(f'User {_user.first_name}:{_user.id} creating new project {_project_name}')
         serializer.save(owner=self.request.user)
 
     def perform_destroy(self, instance):
@@ -72,8 +75,11 @@ class ProjectPermsViewSet(viewsets.ModelViewSet):
         # TODO: Check perms if 5 - can create 0, if 9 can create other
         _save_id: str = self.request.data.get('save_id')
         _first_name: str = self.request.data.get('first_name')
+        _permission: int = self.request.get("permission")  # For log only
         _project = get_object_or_404(Project, save_id=_save_id)
         _user = get_object_or_404(User, first_name=_first_name)
+        _log_tuple: tuple = (self.request.user.first_name, _permission, _first_name, _save_id)  # For log only
+        logger.info('User {} give permission {} to other user {} for project {}'.format(*_log_tuple))
         serializer.save(project=_project, user=_user)
 
 
@@ -92,8 +98,10 @@ class FolderViewSet(viewsets.ModelViewSet):
     def perform_create(self, serializer):
         """ Increment position when creating new folder """
         _save_id = self.request.data.get('save_id')
-        _project = Project.objects.get(save_id=_save_id)  # Project exist check in perms
+        # _project = Project.objects.get(save_id=_save_id)  # Project exist check in perms
+        _project = get_object_or_404(Project, save_id=_save_id)
         _position = self.get_queryset().aggregate(m=Max('position')).get('m') or 0
+        logger.info(f'User {self.request.user.first_name} creating new folder in project {_save_id}')
         serializer.save(project=_project, position=_position + 1)
 
     def update(self, request, *args, **kwargs):
@@ -210,7 +218,7 @@ class TransferFileView(viewsets.ViewSet):
     permission_classes = [IsAuthenticated, IsFileOwnerOrManager]
 
     def retrieve(self, request, pk=None):
-        """ Return file to download by Translated.id (Can be changed to retrieve by File.id and Lang.id) """
+        """ Return file to download by Translated.id (Can be changed/add to retrieve by File.id and Lang.id) """
         _data, _status = ApiUtil.get_copy_filename_or_error(pk)  # data can be str or AnyDataClass
         if _status == 200:
             # TODO: StreamingHttpResponse
@@ -221,13 +229,15 @@ class TransferFileView(viewsets.ViewSet):
     def create(self, request):
         """
             Upload file from user UI and run full 'build translates' progress:
-              Original language -> rebuild
-              Other language -> renew translate for selected language
+                Folder ID and file name -> File new -> put in folder and rebuild
+                File ID -> File not new:
+                    Original language -> rebuild
+                    Other language -> renew translate for selected language
         """
         _folder_id: int = request.data.get('folder_id')
+        _file_name: str = request.data.get('name')
         _file_id: int = request.data.get('file_id')
         _lang_id: int = request.data.get('lang_id')
-        _file_name: str = request.data.get('name')
         _data = request.data.get('data')
 
         if not _data:  # TODO: mb allow to create if repository is set - to update from repo...

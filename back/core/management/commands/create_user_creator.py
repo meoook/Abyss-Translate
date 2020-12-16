@@ -5,8 +5,6 @@ from django.contrib.auth.models import User, Permission
 
 from core.models import Project, Folder
 
-# TODO: Create user by username and email - send email with password to this user
-
 
 class Command(BaseCommand):
     help = 'Manager to create user with perms - creator'
