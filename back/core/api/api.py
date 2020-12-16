@@ -27,7 +27,7 @@ class DefaultSetPagination(PageNumberPagination):
 
 
 class ApiUtil:
-    """ Class to help with API (qs - QuerySet, tr - Translates) """
+    """ Class with static methods to help with API (qs - QuerySet, tr - Translates) """
     @staticmethod
     def qs_tr_filter_and_order(queryset: QuerySet, lang_id: int, search_text: str) -> QuerySet:
         """ Filter translates that have text to selected language and search text (!Care - method change income qs) """

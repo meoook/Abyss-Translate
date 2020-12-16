@@ -12,7 +12,10 @@
 |   ?     |    +     | Translate examples: Google                                         |
 |  1-2d   |    +     | Translate examples: translates from same file (by like)            |
 |   ?     |  ??????  | Что делать с файлами у которых кодировка не соответсвует языку     |
-| 1.04.2  | 05.12.20 | Новый способ парсинга файла - row (1 row = 1 value) as default     |
+|   ?     |    +     | Logging                                                            |
+| 1.04.4  | 16.12.20 | Celery - удаление файлов и папок. DeleteInOS service. Del signals. |
+| 1.04.3  | 12.12.20 | All classes: type hinting, comments fixs, method fixs              |
+| 1.04.2  | 06.12.20 | Новый способ парсинга файла - row (1 row = 1 value) as default     |
 | 1.04.1  | 03.12.20 | Celery - исправление ошибок в переодических задачах                |
 | 1.04.0  | 20.11.20 | Auth with Abyss by JWT (removed own auth)                          |
 | 1.03.7  | 18.11.20 | Переработка UI - страница переводов, настройки для файлов          |

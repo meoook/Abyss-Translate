@@ -7,8 +7,8 @@
 .coverage
 /htmlcov
 # Front
-.eslintcache
 front/node_modules
+front/.eslintcache
 front/.env.local
 # Back
 back/celerybeat-schedule
