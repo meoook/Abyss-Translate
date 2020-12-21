@@ -1,11 +1,11 @@
-import React, { useEffect, useContext, useState } from "react"
-import AppContext from "../../context/application/appContext"
-import { IcoGet } from "../icons"
-import Loader from "../AppComponents/Loader"
-import Paginator from "../AppComponents/Paginator"
-import FileTranslatedStatus from "../AppComponents/FileTranslatedStatus"
-import { Link } from "react-router-dom"
-import { textCutByLen } from "../componentUtils"
+import React, { useEffect, useContext, useState } from 'react'
+import AppContext from '../../context/application/appContext'
+import { IcoGet } from '../icons'
+import Loader from '../AppComponents/Loader'
+import Paginator from '../AppComponents/Paginator'
+import FileTranslatedStatus from '../AppComponents/FileTranslatedStatus'
+import { Link } from 'react-router-dom'
+import { textCutByLen } from '../componentUtils'
 
 const FileListByAccess = ({ trOnly, fldrID, prjID, onOptClick = null }) => {
   const [loading, setLoading] = useState(true)
@@ -52,14 +52,14 @@ const FileListByAccess = ({ trOnly, fldrID, prjID, onOptClick = null }) => {
 
   return (
     <div className={`col col-${trOnly ? 12 : 9}`}>
-      <div className={`table-head${!trOnly ? " ml-3" : ""}`}>
+      <div className={`table-head${!trOnly ? ' ml-3' : ''}`}>
         <div className='col col-3'>Название</div>
         <div className='col col-2'>Позиций</div>
         <div className='col col-1'>Слов</div>
         <div className='col col-4'>Прогресс перевода</div>
         <div className='col col-2'>GIT статус</div>
       </div>
-      <div className={`scroll-y paginate column m-1${!trOnly ? " ml-3" : ""}`}>
+      <div className={`scroll-y paginate column m-1${!trOnly ? ' ml-3' : ''}`}>
         {loading ? (
           <Loader />
         ) : !fileList.length ? (
@@ -91,7 +91,7 @@ const FileItem = ({ file, onOptClick = null }) => {
             <span>{textCutByLen(file.name, 25)}</span>
           </Link>
         )}
-      </div>
+     </div>
       {file.error ? (
         <div className='col col-8 row center'>
           <div className='color-error'>ошибка обработка файла: {file.error}</div>
@@ -116,7 +116,7 @@ const FileItem = ({ file, onOptClick = null }) => {
       )}
       <div className='col col-1'>
         <div className='row justify'>
-          <div>{file.repo_status ? "Ok" : "X"}</div>
+          <div>{file.repo_status ? 'Ok' : 'X'}</div>
           {Boolean(onOptClick) && <MoreButton filoID={file.id} onOptClick={onOptClick} />}
         </div>
       </div>

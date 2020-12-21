@@ -84,6 +84,7 @@ def delete_from_os(obj_type: str, path: str):
     """ After delete Project, Folder, File or Translated object -> Delete in OS """
     try:
         if not DeleteInOS.delete_object(obj_type, path):
+            # FIXME: create exception to retry (if no folder - no need to retry)
             delete_from_os.retry(countdown=60)  # retry after 60 seconds
     except SoftTimeLimitExceeded:
         logger.warning(f'Deleting {obj_type} path:{path} too slow')

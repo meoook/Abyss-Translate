@@ -3,7 +3,6 @@ import os
 
 from django.conf import settings
 
-
 logger = logging.getLogger('django')
 
 

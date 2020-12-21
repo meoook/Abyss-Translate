@@ -70,8 +70,8 @@ class CopyContextControl:
     @staticmethod
     def get_path_with_suffix(original_file_path: str, lang_short_name: str) -> str:
         """ Get translate copy path related to original but add 'language short name' suffix """
-        dir_name = os.path.dirname(original_file_path)
-        file_name = os.path.basename(original_file_path)
-        name, ext = os.path.splitext(file_name)
-        copy_name = f'{name}-{lang_short_name}{ext}'
-        return os.path.join(dir_name, copy_name)
+        _dir_name = os.path.dirname(original_file_path)
+        _file_name = os.path.basename(original_file_path)
+        _name, _ext = os.path.splitext(_file_name)
+        _copy_name = f'{_name}-{lang_short_name}{_ext}'
+        return os.path.join(_dir_name, _copy_name)
