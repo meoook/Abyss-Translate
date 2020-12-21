@@ -46,7 +46,7 @@ class ProjectViewSet(viewsets.ModelViewSet):
 
     def perform_create(self, serializer):
         _user = self.request.user
-        _project_name: str = self.request.get("name")  # For log only
+        _project_name: str = self.request.data.get("name")  # For log only
         logger.info(f'User {_user.first_name}:{_user.id} creating new project {_project_name}')
         serializer.save(owner=self.request.user)
 
@@ -75,7 +75,7 @@ class ProjectPermsViewSet(viewsets.ModelViewSet):
         # TODO: Check perms if 5 - can create 0, if 9 can create other
         _save_id: str = self.request.data.get('save_id')
         _first_name: str = self.request.data.get('first_name')
-        _permission: int = self.request.get("permission")  # For log only
+        _permission: int = self.request.data.get("permission")  # For log only
         _project = get_object_or_404(Project, save_id=_save_id)
         _user = get_object_or_404(User, first_name=_first_name)
         _log_tuple: tuple = (self.request.user.first_name, _permission, _first_name, _save_id)  # For log only
