@@ -41,7 +41,6 @@ class LocalizeCSVReader:
         if self.__row_parser.data['fid']:
             return self.__row_parser.data
         else:
-            # return {**self.__row_parser.data, 'fid': self.__row_index}
             return self.__row_parser.data | {'fid': self.__row_index}
 
     def __next_row_with_value(self):
