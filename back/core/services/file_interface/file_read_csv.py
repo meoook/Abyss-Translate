@@ -31,17 +31,11 @@ class LocalizeCSVReader:
         return self
 
     def __next__(self) -> dict[str, any]:
+        self.__next_row_with_value()
         if self.__row_index > self.__max_index:
             if self.__copy:  # handle copy control
                 self.__copy.finish()  # To finish file
             raise StopIteration
-        if self.__copy:  # handle copy control
-            self.__copy.add_data(self.__data[self.__row_index])
-        # Set next row
-        self.__row_parser.data = self.__data[self.__row_index]
-        self.__row_index += 1
-        if not self.__row_parser.data['words']:
-            self.__next__()
         self.__file_items += len(self.__row_parser.data['items'])
         self.__file_words += self.__row_parser.data['words']
         if self.__row_parser.data['fid']:
@@ -49,6 +43,17 @@ class LocalizeCSVReader:
         else:
             # return {**self.__row_parser.data, 'fid': self.__row_index}
             return self.__row_parser.data | {'fid': self.__row_index}
+
+    def __next_row_with_value(self):
+        """ Find next row where value is valid text (set row index) """
+        while self.__row_index <= self.__max_index:
+            if self.__copy:  # handle copy control
+                self.__copy.add_data(self.__data[self.__row_index])
+            # Set next row
+            self.__row_parser.data = self.__data[self.__row_index]
+            self.__row_index += 1
+            if self.__row_parser.data['words']:
+                return
 
     def copy_write_mark_items(self, values: list[dict[str, any]]) -> None:
         """ Write row filled with values in translation file copy """

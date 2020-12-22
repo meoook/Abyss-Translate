@@ -144,10 +144,10 @@ if __name__ == '__main__':
     # file_scanner_test()
     # po_lib_test()
     # fid_finder_test()
-    # csv_reader_test()
+    csv_reader_test()
     # ue_reader_test()
     # html_reader_test()
-    html_reader_test2()
+    # html_reader_test2()
     # my_path = r'C:\Projects\PY\Abby\HELIOS\Ability-ru.txt'
     # w = r'C:\Projects\PY\Abby\test.txt'
     #
