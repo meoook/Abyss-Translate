@@ -25,9 +25,9 @@ class Command(BaseCommand):
         trans = 0
         total = 0
         for file_name in files_ru:
-            if file_name != 'building_siegelist.htm':
+            # if file_name != 'building_siegelist.htm':
                 # print('skiping', file_name)
-                continue
+                # continue
             total += 1
             orig_path = os.path.join(ru_dir, file_name)
             trans_path = os.path.join(en_dir, file_name)
