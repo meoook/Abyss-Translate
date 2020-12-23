@@ -44,7 +44,7 @@ class LocalizeCSVReader:
             return self.__row_parser.data | {'fid': self.__row_index}
 
     def __next_row_with_value(self):
-        """ Find next row where value is valid text (set row index) """
+        """ Find next row where value is valid text (set row index and handle copy) """
         while self.__row_index <= self.__max_index:
             if self.__copy:  # handle copy control
                 self.__copy.add_data(self.__data[self.__row_index])
@@ -120,7 +120,7 @@ class _CsvRowToMarkSerializer(ParserUtils):
         for col_n, col_value in enumerate(self.__current_row_items, start=1):
             if col_n in self.__fields:
                 text = self.__get_unquote_text(col_value)
-                clean_text = self._clean_text(text)
+                clean_text = self.__csv_clean_text(text)
                 item_words = self._count_words(clean_text)
                 if item_words > 0:
                     self.__words_amount += item_words
@@ -135,6 +135,14 @@ class _CsvRowToMarkSerializer(ParserUtils):
                     })
         if self.__words_amount:
             self.__context = self._clean_text(row)
+
+    def __csv_clean_text(self, text: str) -> str:
+        """ Almost BSFG files fix """  # FIXME: Not good way to do methods only for abyss (костыль)
+        if text.startswith(r'u,') or text.startswith('a,'):
+            return self._clean_text(text[2:-2])  # FIXME  - string len can be 2
+        elif text.startswith('[') and text.endswith(']'):
+            return self._clean_text(text[1:-1])
+        return self._clean_text(text)
 
     @staticmethod
     def __set_fid_lookup_fn(formula: str) -> Callable[[list[any]], str]:
