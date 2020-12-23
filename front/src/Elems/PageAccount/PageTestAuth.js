@@ -1,9 +1,9 @@
-import React from "react"
-import { NavLink } from "react-router-dom"
+import React from 'react'
+import { NavLink } from 'react-router-dom'
 
 const PageTestAuth = (props) => {
   const handleRedirect = () => {
-    return props.history.push("/")
+    return props.history.push('/')
   }
 
   return (
@@ -13,7 +13,7 @@ const PageTestAuth = (props) => {
         <div className='row center justify m-2'>
           <NavLink
             to={
-              "/auth/eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9.eyJ1dWlkIjoiMDc0OC1hY2M1LTRjMDgtZjIyOSIsIm5pY2tuYW1lIjoibG9sIiwidGFnIjoiNzQzNiIsImxhbmciOiJydSIsInRpbWVzdGFtcCI6MTYwNjA1MTA1MS45MDk0NjR9.lZkWtCNrrpgm6FsKtQyKCcoridhnKzN7sT9gnsWxIRw"
+              '/auth/eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9.eyJ1dWlkIjoiMDc0OC1hY2M1LTRjMDgtZjIyOSIsIm5pY2tuYW1lIjoibG9sIiwidGFnIjoiNzQzNiIsImxhbmciOiJydSIsInRpbWVzdGFtcCI6MTYwODcxNjUxMi4yNjY1NzV9.ieE_TzCb1Z1Xb6beHbTjFcl9Ate6J9gmTlK7ViJPWjM'
             }
             className='underline'>
             Link as in abyss to auth here
