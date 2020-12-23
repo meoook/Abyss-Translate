@@ -116,7 +116,8 @@ class FileScanner(ParserUtils):
         return False
 
     def __method_check_html(self) -> bool:
-        texts = re.findall(r'>\s*([^<>]+[^\s])\s*<', self.__data)
+        # texts = re.findall(r'>\s*([^<>]+[^\s])\s*<', self.__data)
+        texts = re.findall(r'<[^<>]+>.+</[^<>]+>', self.__data)
         if len(texts) > 2:
             self.__method = 'html'
             self.__find_lang_in_text(''.join(texts))

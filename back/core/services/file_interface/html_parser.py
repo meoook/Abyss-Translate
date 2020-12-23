@@ -47,8 +47,8 @@ class HtmlContextParser:
             self.__prefix_add(_cut_idx)  # Add \r or \n to prefix
             return True
         # Try to parse data as 'in tag'
-        # _tag_data = re.match(r'[^<]+', self.__left_data, flags=re.A)
-        _tag_data = re.match(r'[^<]+', self.__left_data)
+        _tag_data = re.match(r'[^<]+', self.__left_data, flags=re.A)
+        # _tag_data = re.match(r'[^<]+', self.__left_data)
         if not _tag_data:  # Data not found
             self.__open_or_close_next_tag()
         else:
