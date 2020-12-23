@@ -68,7 +68,7 @@ class AuthAPI(generics.GenericAPIView):
         """
         logger.info(f'TRY TO GET USER WITH UID:{_uid}')
         try:
-            _authed_user = User.objects.get(username=_uid)
+            _authed_user = User.objects.get(username=str(_uid))
         except User.DoesNotExist:
             logger.info(f'Creating new user: {_name} from jwt data')
             logger.warning(f'BECAUSE NO USER WITH UID:{_uid}')
