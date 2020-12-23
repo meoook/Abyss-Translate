@@ -53,6 +53,7 @@ class AuthAPI(generics.GenericAPIView):
 
         """
         THIS CODE DON'T WORK IN VM WHEN LOGIN SECOND TIME (IN WINDOWS - OK) 
+        """
         authed_user = authenticate(username=_uid, password=_nick)
         if authed_user is not None:
             if not authed_user.is_active:
@@ -61,26 +62,25 @@ class AuthAPI(generics.GenericAPIView):
             logger.info(f'User: {_name} auth with jwt')
         else:
             logger.info(f'Creating new user: {_name} from jwt data')
-            authed_user = User.objects.create_user(_user)
+            authed_user = User.objects.create_user(**_user)
             # TODO: check if is abyss creator or admin - if so - give permission
             creator = Permission.objects.get(codename='creator')
             authed_user.user_permissions.add(creator)
-        """
-        logger.info(f'TRY TO GET USER WITH UID:{_uid} {type(_uid)}')
-        try:
-            _authed_user = User.objects.get(username=_data['uuid'])
-        except User.DoesNotExist:
-            logger.info(f'Creating new user: {_name} from jwt data')
-            logger.warning(f'BECAUSE NO USER WITH UID:{_uid}')
-            _authed_user = User.objects.create_user(_user)
-            # TODO: check if is abyss creator or admin - if so - give permission
-            _role_creator = Permission.objects.get(codename='creator')
-            _authed_user.user_permissions.add(_role_creator)
-        else:
-            if not _authed_user.is_active:
-                logger.warning(f'Blocked user: {_name} try to auth by jwt')
-                return Response({'err': 'no access for user'}, status=403)
-            logger.info(f'User: {_name} auth with jwt')
+        # logger.info(f'TRY TO GET USER WITH UID:{_uid} {type(_uid)}')
+        # try:
+        #     _authed_user = User.objects.get(username=_data['uuid'])
+        # except User.DoesNotExist:
+        #     logger.info(f'Creating new user: {_name} from jwt data')
+        #     logger.warning(f'BECAUSE NO USER WITH UID:{_uid}')
+        #     _authed_user = User.objects.create_user(_user)
+        #     # TODO: check if is abyss creator or admin - if so - give permission
+        #     _role_creator = Permission.objects.get(codename='creator')
+        #     _authed_user.user_permissions.add(_role_creator)
+        # else:
+        #     if not _authed_user.is_active:
+        #         logger.warning(f'Blocked user: {_name} try to auth by jwt')
+        #         return Response({'err': 'no access for user'}, status=403)
+        #     logger.info(f'User: {_name} auth with jwt')
 
         _, token = AuthToken.objects.create(_authed_user)
         return Response(self.get_serializer(_authed_user, context={'token': token}).data, status=200)
