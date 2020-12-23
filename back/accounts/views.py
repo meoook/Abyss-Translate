@@ -53,7 +53,7 @@ class AuthAPI(generics.GenericAPIView):
 
         authed_user = authenticate(username=_uid, password=_nick)
         logger.info(f'TRY TO LOGIN WITH U:{_uid} P:{_nick}')
-        if authed_user:
+        if authed_user is not None:
             if not authed_user.is_active:
                 logger.warning(f'Blocked user: {_name} try to auth by jwt')
                 return Response({'err': 'no access for user'}, status=403)
