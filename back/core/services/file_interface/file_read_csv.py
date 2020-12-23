@@ -119,8 +119,9 @@ class _CsvRowToMarkSerializer(ParserUtils):
 
         for col_n, col_value in enumerate(self.__current_row_items, start=1):
             if col_n in self.__fields:
-                text = self.__get_unquote_text(col_value)
-                clean_text = self.__csv_clean_text(text)
+                _fixed_text = self.__csv_get_text(col_value)
+                text = self.__get_unquote_text(_fixed_text)
+                clean_text = self._clean_text(text)
                 item_words = self._count_words(clean_text)
                 if item_words > 0:
                     self.__words_amount += item_words
@@ -136,13 +137,14 @@ class _CsvRowToMarkSerializer(ParserUtils):
         if self.__words_amount:
             self.__context = self._clean_text(row)
 
-    def __csv_clean_text(self, text: str) -> str:
+    @staticmethod
+    def __csv_get_text(text: str) -> str:
         """ Almost BSFG files fix """  # FIXME: Not good way to do methods only for abyss (костыль)
         if text.startswith(r'u,') or text.startswith('a,'):
-            return self._clean_text(text[2:-2])  # FIXME  - string len can be 2
+            return text[2:-2]  # FIXME  - string len can be 2
         elif text.startswith('[') and text.endswith(']'):
-            return self._clean_text(text[1:-1])
-        return self._clean_text(text)
+            return text[1:-1]
+        return text
 
     @staticmethod
     def __set_fid_lookup_fn(formula: str) -> Callable[[list[any]], str]:

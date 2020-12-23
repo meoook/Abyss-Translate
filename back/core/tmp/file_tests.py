@@ -106,11 +106,12 @@ def ue_reader_test():
 
 
 def html_reader_test():
-    my_path = r'C:\Projects\PY\Abby\HELIOS\html'
+    # my_path = r'C:\Projects\PY\Abby\HELIOS\html'
+    my_path = r'C:\+migration\from_repo\ru'
     _, _, file_names = next(os.walk(my_path))
 
     for idxx, file_name in enumerate(file_names):
-        if file_name == 'top_list_info2.htm' and file_name[-3:] == 'htm' or file_name[-4:] == 'html':
+        if file_name == 'a_expert_admin_3.htm' and file_name[-3:] == 'htm' or file_name[-4:] == 'html':
             file_path = os.path.join(my_path, file_name)
             info = FileScanner(file_path, 'ru')
             print(idxx, file_path, {**info.info})
@@ -144,9 +145,9 @@ if __name__ == '__main__':
     # file_scanner_test()
     # po_lib_test()
     # fid_finder_test()
-    csv_reader_test()
+    # csv_reader_test()
     # ue_reader_test()
-    # html_reader_test()
+    html_reader_test()
     # html_reader_test2()
     # my_path = r'C:\Projects\PY\Abby\HELIOS\Ability-ru.txt'
     # w = r'C:\Projects\PY\Abby\test.txt'
