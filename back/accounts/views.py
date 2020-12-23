@@ -54,7 +54,6 @@ class AuthAPI(generics.GenericAPIView):
         """
         THIS CODE DON'T WORK IN VM WHEN LOGIN SECOND TIME (IN WINDOWS - OK) 
         authed_user = authenticate(username=_uid, password=_nick)
-        logger.info(f'TRY TO LOGIN WITH U:{_uid} P:{_nick}')
         if authed_user is not None:
             if not authed_user.is_active:
                 logger.warning(f'Blocked user: {_name} try to auth by jwt')
@@ -67,10 +66,12 @@ class AuthAPI(generics.GenericAPIView):
             creator = Permission.objects.get(codename='creator')
             authed_user.user_permissions.add(creator)
         """
+        logger.info(f'TRY TO GET USER WITH UID:{_uid}')
         try:
             _authed_user = User.objects.get(username=_uid)
         except User.DoesNotExist:
             logger.info(f'Creating new user: {_name} from jwt data')
+            logger.warning(f'BECAUSE NO USER WITH UID:{_uid}')
             _authed_user = User.objects.create_user(_user)
             # TODO: check if is abyss creator or admin - if so - give permission
             _role_creator = Permission.objects.get(codename='creator')
