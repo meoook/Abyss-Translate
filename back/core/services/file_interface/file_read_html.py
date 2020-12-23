@@ -67,12 +67,22 @@ class LocalizeHtmlReader(ParserUtils):
                 'warning': html_item['warning'],
             }
         return {
-            'fid': html_item['dom'],
+            'fid': self.__elem_dom_fix_fix_len(html_item['dom']),
             'words': words,
             'search_words': clean_text.lower(),
             'context': html_item['prefix'] + html_item['text'],
             'items': [_item, ],
         }
+
+    def __elem_dom_fix_fix_len(self, string_dom: str) -> str:
+        """ Fix len of element dom tree to 255 symbols (DB indexed) """
+        if len(string_dom) < 255:
+            return string_dom
+        _without_dots = string_dom.replace(':', '')
+        if len(_without_dots) < 255:
+            return _without_dots
+        _binary = _without_dots.encode(self.__codec)
+        return self._get_md5(_binary)
 
     def copy_write_mark_items(self, values: list[dict[str, any]]) -> None:
         """ Translation file copy write new translates for current item """

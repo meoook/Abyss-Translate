@@ -116,10 +116,12 @@ class FileScanner(ParserUtils):
         return False
 
     def __method_check_html(self) -> bool:
-        # texts = re.findall(r'>\s*([^<>]+[^\s])\s*<', self.__data)
-        texts = re.findall(r'<[^<>]+>.+</[^<>]+>', self.__data)
-        if len(texts) > 2:
+        all_tags = re.findall(r'<[^><]+>', self.__data)
+        if len(all_tags) > 1:  # Is HTML STRUCTURE
             self.__method = 'html'
+            texts = re.findall(r'>\s*([^<>]+[^\s])\s*<', self.__data)
+            # if len(texts) < 1:    # TODO: Add values count check - for not valid values in HTML (if 0 - pass file)
+            #     return False  # HTML with no text
             self.__find_lang_in_text(''.join(texts))
             return True
         return False

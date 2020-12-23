@@ -70,7 +70,7 @@ class FileModelApi:
                 settings.STORAGE_ERRORS.delete(tmp_path)
                 return False
         """ Phase 3: Update structure if upload file is original language """
-        self._log(f' get info success - method:{_info.method}')
+        self._log(f'get info success - method:{_info.method}')
         if is_original and self._structure_changed:
             self._log(f'uploaded new original with changed structure:{_info.options}')
             self._file.codec = _info.codec
@@ -98,7 +98,8 @@ class FileModelApi:
                 self._log_err(f"build translates error:{err}")
             finally:
                 """ Phase 5: Refresh progress and del tmp data """
-                settings.STORAGE_ERRORS.delete(tmp_path)
+                # settings.STORAGE_ROOT.delete(tmp_path)
+                # settings.STORAGE_ERRORS.delete(tmp_path)
                 self._file_progress_refresh(lang_id)
         return True
 

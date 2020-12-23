@@ -5,9 +5,10 @@ class HtmlContextParser:
     """ Control text data in HTML document """
 
     __INVALID_DATA_TAGS = ['script', 'style']
-    __AUTO_CLOSE_TAGS = ['meta', 'link', 'br', 'hr']
+    __AUTO_CLOSE_TAGS = ['meta', 'link', 'br', 'hr', 'img', 'input']
 
     def __init__(self, html_data: str, *_args):
+        # re.purge()
         self.__left_data: str = html_data  # Not parsed data
         # Class props to return
         self.__dom_data: list[dict[str, str]] = []  # List of DOM-tree items (item where is valid text)
@@ -161,7 +162,9 @@ class HtmlContextParser:
         except ValueError:
             pass
         _text = text.strip()
-        if _text and re.match(r'( |[^.:/])+.$', _text):  # Not empty and not URL or like technical
+        if ' ' in _text:
+            return True
+        elif _text and re.match(r'[^.:/\s]+.$', _text):  # Not empty and not URL or like technical
             return True
         else:
             return False

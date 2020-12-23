@@ -1,6 +1,3 @@
-import base64
-import json
-
 import requests
 
 
@@ -24,7 +21,6 @@ def get_data(token):
     }
     headers = {
         'Cache-Control': 'no-cache',
-        # 'Authorization': f'Bearer {token}',
         'Accept': '*/*',
     }
     response2 = requests.request("GET", url, headers=headers, params=params2)
@@ -57,4 +53,3 @@ with requests.request(**req_obj) as req:
         get_data(token)
     else:
         print('ERRR', req.text)
-

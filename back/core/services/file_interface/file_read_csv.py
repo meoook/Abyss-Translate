@@ -139,9 +139,9 @@ class _CsvRowToMarkSerializer(ParserUtils):
 
     @staticmethod
     def __csv_get_text(text: str) -> str:
-        """ Almost BSFG files fix """  # FIXME: Not good way to do methods only for abyss (костыль)
+        """ File parse fix """  # FIXME: Not good way to do methods only for abyss (костыль для BSFG)
         if text.startswith(r'u,') or text.startswith('a,'):
-            return text[2:-2]  # FIXME  - string len can be 2
+            return text[2:-2]  # FIXME  - text len can be 2
         elif text.startswith('[') and text.endswith(']'):
             return text[1:-1]
         return text
