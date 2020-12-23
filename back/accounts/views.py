@@ -46,26 +46,26 @@ class AuthAPI(generics.GenericAPIView):
             return Response({'err': 'invalid token'}, status=403)
         _data = jwt_validator.data
 
-        uid = _data['uuid']
-        nick = _data['nickname']
-        abyss_name = f'{nick}#{_data["tag"]}'
-        _user = {'username': uid, 'email': None, 'password': nick, 'first_name': abyss_name, 'last_name': _data['lang']}
+        _uid = _data['uuid']
+        _nick = _data['nickname']
+        _name = f'{_nick}#{_data["tag"]}'
+        _user = {'username': _uid, 'email': None, 'password': _nick, 'first_name': _name, 'last_name': _data['lang']}
 
-        user = authenticate(username=uid, password=nick)
-        logger.info(f'TRY TO LOGIN WITH U:{uid} P:{nick}')
-        if user:
-            if not user.is_active:
-                logger.warning(f'Blocked user: {abyss_name} try to auth by jwt')
+        authed_user = authenticate(username=_uid, password=_nick)
+        logger.info(f'TRY TO LOGIN WITH U:{_uid} P:{_nick}')
+        if authed_user:
+            if not authed_user.is_active:
+                logger.warning(f'Blocked user: {_name} try to auth by jwt')
                 return Response({'err': 'no access for user'}, status=403)
-            logger.info(f'User: {abyss_name} auth with jwt')
+            logger.info(f'User: {_name} auth with jwt')
         else:
-            logger.info(f'Creating new user: {abyss_name} from jwt data')
-            user = User.objects.create_user(_user)
+            logger.info(f'Creating new user: {_name} from jwt data')
+            authed_user = User.objects.create_user(_user)
             # TODO: check if is abyss creator or admin - if so - give permission
             creator = Permission.objects.get(codename='creator')
-            user.user_permissions.add(creator)
-        _, token = AuthToken.objects.create(user)
-        return Response(self.get_serializer(user, context={'token': token}).data, status=200)
+            authed_user.user_permissions.add(creator)
+        _, token = AuthToken.objects.create(authed_user)
+        return Response(self.get_serializer(authed_user, context={'token': token}).data, status=200)
 
 
 class UserAPI(generics.RetrieveAPIView):
