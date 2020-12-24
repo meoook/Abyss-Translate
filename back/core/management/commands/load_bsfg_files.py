@@ -15,12 +15,12 @@ class Command(BaseCommand):
             self.stdout.write(self.style.WARNING('error - set folder id where to parse files'))
             return
         else:
-            self.stdout.write(self.style.NOTICE('Start loading files...'))
+            self.stdout.write('PARSER: Start loading files...')
         migrator = AbyMigrator(kwargs['folder_id'])
         try:
             migrator.start_parsing()
         except Exception as err:
-            self.stdout.write(self.style.ERROR(f'Exception while parsing files: {err}'))
+            self.stdout.write(self.style.ERROR(f'PARSER: Exception while parsing files: {err}'))
             return
         else:
-            self.stdout.write(self.style.SUCCESS('All files loaded'))
+            self.stdout.write(self.style.SUCCESS('PARSER: All files loaded'))

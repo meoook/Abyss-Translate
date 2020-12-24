@@ -70,20 +70,21 @@ case "$selected" in
         fi
         case "$selected2" in
             1) docker-compose run --rm django sh -c "python manage.py createsuperuser" ;;
-            2)  echo_line
-                read -p "Enter user name or leave blank for random: " option_name
-                docker-compose run --rm django sh -c "python manage.py create_user_creator $option_name" ;;
+            2) echo_line
+               read -p "Enter user name or leave blank for random: " option_name
+               docker-compose run --rm django sh -c "python manage.py create_user_creator $option_name" ;;
             3) docker-compose run --rm django sh -c "python manage.py test" ;;
             4) html_files_path="$(dirname "$(pwd)")/bfilo/html/"
                echo "Source HTML path ${html_files_path}"
                echo_line
                read -p "Enter folder id where to copy files: " user_folder_id_where
-               docker cp $html_files_path localize-django-dev:/usr/src/back/users/
+               docker cp "${html_files_path}ru/" localize-django-dev:/usr/src/back/users/
+               docker cp "${html_files_path}en/" localize-django-dev:/usr/src/back/users/
                docker-compose run --rm django sh -c "python manage.py load_bsfg_files $user_folder_id_where" ;;
             5) docker-compose run --rm django sh -c "python manage.py create_test_data" ;;
             9) docker-compose -f docker-compose.prod.yml run --rm django sh -c "python manage.py test" ;;
-            *)  docker-compose run --rm django sh -c "python manage.py makemigrations"
-                docker-compose run --rm django sh -c "python manage.py migrate" ;;
+            *) docker-compose run --rm django sh -c "python manage.py makemigrations"
+               docker-compose run --rm django sh -c "python manage.py migrate" ;;
         esac ;;
 
     2)  if [ -z "$selected2" ]; then
