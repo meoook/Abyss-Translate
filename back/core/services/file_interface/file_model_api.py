@@ -98,8 +98,7 @@ class FileModelApi:
                 self._log_err(f"build translates error:{err}")
             finally:
                 """ Phase 5: Refresh progress and del tmp data """
-                # settings.STORAGE_ROOT.delete(tmp_path)
-                # settings.STORAGE_ERRORS.delete(tmp_path)
+                settings.STORAGE_ERRORS.delete(tmp_path)
                 self._file_progress_refresh(lang_id)
         return True
 

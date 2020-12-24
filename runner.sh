@@ -60,6 +60,7 @@ case "$selected" in
             echo "${MYCUSTOMTAB}1 - create superuser"
             echo "${MYCUSTOMTAB}2 - create user"
             echo "${MYCUSTOMTAB}3 - development tests"
+            echo "${MYCUSTOMTAB}4 - load game - html data"
             echo "${MYCUSTOMTAB}5 - create test data"
             echo "${MYCUSTOMTAB}9 - production tests"
             echo "${MYCUSTOMTAB}* - make migrations and migrate"
@@ -73,6 +74,8 @@ case "$selected" in
                 read -p "Enter user name or leave blank for random: " option_name
                 docker-compose run --rm django sh -c "python manage.py create_user_creator $option_name" ;;
             3) docker-compose run --rm django sh -c "python manage.py test" ;;
+            4) docker-compose cp MY_PATH_IN_VM/bfilo/html/* django:/usr/src/back/users/*
+               docker-compose run --rm django sh -c "python manage.py load_bsfg_files FOLDER_ID" ;;
             5) docker-compose run --rm django sh -c "python manage.py create_test_data" ;;
             9) docker-compose -f docker-compose.prod.yml run --rm django sh -c "python manage.py test" ;;
             *)  docker-compose run --rm django sh -c "python manage.py makemigrations"

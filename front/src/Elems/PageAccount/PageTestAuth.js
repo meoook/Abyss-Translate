@@ -13,7 +13,7 @@ const PageTestAuth = (props) => {
         <div className='row center justify m-2'>
           <NavLink
             to={
-              '/auth/eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9.eyJ1dWlkIjoiMDc0OC1hY2M1LTRjMDgtZjIyOSIsIm5pY2tuYW1lIjoibG9sIiwidGFnIjoiNzQzNiIsImxhbmciOiJydSIsInRpbWVzdGFtcCI6MTYwODcxNjUxMi4yNjY1NzV9.ieE_TzCb1Z1Xb6beHbTjFcl9Ate6J9gmTlK7ViJPWjM'
+              '/auth/eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9.eyJ1dWlkIjoiMDc0OC1hY2M1LTRjMDgtZjIyOSIsIm5pY2tuYW1lIjoibG9sIiwidGFnIjoiNzQzNiIsImxhbmciOiJydSIsInRpbWVzdGFtcCI6MTYwODg0MDI4NS43OTk2Nn0.ee3PiV7Vqtoscj_lzyQ4uB0xsaXzyqIFDGAaxWcl4x0'
             }
             className='underline'>
             Link as in abyss to auth here

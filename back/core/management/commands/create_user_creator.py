@@ -4,6 +4,7 @@ from django.core.management.base import BaseCommand
 from django.contrib.auth.models import User, Permission
 
 from core.models import Project, Folder
+from django.utils.crypto import get_random_string
 
 
 class Command(BaseCommand):
@@ -53,4 +54,6 @@ class Command(BaseCommand):
         for _ in range(length):
             letter_n = random.randrange(len(letters_arr))
             name += letters_arr[letter_n]
-        return name
+        # return name
+        # FIXME: Can be changed to
+        return get_random_string()
