@@ -74,9 +74,10 @@ case "$selected" in
                 read -p "Enter user name or leave blank for random: " option_name
                 docker-compose run --rm django sh -c "python manage.py create_user_creator $option_name" ;;
             3) docker-compose run --rm django sh -c "python manage.py test" ;;
-            4) echo_line
+            4) html_files_path="$(dirname "$(pwd)")/bfilo/html/"
+               echo "Source HTML path ${html_files_path}"
+               echo_line
                read -p "Enter folder id where to copy files: " user_folder_id_where
-               html_files_path="$(pwd)/../bfilo/html/"
                docker cp $html_files_path localize-django-dev:/usr/src/back/users/
                docker-compose run --rm django sh -c "python manage.py load_bsfg_files $user_folder_id_where" ;;
             5) docker-compose run --rm django sh -c "python manage.py create_test_data" ;;
