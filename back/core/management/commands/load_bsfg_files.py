@@ -18,11 +18,15 @@ class Command(BaseCommand):
             self.stdout.write('PARSER: Start loading files...')
         migrator = AbyMigrator(kwargs['folder_id'])
 
-        migrator.start_parsing()
-        # try:
-        #     migrator.start_parsing()
-        # except Exception as err:
-        #     self.stdout.write(self.style.ERROR(f'PARSER: Exception while parsing files: {err}'))
-        #     return
-        # else:
-        #     self.stdout.write(self.style.SUCCESS('PARSER: All files loaded'))
+        # migrator.start_parsing()
+        try:
+            migrator.start_parsing()
+        except FileNotFoundError as err:
+            self.stdout.write(self.style.ERROR(f'PARSER: Not found error: {err}'))
+            return
+        except Exception as err:
+            self.stdout.write(self.style.ERROR(f'PARSER: Exception while parsing files: {err}'))
+            return
+        else:
+            self.stdout.write(self.style.SUCCESS('PARSER: All files loaded'))
+

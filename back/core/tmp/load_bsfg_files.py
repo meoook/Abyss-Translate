@@ -34,11 +34,11 @@ class AbyMigrator:
         except ObjectDoesNotExist:
             return False
         else:
-            self.__prj_lang_orig_id = _folder.project.lang_orig.id
-            self.__english_id = self.__english_lang_id()
-            self.__path_source_orig = os.path.join(settings.MEDIA_ROOT, 'ru')
-            self.__path_source_tr = os.path.join(settings.MEDIA_ROOT, 'en')
-            self.__path_source_tr_tmp = os.path.join(settings.MEDIA_ROOT, 'errors')
+            self.__prj_lang_orig_id = _folder.project.lang_orig.id                   # Const 75
+            self.__english_id = self.__english_lang_id()                             # Const 18
+            self.__path_source_orig = os.path.join(settings.MEDIA_ROOT, 'ru')        # Const ../users/ru
+            self.__path_source_tr = os.path.join(settings.MEDIA_ROOT, 'en')          # Const ../users/en
+            self.__path_source_tr_tmp = os.path.join(settings.MEDIA_ROOT, 'errors')  # Const ../users/errors
             self.__path_dst = self.__folder_path_from_instance(_folder)
             # self.__path_dst_tr = os.path.join(self.__path_dst, 'en')
             self.__file_list_ru = os.listdir(self.__path_source_orig)

@@ -60,7 +60,7 @@ case "$selected" in
             echo "${MYCUSTOMTAB}1 - create superuser"
             echo "${MYCUSTOMTAB}2 - create user"
             echo "${MYCUSTOMTAB}3 - development tests"
-            echo "${MYCUSTOMTAB}4 - load game - html data"
+            echo "${MYCUSTOMTAB}4 - migrate games"
             echo "${MYCUSTOMTAB}5 - create test data"
             echo "${MYCUSTOMTAB}9 - production tests"
             echo "${MYCUSTOMTAB}* - make migrations and migrate"
@@ -74,15 +74,22 @@ case "$selected" in
                read -p "Enter user name or leave blank for random: " option_name
                docker-compose run --rm django sh -c "python manage.py create_user_creator $option_name" ;;
             3) docker-compose run --rm django sh -c "python manage.py test" ;;
-            4) html_files_path="$(dirname "$(pwd)")/bfilo/html/"
-               echo "Source HTML path ${html_files_path}"
+            4) bfilo_dir = "$(dirname "$(pwd)")/bfilo/"
+               html_zip_path="${bfilo}html.zip"
+               cfg_zip_path="${bfilo}cfg.zip"
+               scripts_zip_path="${bfilo}scripts.zip"
+               ls_zip_path="${bfilo}ls.zip"
+               echo "Source archive path ${bfilo_dir}"
                echo_line
-               read -p "Enter folder id where to copy files: " user_folder_id_where
-               docker cp "${html_files_path}ru/" localize-django-dev:/usr/src/back/users/
-               docker cp "${html_files_path}en/" localize-django-dev:/usr/src/back/users/
-               docker exec localize-django-dev sh -c "chgrp translate /usr/src/back/users/*"
-               docker exec localize-django-dev sh -c "chmod 777 /usr/src/back/users/*"
-               docker-compose run --rm django sh -c "python manage.py load_bsfg_files $user_folder_id_where" ;;
+               docker cp $html_zip_path localize-django-dev:/usr/src/back/
+               docker cp $cfg_zip_path localize-django-dev:/usr/src/back/
+               docker cp $scripts_zip_path localize-django-dev:/usr/src/back/
+               docker cp $ls_zip_path localize-django-dev:/usr/src/back/
+               docker-compose run --rm django sh -c "unzip /usr/src/back/html.zip -d /usr/src/back/users/html/"
+               docker-compose run --rm django sh -c "unzip /usr/src/back/cfg.zip -d /usr/src/back/users/cfg/"
+               docker-compose run --rm django sh -c "unzip /usr/src/back/scripts.zip -d /usr/src/back/users/scripts/"
+               docker-compose run --rm django sh -c "unzip /usr/src/back/ls.zip -d /usr/src/back/users/ls/"
+               docker-compose run --rm django sh -c "python manage.py games_migrate" ;;
             5) docker-compose run --rm django sh -c "python manage.py create_test_data" ;;
             9) docker-compose -f docker-compose.prod.yml run --rm django sh -c "python manage.py test" ;;
             *) docker-compose run --rm django sh -c "python manage.py makemigrations"
