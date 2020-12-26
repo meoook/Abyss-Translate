@@ -39,21 +39,21 @@ class GamesMigrator:
         helios_source = os.path.join(settings.MEDIA_ROOT, 'cfg')
         helios_migrator = _MigratorIterator(int(folder_helios.id), lang_orig, lang_tr)
         helios_migrator.start_parsing(helios_source, helios_destination)
-        self.__results.append(helios_migrator.stats)
+        self.__results += helios_migrator.stats
         # HTML folder
         folder_html = Folder.objects.create(project=game_bsfg, name='html', position=2)
         html_destination = self.__folder_path_from_instance(folder_html)
         html_source = os.path.join(settings.MEDIA_ROOT, 'html')
         html_migrator = _MigratorIterator(int(folder_html.id), lang_orig, lang_tr)
         html_migrator.start_parsing(html_source, html_destination)
-        self.__results.append(html_migrator.stats)
+        self.__results += html_migrator.stats
         # SCRIPTS folder
         folder_scripts = Folder.objects.create(project=game_bsfg, name='scripts', position=3)
         scripts_destination = self.__folder_path_from_instance(folder_scripts)
         scripts_source = os.path.join(settings.MEDIA_ROOT, 'scripts')
         scripts_migrator = _MigratorIterator(int(folder_scripts.id), lang_orig, lang_tr)
         scripts_migrator.start_parsing(scripts_source, scripts_destination)
-        self.__results.append(scripts_migrator.stats)
+        self.__results += scripts_migrator.stats
         # Create Line Strike game
         game_ls_props = {'name': f'Line Strike', 'icon_chars': 'Ls', 'owner': user, 'lang_orig_id': lang_orig, }
         game_ls = Project.objects.create(**game_ls_props)
@@ -65,7 +65,7 @@ class GamesMigrator:
         ls_source = os.path.join(settings.MEDIA_ROOT, 'ls')
         ls_migrator = _MigratorIterator(int(folder_ls.id), lang_orig, lang_tr)
         ls_migrator.start_parsing(ls_source, ls_destination)
-        self.__results.append(ls_migrator.stats)
+        self.__results += ls_migrator.stats
 
     def __get_or_cr_user(self):
         nick = f'{self.__NAME}#{self.__TAG}'
@@ -173,4 +173,3 @@ class _MigratorIterator:
         if not os.path.isdir(dst_dir):
             os.makedirs(dst_dir)
         return shutil.move(source_path, dst_dir)
-

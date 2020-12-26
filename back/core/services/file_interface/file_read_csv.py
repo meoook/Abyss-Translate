@@ -119,12 +119,13 @@ class _CsvRowToMarkSerializer(ParserUtils):
 
         for col_n, col_value in enumerate(self.__current_row_items, start=1):
             if col_n in self.__fields:
-                _fixed_text = self.__csv_get_text(col_value)
+                _fixed_text = self._aby_csv_rule(col_value)
                 text = self.__get_unquote_text(_fixed_text)
                 clean_text = self._clean_text(text)
                 item_words = self._count_words(clean_text)
                 if item_words > 0:
                     self.__words_amount += item_words
+                    # FIXME: WTF ? make array
                     self.__search_words += f' {clean_text}' if self.__search_words else clean_text   # Add leading space
                     self.__items.append({
                         'item_number': col_n,
@@ -136,15 +137,6 @@ class _CsvRowToMarkSerializer(ParserUtils):
                     })
         if self.__words_amount:
             self.__context = self._clean_text(row)
-
-    @staticmethod
-    def __csv_get_text(text: str) -> str:
-        """ File parse fix """  # FIXME: Not good way to do methods only for abyss (костыль для BSFG)
-        if text.startswith(r'u,') or text.startswith('a,'):
-            return text[2:-2]  # FIXME  - text len can be 2
-        elif text.startswith('[') and text.endswith(']'):
-            return text[1:-1]
-        return text
 
     @staticmethod
     def __set_fid_lookup_fn(formula: str) -> Callable[[list[any]], str]:

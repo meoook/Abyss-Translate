@@ -74,17 +74,18 @@ case "$selected" in
                read -p "Enter user name or leave blank for random: " option_name
                docker-compose run --rm django sh -c "python manage.py create_user_creator $option_name" ;;
             3) docker-compose run --rm django sh -c "python manage.py test" ;;
-            4) bfilo_dir = "$(dirname "$(pwd)")/bfilo/"
-               html_zip_path="${bfilo}html.zip"
-               cfg_zip_path="${bfilo}cfg.zip"
-               scripts_zip_path="${bfilo}scripts.zip"
-               ls_zip_path="${bfilo}ls.zip"
-               echo "Source archive path ${bfilo_dir}"
+            4) games_dir="$(dirname "$(pwd)")/bfilo/"
+               html_zip_path="${games_dir}html.zip"
+               cfg_zip_path="${games_dir}cfg.zip"
+               scripts_zip_path="${games_dir}scripts.zip"
+               ls_zip_path="${games_dir}ls.zip"
+               echo "Source archive path ${games_dir}"
                echo_line
                docker cp $html_zip_path localize-django-dev:/usr/src/back/
                docker cp $cfg_zip_path localize-django-dev:/usr/src/back/
                docker cp $scripts_zip_path localize-django-dev:/usr/src/back/
                docker cp $ls_zip_path localize-django-dev:/usr/src/back/
+               docker-compose run --rm django sh -c "mkdir /usr/src/back/users/html && mkdir /usr/src/back/users/cfg && mkdir /usr/src/back/users/scripts && mkdir /usr/src/back/users/ls"
                docker-compose run --rm django sh -c "unzip /usr/src/back/html.zip -d /usr/src/back/users/html/"
                docker-compose run --rm django sh -c "unzip /usr/src/back/cfg.zip -d /usr/src/back/users/cfg/"
                docker-compose run --rm django sh -c "unzip /usr/src/back/scripts.zip -d /usr/src/back/users/scripts/"

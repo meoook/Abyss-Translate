@@ -129,8 +129,8 @@ class FileScanner(ParserUtils):
     def __deep_scan_csv(self) -> None:
         """ Find header row, quotes, language, columns, fid lookup method """  # FIXME: scan time is too long
         quotes_finder = TextQuoteFinder()
-        columns = {}
-        columns_lookup_id = UniqueIDLookUp()
+        columns = {}   # To find what columns have *valid* text
+        columns_lookup_id = UniqueIDLookUp()  # To find column(s) unique for all file
         all_clean_texts = ''
         top_rows = True  # File with header row by default
 
@@ -146,9 +146,11 @@ class FileScanner(ParserUtils):
                         pass  # File with header row - is ok
                     finally:
                         continue
-                # Put support variables for language, fID and columns finders methods
-                text = self.__csv_text_serializer(val)
+                # Validate and serialize text
+                _fixed_text = self._aby_csv_rule(val)
+                text = self.__csv_text_serializer(_fixed_text)
                 if text:
+                    # Put support variables for language, fID and columns finders methods
                     quotes_finder.value = text
                     all_clean_texts += self._clean_text(text)
                     columns[col_n] = columns[col_n] + 1 if col_n in columns else 1
@@ -224,7 +226,6 @@ class FileScanner(ParserUtils):
     @staticmethod
     def __csv_text_serializer(text: str) -> str:
         """ Check cell if it's have a valid text inside. Invalid are: aaa.bbb, aaa_bbb, bool and int types """
-        text = text.strip()
         if not re.match(r'^(none|false|true|[\W\-+_0-9]+|[^\s]*[._]+[^\s]*[^.])$', text, re.IGNORECASE):
             return text
 

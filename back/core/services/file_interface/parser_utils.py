@@ -25,6 +25,16 @@ class ParserUtils:
     def _get_md5(binary_data: bytes) -> str:
         return hashlib.md5(binary_data).hexdigest()
 
+    @staticmethod
+    def _aby_csv_rule(text: str) -> str:
+        """ Rule to parse CSV files from Abyss game """
+        # FIXME: Not good way to do methods only for abyss but use for all (костыль для игры)
+        if text.startswith(r'u,') or text.startswith('a,'):
+            return text[2:-2]  # FIXME  - text len can be 2
+        elif text.startswith('[') and text.endswith(']'):
+            return text[1:-1]
+        return text.strip()
+
     # @staticmethod
     # def _filename_from_path(path, suffix=None):
     #     file_name = os.path.basename(path)
