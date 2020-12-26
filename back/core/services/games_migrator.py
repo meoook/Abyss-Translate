@@ -23,7 +23,7 @@ class GamesMigrator:
         return self.__results
 
     def __create_user_storage_structure(self):
-        """ Create user and game structure """
+        """ Create user and game structure and parse files """
         # Prepare user and languages
         user = self.__get_or_cr_user()
         lang_orig = self.__russian_lang_id()
@@ -32,7 +32,7 @@ class GamesMigrator:
         game_bsfg_props = {'name': f'BSFG', 'icon_chars': 'Bg', 'owner': user, 'lang_orig_id': lang_orig, }
         game_bsfg = Project.objects.create(**game_bsfg_props)
         game_bsfg.translate_to.set([lang_tr])
-        self.__results += ['Migration status for game - BSFG', '=============' * 5]
+        self.__results += ['=============' * 5, 'Migration status for game - BSFG']
         # HELIOS folder
         folder_helios = Folder.objects.create(project=game_bsfg, name='helios', position=1)
         helios_destination = self.__folder_path_from_instance(folder_helios)
@@ -58,8 +58,8 @@ class GamesMigrator:
         game_ls_props = {'name': f'Line Strike', 'icon_chars': 'Ls', 'owner': user, 'lang_orig_id': lang_orig, }
         game_ls = Project.objects.create(**game_ls_props)
         game_ls.translate_to.set([lang_tr])
-        self.__results += ['Migration status for game - Line Strike', '=============' * 5]
-        # FILES folder (it's a random name)
+        self.__results += ['=============' * 5, 'Migration status for game - Line Strike']
+        # FILES folder ('files' it's a random name)
         folder_ls = Folder.objects.create(project=game_ls, name='files', position=1)
         ls_destination = self.__folder_path_from_instance(folder_ls)
         ls_source = os.path.join(settings.MEDIA_ROOT, 'ls')
