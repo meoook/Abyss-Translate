@@ -141,6 +141,36 @@ def html_reader_test2():
                 # reader.copy_write_mark_items([{'item_number': 1, 'text': 'bugaga'}])
 
 
+def html_reader_test3():
+    my_path = r'C:\Projects\PY\Abby\HELIOS\html'
+    _, _, file_names = next(os.walk(my_path))
+
+    for idxx, file_name in enumerate(file_names):
+        # if file_name == 'top_list_info2.htm' and file_name[-3:] == 'htm' or file_name[-4:] == 'html':
+        # if file_name == 'building_market_itemlist.htm' and file_name[-3:] == 'htm' or file_name[-4:] == 'html':
+        # if file_name == 'ai_help_mdefence2.htm' and file_name[-3:] == 'htm' or file_name[-4:] == 'html':
+        # if file_name == 'ai_help_noslots.htm' and file_name[-3:] == 'htm' or file_name[-4:] == 'html':
+        if file_name == 'building_siegelist.htm' and file_name[-3:] == 'htm' or file_name[-4:] == 'html':
+        # if file_name == 'ai_help_mondefence2.htm' and file_name[-3:] == 'htm' or file_name[-4:] == 'html':
+        # if file_name[-3:] == 'htm' or file_name[-4:] == 'html':
+            file_path = os.path.join(my_path, file_name)
+            info = FileScanner(file_path, 'ru')
+            print(idxx, file_path, {**info.info})
+            if not info.error:
+                print('READ ROW BY ROW ================================================')
+                html_manager = HtmlContextParser()
+                html_manager.data = info.data
+                [print('TREE:', x) for x in html_manager.tree]
+                for value in html_manager.data:
+                    # print(f'VALUE: {value["prefix"].encode()}')
+                    # print('VALUE:', value["text"].encode())
+                    # print('VALUE:', value['warning'])
+                    print('VALUE:', value)
+                    pass
+                # reader.copy_write_mark_items([{'item_number': 1, 'text': 'bugaga'}])
+                # break
+
+
 if __name__ == '__main__':
     # file_scanner_test()
     # po_lib_test()
@@ -149,6 +179,7 @@ if __name__ == '__main__':
     # ue_reader_test()
     html_reader_test()
     # html_reader_test2()
+    # html_reader_test3()
     # my_path = r'C:\Projects\PY\Abby\HELIOS\Ability-ru.txt'
     # w = r'C:\Projects\PY\Abby\test.txt'
     #

@@ -2,19 +2,14 @@ from core.services.file_interface.file_copy import CopyContextControl
 from core.services.file_interface.html_parser import HtmlContextParser
 from core.services.file_interface.parser_utils import ParserUtils
 
-# regular = r'<([\w]+)(\s.*)?>\s*([^<>]+[^\s])\s*<'
-# regggaa = r'<([\w]+)([^>]*)?>(\s*.*)</\1>'
-#
-# ONE_CONTENT_LOOK_UP = r'<([\w]+)([^>]*)?>([^\0]+)</\1>'
-# xx = '(?:</\w+>|^)([^><]+)<'
-
 
 class LocalizeHtmlReader(ParserUtils):
     """ Read html file and yield FileMark object to insert in DB. Also control creating translation copy. """
     def __init__(self, decoded_data: str, data_codec: str, _, copy_path: str = ''):
         self.__codec: str = data_codec
-        _html_parser = HtmlContextParser(decoded_data)  # Parse html data to list of elements
-        self.__data: list[dict[str, str]] = _html_parser.data
+        # Parse data to context
+        self.__read_data(decoded_data)
+        # Indexes
         self.__elem_index: int = 0
         self.__eof_index: int = len(self.__data) - 1
         # File results
@@ -67,14 +62,22 @@ class LocalizeHtmlReader(ParserUtils):
                 'warning': html_item['warning'],
             }
         return {
-            'fid': self.__elem_dom_fix_fix_len(html_item['dom']),
+            'fid': self.__elem_dom_fix_len(html_item['dom']),
             'words': words,
             'search_words': clean_text.lower(),
             'context': html_item['prefix'] + html_item['text'],
             'items': [_item, ],
         }
 
-    def __elem_dom_fix_fix_len(self, string_dom: str) -> str:
+    def __read_data(self, decoded_data: str):
+        """ Prepare data from file context """
+        tags_params = {'button': {'value', }, }
+        tags_default = {'tooltip', }
+        _html_parser = HtmlContextParser(tags_params, tags_default)
+        _html_parser.data = decoded_data
+        self.__data: list[dict[str, str]] = _html_parser.data
+
+    def __elem_dom_fix_len(self, string_dom: str) -> str:
         """ Fix len of element dom tree to 255 symbols (DB indexed) """
         if len(string_dom) < 255:
             return string_dom
