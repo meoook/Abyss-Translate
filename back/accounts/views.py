@@ -19,12 +19,12 @@ class LoginAPI(generics.GenericAPIView):
     permission_classes = [permissions.AllowAny]
 
     def post(self, request, *args, **kwargs):
-        user = authenticate(**kwargs)
+        user = authenticate(**request.data)  # FIXME: request.data can be nontype
         if user and user.is_active:
             logger.info(f'User: {user.first_name} login with password')
             _, token = AuthToken.objects.create(user)
             return Response(self.get_serializer(user, context={'token': token}).data, status=200)
-        return Response({'err': 'Incorrect Credentials'}, status=400)
+        return Response({'err': 'Incorrect credentials'}, status=400)
 
 
 class AuthAPI(generics.GenericAPIView):
@@ -71,7 +71,7 @@ class AuthAPI(generics.GenericAPIView):
 class UserAPI(generics.RetrieveAPIView):
     """ Get User info """
     serializer_class = UserSerializer
-    permission_classes = [permissions.AllowAny]
+    # permission_classes = [permissions.AllowAny]
 
     def get_object(self):
         return self.request.user
