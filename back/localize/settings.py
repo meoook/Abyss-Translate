@@ -92,8 +92,8 @@ DATABASES = {
         "NAME": os.environ.get("SQL_DATABASE", "postgres"),
         "USER": os.environ.get("SQL_USER", "postgres"),
         "PASSWORD": os.environ.get("SQL_PASSWORD", "xaxaxue"),
-        # "HOST": os.environ.get("SQL_HOST", "127.0.0.1"),
-        "HOST": os.environ.get("SQL_HOST", "postgres"),
+        "HOST": os.environ.get("SQL_HOST", "127.0.0.1"),
+        # "HOST": os.environ.get("SQL_HOST", "postgres"),
         "PORT": os.environ.get("SQL_PORT", "5432"),
         "TEST": {'NAME': 'test_postgres'},
     }
@@ -151,6 +151,7 @@ REST_FRAMEWORK = {
     # ],
 }
 
+# APPEND_SLASH = False
 # Celery
 CELERY_BROKER_URL = os.environ.get("CELERY_BROKER_URL", "redis://redis:6379")
 CELERY_RESULT_BACKEND = os.environ.get("CELERY_RESULT_BACKEND", "redis://redis:6379")

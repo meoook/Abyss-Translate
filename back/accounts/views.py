@@ -19,7 +19,7 @@ class LoginAPI(generics.GenericAPIView):
     permission_classes = [permissions.AllowAny]
 
     def post(self, request, *args, **kwargs):
-        user = authenticate(**request.data)  # FIXME: request.data can be nontype
+        user = authenticate(**request.data)  # FIXME: request.data can be non-type
         if user and user.is_active:
             logger.info(f'User: {user.first_name} login with password')
             _, token = AuthToken.objects.create(user)

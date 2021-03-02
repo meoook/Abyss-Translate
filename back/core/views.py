@@ -106,6 +106,7 @@ class FolderViewSet(viewsets.ModelViewSet):
 
     def update(self, request, *args, **kwargs):
         """ Check changing repository on update. If updated - update """
+        # TODO: check position change
         _folder_instance = self.get_object()
         _repo_url: str = request.data.get('repo_url')
         _need_update: bool = _repo_url != _folder_instance.repo_url  # Repository URL have been changed
@@ -158,7 +159,7 @@ class FileViewSet(viewsets.ModelViewSet):
         if _folder_id:
             _qs = self.get_queryset().filter(folder_id=_folder_id)
         else:  # For translator only - files with translates
-            _save_id = request.query_params.get('save_id')
+            _save_id: str = request.query_params.get('save_id')
             _qs = self.get_queryset().filter(folder__project__save_id=_save_id, error__exact="")
         _page = self.paginate_queryset(_qs.order_by('-error', '-warning', '-created'))  # TODO: Ordering filter
         _serializer = self.get_serializer(_page, many=True)

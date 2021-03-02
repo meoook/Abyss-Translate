@@ -85,7 +85,7 @@ class TranslatedSerializer(serializers.ModelSerializer):
     """ To display file translate progress to other languages """
     class Meta:
         model = Translated
-        exclude = ['translate_copy']
+        fields = ['items', 'language']
 
 
 class FilesSerializer(serializers.ModelSerializer):
@@ -94,13 +94,12 @@ class FilesSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = File
-        exclude = ['data', 'folder', 'codec', 'options']
+        exclude = ['data', 'folder', 'codec', 'options', 'repo_sha']
         extra_kwargs = {
             # 'state': {'read_only': True, 'source': 'get_state_display'},
             'method': {'read_only': True},
             'items': {'read_only': True},
             'words': {'read_only': True},
-            'repo_sha': {'read_only': True},
             'repo_status': {'read_only': True},
             'warning': {'read_only': True},
             'error': {'read_only': True},

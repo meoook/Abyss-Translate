@@ -236,7 +236,7 @@ class HtmlContextParser:
         _cut_idx = len(self.__left_data)
         self.__cut_to_elem_prefix(_cut_idx)
         _prefix = self.__elem_prefix_return(_cut_idx)
-        _data_tail = {'dom': 'EOF', 'text': _prefix, 'prefix': _prefix, 'warning': 'data broken'}
+        _data_tail = {'dom': 'EOF', 'text': '', 'prefix': _prefix, 'warning': 'data broken'}
         self.__dom_data.append(_data_tail)  # Add left data to return data as 'EOF'
         self.__warnings.append(f'data broken - {_cut_idx} bytes left not parsed')
 
